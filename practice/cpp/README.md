@@ -1,0 +1,52 @@
+# C++ Exercise Collections
+
+This directory contains focused C++ practice collections and the documentation used to grow and validate them.
+
+## Layout
+
+```text
+cpp/
+├── AGENTS.md
+├── README.md
+├── CppFollowUpTopics.md
+├── CppProblemsGenerationPrompt.md
+├── collections/
+│   ├── README.md
+│   └── core/
+│       ├── collection_spec.md
+│       ├── exercise_manifest.md
+│       └── 108 exercise pairs
+└── tools/
+    └── validate_exercises.sh
+```
+
+## Current Collection
+
+The [core collection](collections/core/collection_spec.md) contains 108 Level A implementation-fluency exercises targeting idiomatic C++ up to and including C++20. It is considered complete and should normally remain frozen.
+
+Its [exercise manifest](collections/core/exercise_manifest.md) records the recommended
+1-to-108 practice order as well as the generation batch, primary implementation
+skill, and supporting topics for every exercise.
+
+## Planning Documents
+
+- [Follow-up topics](CppFollowUpTopics.md) lists proposed up-to-C++20 collections and a separate C++23-delta curriculum.
+- The [base generation prompt](CppProblemsGenerationPrompt.md) defines the exercise-pair format and general quality requirements.
+
+## Validation
+
+Validate the core collection from this directory with:
+
+```bash
+tools/validate_exercises.sh collections/core c++20
+```
+
+The validator compiles temporary completed forms through a pipe; it does not modify learner files or leave generated solutions in the repository.
+
+## Adding a Collection
+
+1. Create `collections/<descriptive_name>/`.
+2. Write `collection_spec.md` before generating exercises.
+3. Create `exercise_manifest.md` and treat it as the collection inventory.
+4. Generate and validate exercises in reviewable batches.
+5. Reassess gaps after each batch and freeze the collection when only weak variants remain.

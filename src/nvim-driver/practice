@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+driver_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repository_dir=$(cd -- "$driver_dir/../.." && pwd)
+
+if (( $# > 1 )); then
+    printf 'Usage: %s [exercise-directory]\n' "$0" >&2
+    exit 2
+fi
+
+collection=${1:-$repository_dir/practice/cpp/collections/core}
+if [[ ! -d "$collection" ]]; then
+    printf 'Exercise directory does not exist: %s\n' "$collection" >&2
+    exit 1
+fi
+
+collection=$(cd -- "$collection" && pwd)
+practice_python=${PRACTICE_PYTHON:-python3}
+if ! "$practice_python" -c 'import fsrs' 2>/dev/null; then
+    printf 'FSRS dependency is unavailable for %s. Install with: %s -m pip install -r %s/requirements.txt\n' \
+        "$practice_python" "$practice_python" "$driver_dir" >&2
+    exit 1
+fi
+
+exec env \
+    PRACTICE_COLLECTION="$collection" \
+    PRACTICE_AUTOSTART=1 \
+    nvim --clean -u "$driver_dir/init.lua"
