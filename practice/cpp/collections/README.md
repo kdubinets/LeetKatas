@@ -23,4 +23,7 @@ The collection specification must define:
 
 The manifest must identify each exercise's primary skill clearly enough to detect overlap.
 
+An optional `exercise_order.md` defines a canonical introduction order. It must
+contain every exercise basename exactly once, one unadorned basename per line.
+
 Use [CppFollowUpTopics.md](../CppFollowUpTopics.md) to select and prioritize future collections.

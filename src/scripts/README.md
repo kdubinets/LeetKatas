@@ -33,10 +33,13 @@ whose `compiled` field is `false`.
 
 It returns an `exercise` object containing `id`, `source_path`, and
 `metadata_path`. The paths are absolute. The oldest due exercise is selected
-first; when none is due, a random unseen exercise is selected. The previous
-exercise is excluded when an equivalent alternative is available. When every
-exercise has scheduling state and none is due, it returns `exercise: null` and
-the UTC `next_due` timestamp.
+first. When none is due and `exercise_order.md` exists, unseen exercises follow
+its line order. The file contains one unadorned exercise basename per line and
+must cover every discovered exercise exactly once. Collections without the file
+retain random unseen selection. The
+previous exercise is excluded when an alternative of the same scheduling class
+is available. When every exercise has scheduling state and none is due, the
+command returns `exercise: null` and the UTC `next_due` timestamp.
 
 `evaluate_exercise.py` accepts source and metadata paths plus a command array.
 One or more arguments must contain the literal `{source}` placeholder. The

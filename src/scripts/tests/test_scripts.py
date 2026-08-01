@@ -33,6 +33,9 @@ class SelectExerciseTests(unittest.TestCase):
         (directory / f"{name}.cpp").write_text("int solve() { return 1; }\n")
         (directory / f"{name}.md").write_text(f"# Name\n\n{name}\n")
 
+    def write_order(self, directory: Path, exercise_ids: list[str]) -> None:
+        (directory / "exercise_order.md").write_text("\n".join(exercise_ids) + "\n")
+
     def request(self, directory: Path, previous: str | None = None) -> dict:
         return {
             "exercise_directory": str(directory),
@@ -78,6 +81,73 @@ class SelectExerciseTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(response["exercise"]["id"], "only")
+
+    def test_selects_unseen_exercises_in_recommended_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            for exercise_id in ("first", "second", "third"):
+                self.create_pair(directory, exercise_id)
+            self.write_order(directory, ["second", "third", "first"])
+
+            result, response = run_script(
+                "select_exercise.py", self.request(directory)
+            )
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(response["exercise"]["id"], "second")
+
+    def test_skip_temporarily_bypasses_ordered_unseen_exercise(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "first")
+            self.create_pair(directory, "second")
+            self.write_order(directory, ["first", "second"])
+
+            result, response = run_script(
+                "select_exercise.py", self.request(directory, "first")
+            )
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(response["exercise"]["id"], "second")
+
+    def test_rejects_an_incomplete_exercise_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "first")
+            self.create_pair(directory, "missing")
+            self.write_order(directory, ["first"])
+
+            result, response = run_script(
+                "select_exercise.py", self.request(directory)
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("exercise order is missing", response["error"])
+
+    def test_rejects_decorated_exercise_order_lines(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "first")
+            (directory / "exercise_order.md").write_text("1. `first`\n")
+
+            result, response = run_script(
+                "select_exercise.py", self.request(directory)
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("invalid exercise ID", response["error"])
+
+    def test_core_collection_starts_with_order_file_first_exercise(self) -> None:
+        core = SCRIPTS.parents[1] / "practice" / "cpp" / "collections" / "core"
+        with tempfile.TemporaryDirectory() as temporary:
+            request = self.request(core)
+            request["database_path"] = str(Path(temporary) / "practice.sqlite3")
+
+            response = select_exercise(
+                request, datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
+            )
+
+            self.assertEqual(response["exercise"]["id"], "fill_fixed_array")
 
     def test_reports_an_empty_collection_as_a_command_error(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -220,6 +290,9 @@ class SchedulerIntegrationTests(unittest.TestCase):
         (directory / f"{name}.cpp").write_text("int solve() { return 1; }\n")
         (directory / f"{name}.md").write_text(f"# Name\n\n{name}\n")
 
+    def write_order(self, directory: Path, exercise_ids: list[str]) -> None:
+        (directory / "exercise_order.md").write_text("\n".join(exercise_ids) + "\n")
+
     def select_request(self, directory: Path, database: Path) -> dict:
         return {
             "exercise_directory": str(directory),
@@ -268,6 +341,7 @@ class SchedulerIntegrationTests(unittest.TestCase):
             database = directory / "practice.sqlite3"
             for exercise_id in ("oldest", "later", "unseen"):
                 self.create_pair(directory, exercise_id)
+            self.write_order(directory, ["unseen", "later", "oldest"])
             record_rating(
                 self.record_request(directory, database, "oldest", "fail"), self.NOW
             )

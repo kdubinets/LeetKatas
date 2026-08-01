@@ -15,6 +15,7 @@ else
 fi
 
 manifest=$collection_dir/exercise_manifest.md
+order_file=$collection_dir/exercise_order.md
 
 if [[ ! -d "$collection_dir" ]]; then
     printf 'Collection directory does not exist: %s\n' "$collection_dir" >&2
@@ -41,6 +42,39 @@ if (( ${#sources[@]} == 0 )); then
 fi
 
 status=0
+
+if [[ -f "$order_file" ]]; then
+    declare -A ordered_exercises=()
+    order_line_number=0
+    while IFS= read -r exercise_id || [[ -n "$exercise_id" ]]; do
+        ((order_line_number += 1))
+        if [[ ! "$exercise_id" =~ ^[a-z0-9_]+$ ]]; then
+            printf 'INVALID ORDER ENTRY: %s line=%s\n' \
+                "$order_file" "$order_line_number" >&2
+            status=1
+            continue
+        fi
+        if [[ -n "${ordered_exercises[$exercise_id]+present}" ]]; then
+            printf 'DUPLICATE ORDER ENTRY: %s\n' "$exercise_id" >&2
+            status=1
+        fi
+        ordered_exercises[$exercise_id]=1
+        if [[ ! -f "$collection_dir/$exercise_id.cpp" ||
+              ! -f "$collection_dir/$exercise_id.md" ]]; then
+            printf 'UNKNOWN ORDER ENTRY: %s\n' "$exercise_id" >&2
+            status=1
+        fi
+    done < "$order_file"
+
+    for source in "${sources[@]}"; do
+        base_name=${source%.cpp}
+        base_name=${base_name##*/}
+        if [[ -z "${ordered_exercises[$base_name]+present}" ]]; then
+            printf 'MISSING ORDER ENTRY: %s\n' "$base_name" >&2
+            status=1
+        fi
+    done
+fi
 
 for source in "${sources[@]}"; do
     base_path=${source%.cpp}
@@ -111,7 +145,7 @@ done
 while IFS= read -r -d '' metadata; do
     metadata_name=${metadata##*/}
     case "$metadata_name" in
-        collection_spec.md|exercise_manifest.md|README.md)
+        collection_spec.md|exercise_manifest.md|exercise_order.md|README.md)
             continue
             ;;
     esac
@@ -122,6 +156,7 @@ while IFS= read -r -d '' metadata; do
     fi
 done < <(find "$collection_dir" -maxdepth 1 -type f -name '*.md' -print0)
 
+# shellcheck disable=SC2016 # The grep expression intentionally contains a literal `$` anchor.
 manifest_rows=$(grep -Ec '^\| `[^`]+` \|' "$manifest" || true)
 if [[ "$manifest_rows" != "${#sources[@]}" ]]; then
     printf 'MANIFEST COUNT FAIL: exercises=%s rows=%s\n' \

@@ -22,6 +22,7 @@ Start work from this directory or a descendant so this guidance is loaded.
 - Prefer quality over requested quantity. If only duplicate, trivial, or exotic candidates remain, report that limit instead of padding the collection.
 - Use descriptive lowercase snake_case basenames and keep every exercise's `.cpp` and `.md` files together in its collection directory.
 - Update the collection manifest in the same change as any exercise addition, removal, rename, or primary-skill change.
+- When a collection has `exercise_order.md`, update it in the same change as any exercise addition, removal, or rename.
 - Review the complete manifest before proposing or generating exercises so primary objectives do not overlap.
 
 ## Existing Core Collection

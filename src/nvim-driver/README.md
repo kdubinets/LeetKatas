@@ -314,11 +314,13 @@ A session launched against the core C++ collection repeatedly completes this
 loop without modifying the collection:
 
 ```text
-due or unseen exercise -> edit -> submit -> see compile result and solution
-                       -> choose/override rating -> scheduled next exercise
+due or ordered-unseen exercise -> edit -> submit -> see compile result and solution
+                               -> choose/override rating -> scheduled next exercise
 ```
 
 The loop is operable through the Space-leader mappings, retains syntax
 highlighting, provides no autocomplete assistance, and invokes all three Python
 command boundaries. Due reviews take priority over unseen exercises; an empty
-scheduled queue reports the next due time.
+scheduled queue reports the next due time. A collection's `exercise_order.md`
+controls unseen introductions with one exercise basename per line; collections
+without one use random unseen selection.

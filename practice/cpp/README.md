@@ -15,6 +15,7 @@ cpp/
 │   └── core/
 │       ├── collection_spec.md
 │       ├── exercise_manifest.md
+│       ├── exercise_order.md
 │       └── 108 exercise pairs
 └── tools/
     └── validate_exercises.sh
@@ -24,9 +25,10 @@ cpp/
 
 The [core collection](collections/core/collection_spec.md) contains 108 Level A implementation-fluency exercises targeting idiomatic C++ up to and including C++20. It is considered complete and should normally remain frozen.
 
-Its [exercise manifest](collections/core/exercise_manifest.md) records the recommended
-1-to-108 practice order as well as the generation batch, primary implementation
-skill, and supporting topics for every exercise.
+Its [exercise order](collections/core/exercise_order.md) records the canonical
+1-to-108 progression as one exercise basename per line. The
+[exercise manifest](collections/core/exercise_manifest.md) records generation
+batch, primary implementation skill, and supporting topics.
 
 ## Planning Documents
 
@@ -48,5 +50,6 @@ The validator compiles temporary completed forms through a pipe; it does not mod
 1. Create `collections/<descriptive_name>/`.
 2. Write `collection_spec.md` before generating exercises.
 3. Create `exercise_manifest.md` and treat it as the collection inventory.
-4. Generate and validate exercises in reviewable batches.
-5. Reassess gaps after each batch and freeze the collection when only weak variants remain.
+4. Add `exercise_order.md` when the collection has a canonical introduction order.
+5. Generate and validate exercises in reviewable batches.
+6. Reassess gaps after each batch and freeze the collection when only weak variants remain.

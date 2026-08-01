@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Select a random paired exercise from a collection directory."""
+"""Select a due or ordered-unseen exercise from a collection directory."""
 
 from __future__ import annotations
 
@@ -41,6 +41,51 @@ def required_string(request: dict[str, Any], name: str) -> str:
     return value
 
 
+def exercise_order(
+    collection: Path, exercises: list[dict[str, str]]
+) -> list[str] | None:
+    order_file = collection / "exercise_order.md"
+    if not order_file.is_file():
+        return None
+
+    ordered_ids = order_file.read_text(encoding="utf-8").splitlines()
+    if not ordered_ids:
+        raise RequestError(f"exercise order contains no exercises: {order_file}")
+    for line_number, exercise_id in enumerate(ordered_ids, start=1):
+        if not exercise_id or any(
+            character not in "abcdefghijklmnopqrstuvwxyz0123456789_"
+            for character in exercise_id
+        ):
+            raise RequestError(
+                f"invalid exercise ID in {order_file} at line {line_number}"
+            )
+
+    duplicate_ids = sorted(
+        exercise_id
+        for exercise_id in set(ordered_ids)
+        if ordered_ids.count(exercise_id) > 1
+    )
+    if duplicate_ids:
+        raise RequestError(
+            "exercise order contains duplicate exercises: "
+            + ", ".join(duplicate_ids)
+        )
+
+    discovered_ids = {exercise["id"] for exercise in exercises}
+    ordered_id_set = set(ordered_ids)
+    unknown_ids = sorted(ordered_id_set - discovered_ids)
+    missing_ids = sorted(discovered_ids - ordered_id_set)
+    if unknown_ids:
+        raise RequestError(
+            "exercise order contains unknown exercises: " + ", ".join(unknown_ids)
+        )
+    if missing_ids:
+        raise RequestError(
+            "exercise order is missing exercises: " + ", ".join(missing_ids)
+        )
+    return ordered_ids
+
+
 def select_exercise(
     request: dict[str, Any], current_datetime: datetime | None = None
 ) -> dict[str, Any]:
@@ -75,6 +120,8 @@ def select_exercise(
             f"no {source_extension}/{metadata_extension} exercise pairs found in {collection}"
         )
 
+    order = exercise_order(collection, exercises)
+
     try:
         cards = PracticeStore(database_path(request)).cards_for_collection(collection_key)
         now = ensure_utc(current_datetime)
@@ -87,23 +134,41 @@ def select_exercise(
         for exercise_id, card in cards.items()
         if exercise_id in exercise_by_id
     }
-    due = [(exercise_id, card) for exercise_id, card in scheduled.items() if card.due <= now]
+    due = [
+        (exercise_id, card)
+        for exercise_id, card in scheduled.items()
+        if card.due <= now
+    ]
     if due:
         oldest_due = min(card.due for _, card in due)
-        candidate_ids = [exercise_id for exercise_id, card in due if card.due == oldest_due]
-    else:
         candidate_ids = [
-            exercise["id"]
-            for exercise in exercises
-            if exercise["id"] not in scheduled
+            exercise_id for exercise_id, card in due if card.due == oldest_due
         ]
+        ordered_candidates = False
+    else:
+        if order is None:
+            candidate_ids = [
+                exercise["id"]
+                for exercise in exercises
+                if exercise["id"] not in scheduled
+            ]
+            ordered_candidates = False
+        else:
+            candidate_ids = [
+                exercise_id for exercise_id in order if exercise_id not in scheduled
+            ]
+            ordered_candidates = True
 
     if candidate_ids:
         if len(candidate_ids) > 1 and previous_id in candidate_ids:
             candidate_ids = [
                 exercise_id for exercise_id in candidate_ids if exercise_id != previous_id
             ]
-        selected_id = random.SystemRandom().choice(candidate_ids)
+        selected_id = (
+            candidate_ids[0]
+            if ordered_candidates
+            else random.SystemRandom().choice(candidate_ids)
+        )
         return {"exercise": exercise_by_id[selected_id]}
 
     next_due = min(card.due for card in scheduled.values())
@@ -113,7 +178,7 @@ def select_exercise(
 def main() -> int:
     try:
         response = select_exercise(read_request())
-    except (OSError, RequestError, SchedulerError, sqlite3.Error) as error:
+    except (OSError, RequestError, SchedulerError, UnicodeError, sqlite3.Error) as error:
         json.dump({"error": str(error)}, sys.stdout)
         sys.stdout.write("\n")
         return 1

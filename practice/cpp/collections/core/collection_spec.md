@@ -10,6 +10,7 @@ Complete and frozen unless corrections or further changes are explicitly request
 - 108 `.cpp` learner files.
 - 108 matching `.md` metadata and solution files.
 - One [exercise manifest](exercise_manifest.md) organized into four generation batches.
+- One [exercise order](exercise_order.md) containing the canonical progression.
 
 ## Language Boundary
 
