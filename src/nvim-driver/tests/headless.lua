@@ -29,6 +29,14 @@ local function find_feedback_buffer()
   end
 end
 
+local function find_stats_buffer()
+  for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "practice-stats" then
+      return buffer
+    end
+  end
+end
+
 local function press(keys)
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "xt", false)
   vim.wait(100)
@@ -43,6 +51,7 @@ assert(vim.fn.exists(":PracticeLog") == 2, "PracticeLog was not registered")
 assert(vim.fn.exists(":PracticeDiagnostics") == 2, "PracticeDiagnostics was not registered")
 assert(vim.fn.exists(":PracticeNote") == 2, "PracticeNote was not registered")
 assert(vim.fn.exists(":PracticeNotes") == 2, "PracticeNotes was not registered")
+assert(vim.fn.exists(":PracticeStats") == 2, "PracticeStats was not registered")
 assert(vim.fn.maparg("<Space>ps", "n") ~= "", "start mapping was not registered")
 assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered")
 assert(vim.fn.maparg("<Space>pr", "n") ~= "", "retry mapping was not registered")
@@ -50,6 +59,7 @@ assert(vim.fn.maparg("<Space>pm", "n") ~= "", "note mapping was not registered")
 assert(vim.fn.maparg("<Space>pf", "n") ~= "", "follow-up mapping was not registered")
 assert(vim.fn.maparg("<Space>pm", "x") ~= "", "visual note mapping was not registered")
 assert(vim.fn.maparg("<Space>po", "n") ~= "", "open notes mapping was not registered")
+assert(vim.fn.maparg("<Space>pt", "n") ~= "", "statistics mapping was not registered")
 assert(vim.o.expandtab, "practice should indent with spaces")
 assert(vim.o.shiftwidth == 4, "practice shiftwidth should be four")
 assert(vim.o.softtabstop == 4, "practice softtabstop should be four")
@@ -117,6 +127,13 @@ practice.start(collection)
 wait_for("solving")
 
 local first_state = practice.get_state()
+assert(first_state.timing.phase == "solve" and first_state.timing.started ~= nil,
+  "solve timing did not start with the exercise")
+vim.api.nvim_exec_autocmds("FocusLost", {})
+assert(first_state.timing.started == nil, "focus loss did not pause solve timing")
+vim.wait(10)
+vim.api.nvim_exec_autocmds("FocusGained", {})
+assert(first_state.timing.started ~= nil, "focus gain did not resume solve timing")
 assert(original_sources[first_state.exercise.id], "unexpected selected exercise")
 local first_id = first_state.exercise.id
 assert(first_state.working_path ~= original_sources[first_state.exercise.id],
@@ -163,6 +180,8 @@ vim.api.nvim_set_current_buf(first_state.source_buffer)
 vim.api.nvim_buf_set_lines(first_state.source_buffer, 1, 2, false, { "    return 42;" })
 practice.submit()
 assert(practice.get_state().status == "evaluating", "submit did not enter evaluating state")
+assert(practice.get_state().timing.phase == nil,
+  "evaluation wait was included in learner timing")
 local progress_visible = false
 for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
   if vim.api.nvim_buf_is_valid(buffer) and buffer_text(buffer):find("Practice evaluation", 1, true) then
@@ -172,6 +191,8 @@ for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
 end
 assert(progress_visible, "evaluation progress pane was not opened immediately")
 wait_for("reviewing")
+assert(practice.get_state().timing.phase == "feedback",
+  "feedback timing did not start after evaluation")
 
 local review_state = practice.get_state()
 assert(review_state.result.compiled == true, "completed source did not compile")
@@ -214,11 +235,15 @@ end
 assert(not feedback:find("Shortcuts", 1, true), "redundant shortcut help is still displayed")
 
 practice.ask("Why does this satisfy the exercise?")
+assert(practice.get_state().timing.phase == nil,
+  "follow-up reviewer wait was included in learner timing")
 local follow_up_completed = vim.wait(10000, function()
   local turns = practice.get_state().result.follow_up.turns
   return #turns == 1 and turns[1].status ~= "pending"
 end, 10)
 assert(follow_up_completed, "timed out waiting for follow-up response")
+assert(practice.get_state().timing.phase == "feedback",
+  "feedback timing did not resume after follow-up")
 assert(practice.get_state().result.proposed_rating == "good",
   "follow-up chat changed the proposed rating")
 feedback = buffer_text(feedback_buffer)
@@ -396,6 +421,28 @@ local complete_state = practice.get_state()
 assert(type(complete_state.next_due) == "string", "complete state did not include next due time")
 assert(complete_state.exercise == nil, "complete state retained an exercise")
 
+practice.stats(collection)
+local stats_loaded = vim.wait(10000, function() return find_stats_buffer() ~= nil end, 10)
+assert(stats_loaded, "timed out waiting for practice statistics")
+local stats_buffer = find_stats_buffer()
+local stats_text = buffer_text(stats_buffer)
+assert(stats_text:find("Practice statistics", 1, true), "statistics heading is missing")
+assert(stats_text:find("Today", 1, true) and stats_text:find("Completed", 1, true),
+  "today statistics are missing")
+assert(stats_text:find("Collection", 1, true) and stats_text:find("Unseen", 1, true),
+  "collection statistics are missing")
+assert(stats_text:find("Forecast", 1, true) and stats_text:find("Scheduled tomorrow", 1, true),
+  "forecast statistics are missing")
+assert(stats_text:find("Recent history", 1, true), "statistics history is missing")
+assert(practice.get_state().status == "complete", "statistics changed practice state")
+vim.api.nvim_set_current_buf(stats_buffer)
+assert(vim.fn.maparg("r", "n", false, true).buffer == 1,
+  "statistics refresh mapping is missing")
+assert(vim.fn.maparg("q", "n", false, true).buffer == 1,
+  "statistics close mapping is missing")
+press("q")
+assert(find_stats_buffer() == nil, "statistics buffer did not close")
+
 for _, source in pairs(original_sources) do
   assert(table.concat(vim.fn.readfile(source), "\n"):find("// Finish:", 1, true),
     "an original exercise was modified")
@@ -416,6 +463,17 @@ assert(archived[2][1]:find("return 0;", 1, true), "final incorrect submission wa
 assert(not archived[2][1]:find("return;", 1, true), "retried submission was archived")
 assert(vim.json.decode(archived[1][2]).feedback.summary
   == "The submitted implementation is correct.", "full reviewer response was not archived")
+
+local timing_output = vim.fn.system({
+  "python3", "-c",
+  "import json,sqlite3,sys; c=sqlite3.connect(sys.argv[1]); "
+    .. "print(json.dumps(c.execute('SELECT solve_duration_ms,feedback_duration_ms FROM reviews ORDER BY review_id').fetchall()))",
+  vim.env.PRACTICE_DATABASE,
+})
+assert(vim.v.shell_error == 0, "could not inspect stored practice timing")
+local timings = vim.json.decode(timing_output)
+assert(#timings == 2 and timings[1][1] ~= vim.NIL and timings[1][2] ~= vim.NIL,
+  "completed review timing was not persisted")
 
 local ui = require("practice.ui")
 local excellent = vim.deepcopy(successful_result)

@@ -18,7 +18,7 @@ else:
     FSRS_IMPORT_ERROR = None
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 RATING_NAMES = {"fail", "acceptable", "good", "excellent"}
 
 
@@ -149,6 +149,8 @@ class PracticeStore:
                 reviewer_model TEXT,
                 reviewer_reasoning_effort TEXT,
                 review_attempts INTEGER NOT NULL DEFAULT 0,
+                solve_duration_ms INTEGER CHECK (solve_duration_ms >= 0),
+                feedback_duration_ms INTEGER CHECK (feedback_duration_ms >= 0),
                 review_log_json TEXT NOT NULL,
                 FOREIGN KEY (collection_key, exercise_id)
                     REFERENCES cards (collection_key, exercise_id)
@@ -166,6 +168,8 @@ class PracticeStore:
                 review_log_json TEXT NOT NULL, review_status TEXT NOT NULL DEFAULT 'legacy',
                 reviewer_name TEXT, reviewer_model TEXT, reviewer_reasoning_effort TEXT,
                 review_attempts INTEGER NOT NULL DEFAULT 0,
+                solve_duration_ms INTEGER CHECK (solve_duration_ms >= 0),
+                feedback_duration_ms INTEGER CHECK (feedback_duration_ms >= 0),
                 FOREIGN KEY (collection_key, exercise_id) REFERENCES cards (collection_key, exercise_id))""")
             connection.execute("""INSERT INTO reviews (review_id,collection_key,exercise_id,review_datetime,final_rating,compiled,proposed_rating,review_log_json)
                 SELECT review_id,collection_key,exercise_id,review_datetime,final_rating,compiled,proposed_rating,review_log_json FROM reviews_legacy_v1""")
@@ -174,6 +178,12 @@ class PracticeStore:
         for name, definition in (("review_status", "TEXT NOT NULL DEFAULT 'legacy'"), ("reviewer_name", "TEXT"), ("reviewer_model", "TEXT"), ("reviewer_reasoning_effort", "TEXT"), ("review_attempts", "INTEGER NOT NULL DEFAULT 0")):
             if name not in columns:
                 connection.execute(f"ALTER TABLE reviews ADD COLUMN {name} {definition}")
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(reviews)")}
+        for name in ("solve_duration_ms", "feedback_duration_ms"):
+            if name not in columns:
+                connection.execute(
+                    f"ALTER TABLE reviews ADD COLUMN {name} INTEGER CHECK ({name} >= 0)"
+                )
         connection.execute(
             """CREATE TABLE IF NOT EXISTS review_artifacts (
                 review_id INTEGER PRIMARY KEY,
@@ -193,7 +203,7 @@ class PracticeStore:
                 "INSERT INTO schema_metadata (key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
-        elif row["value"] in {"1", "2", "3"}:
+        elif row["value"] in {"1", "2", "3", "4"}:
             connection.execute("UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'", (str(SCHEMA_VERSION),))
         elif row["value"] != str(SCHEMA_VERSION):
             raise SchedulerError(
@@ -226,6 +236,8 @@ class PracticeStore:
         reviewer_model: str | None = None,
         reviewer_reasoning_effort: str | None = None,
         review_attempts: int = 0,
+        solve_duration_ms: int | None = None,
+        feedback_duration_ms: int | None = None,
         submitted_source: str | None = None,
         review_response: dict[str, Any] | None = None,
         review_archive_ttl_days: int = 30,
@@ -286,8 +298,8 @@ class PracticeStore:
                     collection_key, exercise_id, review_datetime, final_rating,
                     compiled, proposed_rating, review_log_json, review_status,
                     reviewer_name, reviewer_model, reviewer_reasoning_effort,
-                    review_attempts
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    review_attempts, solve_duration_ms, feedback_duration_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     collection_key,
@@ -302,6 +314,8 @@ class PracticeStore:
                     reviewer_model,
                     reviewer_reasoning_effort,
                     review_attempts,
+                    solve_duration_ms,
+                    feedback_duration_ms,
                 ),
             )
             if archive_enabled:

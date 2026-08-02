@@ -18,6 +18,14 @@ function M.setup(options)
     end,
     desc = "Finish the practice diagnostic session",
   })
+  vim.api.nvim_create_autocmd({ "FocusLost", "VimSuspend" }, {
+    callback = session.focus_lost,
+    desc = "Pause active practice timing",
+  })
+  vim.api.nvim_create_autocmd({ "FocusGained", "VimResume" }, {
+    callback = session.focus_gained,
+    desc = "Resume active practice timing",
+  })
   session.setup(options)
 
   vim.api.nvim_create_user_command("PracticeStart", function(command)
@@ -73,6 +81,13 @@ function M.setup(options)
   vim.api.nvim_create_user_command("PracticeNotes", session.open_notes, {
     desc = "Open the practice notes directory",
   })
+  vim.api.nvim_create_user_command("PracticeStats", function(command)
+    session.stats(command.args ~= "" and command.args or nil)
+  end, {
+    nargs = "?",
+    complete = "dir",
+    desc = "Show practice statistics for a collection",
+  })
   vim.api.nvim_create_user_command("PracticeLog", log.open, {
     desc = "Open the persistent practice diagnostic log",
   })
@@ -101,6 +116,7 @@ function M.setup(options)
     silent = true, desc = "Practice: capture selected context in a follow-up note",
   })
   map("<leader>po", M.open_notes, "Practice: open notes directory")
+  map("<leader>pt", M.stats, "Practice: show statistics")
   map("<leader>pq", M.quit, "Practice: quit")
 end
 
@@ -142,6 +158,10 @@ end
 
 function M.open_notes()
   session.open_notes()
+end
+
+function M.stats(directory)
+  session.stats(directory)
 end
 
 function M.get_state()

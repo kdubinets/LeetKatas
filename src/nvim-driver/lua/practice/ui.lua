@@ -11,6 +11,8 @@ local feedback_result = nil
 local feedback_callbacks = nil
 local expanded = { review = false, compiler = false, reference = false, chat = true }
 local review_started_collapsed = false
+local stats_buffer = nil
+local stats_window = nil
 
 local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeSuccess", { default = true, link = "DiagnosticOk" })
@@ -43,6 +45,68 @@ end
 
 local function title_case(value)
   return value:sub(1, 1):upper() .. value:sub(2)
+end
+
+local function format_duration(milliseconds, tracked, total)
+  if total > 0 and tracked == 0 then return "untracked" end
+  local minutes = math.floor((milliseconds + 30000) / 60000)
+  local text
+  if minutes >= 60 then
+    text = string.format("%dh %02dm", math.floor(minutes / 60), minutes % 60)
+  else
+    text = string.format("%dm", minutes)
+  end
+  if tracked < total then
+    text = string.format("%s (%d/%d tracked)", text, tracked, total)
+  end
+  return text
+end
+
+local function stats_lines(stats)
+  local today, collection, forecast = stats.today, stats.collection_state, stats.forecast
+  local lines = {
+    "Practice statistics",
+    vim.fs.basename(stats.collection) .. "  " .. stats.collection,
+    "",
+    "Today  " .. today.date,
+    string.format("  Completed             %d", today.reviews),
+    string.format("  Due now               %d", today.due_now),
+    string.format("  Due later today       %d", today.due_later_today),
+    string.format("  New introduced        %d", today.new_introduced),
+    string.format("  Practice time         %s",
+      format_duration(today.practice_time_ms, today.tracked_reviews, today.reviews)),
+    string.format("  Ratings               Fail %d · Acceptable %d · Good %d · Excellent %d",
+      today.ratings.fail, today.ratings.acceptable, today.ratings.good,
+      today.ratings.excellent),
+    "",
+    "Collection",
+    string.format("  Total                 %d", collection.total),
+    string.format("  Unseen                %d", collection.unseen),
+    string.format("  Introduced            %d", collection.introduced),
+    string.format("  Learning              %d", collection.learning),
+    string.format("  Learned (FSRS Review) %d", collection.learned),
+    string.format("  Relearning            %d", collection.relearning),
+    "",
+    "Forecast",
+    string.format("  Scheduled tomorrow    %d", forecast.tomorrow_due),
+  }
+  for _, day in ipairs(forecast.days) do
+    table.insert(lines, string.format("  %s             %d", day.date, day.due))
+  end
+  vim.list_extend(lines, {
+    "",
+    "Recent history",
+    "  Date         Reviews  New  F  A  G  E  Time",
+  })
+  for _, day in ipairs(stats.history) do
+    table.insert(lines, string.format("  %s  %7d  %3d  %d  %d  %d  %d  %s",
+      day.date, day.reviews, day.new_introduced, day.ratings.fail,
+      day.ratings.acceptable, day.ratings.good, day.ratings.excellent,
+      format_duration(day.practice_time_ms, day.tracked_reviews, day.reviews)))
+  end
+  table.insert(lines, "")
+  table.insert(lines, "r Refresh   q Close")
+  return lines
 end
 
 local function clean_inline(value)
@@ -485,6 +549,53 @@ function M.close_feedback()
   feedback_contexts, feedback_result, feedback_callbacks = {}, nil, nil
   expanded = { review = false, compiler = false, reference = false, chat = true }
   review_started_collapsed = false
+end
+
+function M.close_stats()
+  if valid_window(stats_window) then vim.api.nvim_win_close(stats_window, true) end
+  if valid_buffer(stats_buffer) then vim.api.nvim_buf_delete(stats_buffer, { force = true }) end
+  stats_window, stats_buffer = nil, nil
+end
+
+function M.open_stats(stats, refresh)
+  if not valid_window(stats_window) or not valid_buffer(stats_buffer) then
+    M.close_stats()
+    if vim.o.columns < 110 then vim.cmd("botright split") else vim.cmd("botright vsplit") end
+    stats_window = vim.api.nvim_get_current_win()
+    stats_buffer = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_win_set_buf(stats_window, stats_buffer)
+    if vim.o.columns < 110 then
+      vim.api.nvim_win_set_height(stats_window, math.max(12, math.floor(vim.o.lines * 0.55)))
+    else
+      vim.api.nvim_win_set_width(stats_window, math.min(78, math.max(55, vim.o.columns - 45)))
+    end
+    vim.bo[stats_buffer].filetype = "practice-stats"
+    vim.bo[stats_buffer].buftype = "nofile"
+    vim.bo[stats_buffer].bufhidden = "wipe"
+    vim.bo[stats_buffer].swapfile = false
+    vim.wo[stats_window].number = false
+    vim.wo[stats_window].relativenumber = false
+    vim.wo[stats_window].signcolumn = "no"
+    vim.wo[stats_window].wrap = false
+    local options = { buffer = stats_buffer, silent = true, nowait = true }
+    vim.keymap.set("n", "q", M.close_stats,
+      vim.tbl_extend("force", options, { desc = "Close practice statistics" }))
+    vim.keymap.set("n", "r", refresh,
+      vim.tbl_extend("force", options, { desc = "Refresh practice statistics" }))
+  end
+  vim.bo[stats_buffer].modifiable = true
+  vim.bo[stats_buffer].readonly = false
+  vim.api.nvim_buf_set_lines(stats_buffer, 0, -1, false, stats_lines(stats))
+  vim.api.nvim_buf_clear_namespace(stats_buffer, feedback_namespace, 0, -1)
+  for _, line in ipairs({ 0, 3, 11, 19, 29 }) do
+    vim.api.nvim_buf_add_highlight(stats_buffer, feedback_namespace, "PracticeHeading", line, 0, -1)
+  end
+  vim.api.nvim_buf_add_highlight(stats_buffer, feedback_namespace, "PracticeHint",
+    vim.api.nvim_buf_line_count(stats_buffer) - 1, 0, -1)
+  vim.bo[stats_buffer].modifiable = false
+  vim.bo[stats_buffer].readonly = true
+  vim.api.nvim_set_current_win(stats_window)
+  return stats_buffer, stats_window
 end
 
 function M.open_source(path, preferred_window, practice_marker)

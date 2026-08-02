@@ -6,6 +6,7 @@ Neovim practice driver:
 - `select_exercise.py` selects a due or unseen exercise from a collection.
 - `evaluate_exercise.py` evaluates a submitted working copy.
 - `record_rating.py` records the final rating and updates its FSRS card.
+- `practice_stats.py` reports collection state, workload, forecasts, timing, and history.
 - `load_practice_config.py` validates and normalizes the optional user TOML file.
 - `practice_scheduler.py` provides shared FSRS and SQLite behavior.
 - `prompts/` contains adapter-specific reviewer instructions.
@@ -104,6 +105,8 @@ instructions from `prompts/codex_review_follow_up.txt`.
   "reviewer_reasoning_effort": "low",
   "submitted_source": "int solve() { return 1; }\n",
   "review_response": {"status": "available", "feedback": {}},
+  "solve_duration_ms": 12500,
+  "feedback_duration_ms": 3200,
   "review_archive_ttl_days": 30,
   "database_path": "optional-database-override"
 }
@@ -116,6 +119,15 @@ response contains `recorded`, the next UTC `due` timestamp, and the card
 `state`. When submission and review artifacts are supplied, they are stored in
 `review_artifacts` for the configured TTL and expired artifacts are purged by a
 subsequent rating. A TTL of zero disables new artifact storage.
+
+The two duration fields are optional for compatibility with older callers, but
+must be supplied together as non-negative integer milliseconds. New Neovim
+sessions use them for active solve and feedback-reading time.
+
+`practice_stats.py` accepts an exercise directory, database path, source and
+metadata extensions, and a history length (30 days in the Neovim UI). It returns
+today, collection-state, seven-day forecast, and daily-history objects. Calendar
+dates use the process's local timezone while stored review timestamps remain UTC.
 
 If `database_path` is omitted, both scheduler commands use
 `PRACTICE_DATABASE`, then `$XDG_DATA_HOME/leetkatas/practice.sqlite3`, and

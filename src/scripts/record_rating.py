@@ -46,6 +46,8 @@ def record_rating(
     submitted_source = request.get("submitted_source")
     review_response = request.get("review_response")
     review_archive_ttl_days = request.get("review_archive_ttl_days", 30)
+    solve_duration_ms = request.get("solve_duration_ms")
+    feedback_duration_ms = request.get("feedback_duration_ms")
 
     if not isinstance(exercise_id, str) or not exercise_id:
         raise RequestError("exercise_id must be a non-empty string")
@@ -63,6 +65,14 @@ def record_rating(
         raise RequestError("review_response must be an object or null")
     if (submitted_source is None) != (review_response is None):
         raise RequestError("submitted_source and review_response must be provided together")
+    for name, value in (
+        ("solve_duration_ms", solve_duration_ms),
+        ("feedback_duration_ms", feedback_duration_ms),
+    ):
+        if value is not None and (type(value) is not int or value < 0):
+            raise RequestError(f"{name} must be a non-negative integer or null")
+    if (solve_duration_ms is None) != (feedback_duration_ms is None):
+        raise RequestError("solve_duration_ms and feedback_duration_ms must be provided together")
     try:
         return PracticeStore(database_path(request)).record_review(
             collection_key=collection_key,
@@ -76,6 +86,8 @@ def record_rating(
             reviewer_model=request.get("reviewer_model"),
             reviewer_reasoning_effort=request.get("reviewer_reasoning_effort"),
             review_attempts=request.get("review_attempts", 0),
+            solve_duration_ms=solve_duration_ms,
+            feedback_duration_ms=feedback_duration_ms,
             submitted_source=submitted_source,
             review_response=review_response,
             review_archive_ttl_days=review_archive_ttl_days,

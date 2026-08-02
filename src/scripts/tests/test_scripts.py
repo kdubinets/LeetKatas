@@ -9,6 +9,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 
 SCRIPTS = Path(__file__).resolve().parents[1]
@@ -18,6 +19,8 @@ from codex_reviewer import SCHEMA, build_prompt  # noqa: E402
 from evaluate_exercise import evaluate, parse_metadata_sections  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
 from record_rating import record_rating  # noqa: E402
+from practice_scheduler import PracticeStore, deserialize_card  # noqa: E402
+from practice_stats import practice_stats  # noqa: E402
 from review_follow_up import ask  # noqa: E402
 from select_exercise import select_exercise  # noqa: E402
 
@@ -646,6 +649,38 @@ class RecordRatingTests(unittest.TestCase):
                 ).fetchone()
             self.assertEqual(stored, ("gpt-5.6-luna", "low"))
 
+    def test_persists_practice_durations(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "example")
+            request = self.request(directory, "good")
+            request.update(solve_duration_ms=1250, feedback_duration_ms=750)
+
+            result, _ = run_script("record_rating.py", request)
+
+            self.assertEqual(result.returncode, 0)
+            with sqlite3.connect(directory / "practice.sqlite3") as connection:
+                stored = connection.execute(
+                    "SELECT solve_duration_ms, feedback_duration_ms FROM reviews"
+                ).fetchone()
+            self.assertEqual(stored, (1250, 750))
+
+    def test_rejects_incomplete_or_negative_practice_durations(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "example")
+            incomplete = self.request(directory, "good")
+            incomplete["solve_duration_ms"] = 10
+            result, response = run_script("record_rating.py", incomplete)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("must be provided together", response["error"])
+
+            negative = self.request(directory, "good")
+            negative.update(solve_duration_ms=-1, feedback_duration_ms=10)
+            result, response = run_script("record_rating.py", negative)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("non-negative", response["error"])
+
     def test_archives_submission_and_full_review_with_ttl(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
@@ -736,6 +771,151 @@ class RecordRatingTests(unittest.TestCase):
 
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("final_rating", response["error"])
+
+
+class PracticeStatsTests(unittest.TestCase):
+    NOW = datetime(2026, 6, 15, 12, 0, tzinfo=timezone.utc)
+    LOCAL_ZONE = ZoneInfo("Europe/Dublin")
+
+    def create_pair(self, directory: Path, name: str) -> None:
+        (directory / f"{name}.cpp").write_text("int solve() { return 1; }\n")
+        (directory / f"{name}.md").write_text(f"# Name\n\n{name}\n")
+
+    def request(self, directory: Path) -> dict:
+        return {
+            "exercise_directory": str(directory),
+            "database_path": str(directory / "practice.sqlite3"),
+            "source_extension": ".cpp",
+            "metadata_extension": ".md",
+            "history_days": 30,
+        }
+
+    def record(
+        self,
+        directory: Path,
+        exercise_id: str,
+        rating: str,
+        reviewed_at: datetime,
+        solve_ms: int | None = None,
+        feedback_ms: int | None = None,
+    ) -> None:
+        record_rating(
+            {
+                "exercise_directory": str(directory),
+                "database_path": str(directory / "practice.sqlite3"),
+                "exercise_id": exercise_id,
+                "compiled": rating != "fail",
+                "proposed_rating": rating,
+                "final_rating": rating,
+                "solve_duration_ms": solve_ms,
+                "feedback_duration_ms": feedback_ms,
+            },
+            reviewed_at,
+        )
+
+    def set_due(self, directory: Path, exercise_id: str, due: datetime) -> None:
+        database = directory / "practice.sqlite3"
+        collection = str(directory.resolve())
+        with sqlite3.connect(database) as connection:
+            serialized = connection.execute(
+                "SELECT card_json FROM cards WHERE collection_key = ? AND exercise_id = ?",
+                (collection, exercise_id),
+            ).fetchone()[0]
+            card = deserialize_card(serialized)
+            card.due = due
+            connection.execute(
+                "UPDATE cards SET card_json = ?, due_at = ? WHERE collection_key = ? AND exercise_id = ?",
+                (card.to_json(), due.isoformat(), collection, exercise_id),
+            )
+
+    def test_reports_today_collection_forecast_and_history(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            for exercise_id in ("learned", "learning", "tomorrow", "unseen"):
+                self.create_pair(directory, exercise_id)
+
+            self.record(directory, "learned", "excellent", self.NOW - timedelta(days=1))
+            self.record(directory, "learned", "good", self.NOW, 1000, 500)
+            self.record(directory, "learning", "fail", self.NOW + timedelta(minutes=1))
+            self.record(directory, "tomorrow", "excellent", self.NOW + timedelta(minutes=2), 2000, 1000)
+            self.set_due(directory, "learned", self.NOW - timedelta(hours=1))
+            self.set_due(directory, "learning", self.NOW + timedelta(hours=3))
+            self.set_due(directory, "tomorrow", self.NOW + timedelta(days=1))
+
+            result = practice_stats(self.request(directory), self.NOW, self.LOCAL_ZONE)
+
+            self.assertEqual(result["today"]["reviews"], 3)
+            self.assertEqual(result["today"]["new_introduced"], 2)
+            self.assertEqual(result["today"]["due_now"], 1)
+            self.assertEqual(result["today"]["due_later_today"], 1)
+            self.assertEqual(result["today"]["ratings"], {
+                "fail": 1, "acceptable": 0, "good": 1, "excellent": 1,
+            })
+            self.assertEqual(result["today"]["practice_time_ms"], 4500)
+            self.assertEqual(result["today"]["tracked_reviews"], 2)
+            self.assertEqual(result["collection_state"]["total"], 4)
+            self.assertEqual(result["collection_state"]["unseen"], 1)
+            self.assertEqual(result["collection_state"]["learning"], 1)
+            self.assertEqual(result["collection_state"]["learned"], 2)
+            self.assertEqual(result["forecast"]["tomorrow_due"], 1)
+            self.assertEqual(len(result["history"]), 30)
+            self.assertEqual(result["history"][0]["date"], "2026-06-15")
+            self.assertEqual(result["history"][1]["date"], "2026-06-14")
+
+    def test_uses_local_calendar_dates_across_dst(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "boundary")
+            reviewed_at = datetime(2026, 3, 29, 23, 30, tzinfo=timezone.utc)
+            self.record(directory, "boundary", "good", reviewed_at, 10, 20)
+
+            result = practice_stats(
+                self.request(directory),
+                datetime(2026, 3, 30, 12, 0, tzinfo=timezone.utc),
+                self.LOCAL_ZONE,
+            )
+
+            self.assertEqual(result["today"]["date"], "2026-03-30")
+            self.assertEqual(result["today"]["reviews"], 1)
+
+    def test_migrates_v4_duration_columns_as_untracked(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            database = Path(temporary) / "practice.sqlite3"
+            with sqlite3.connect(database) as connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE schema_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+                    INSERT INTO schema_metadata VALUES ('schema_version', '4');
+                    CREATE TABLE cards (
+                      collection_key TEXT NOT NULL, exercise_id TEXT NOT NULL,
+                      card_json TEXT NOT NULL, due_at TEXT NOT NULL,
+                      created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                      PRIMARY KEY (collection_key, exercise_id));
+                    CREATE TABLE reviews (
+                      review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      collection_key TEXT NOT NULL, exercise_id TEXT NOT NULL,
+                      review_datetime TEXT NOT NULL, final_rating TEXT NOT NULL,
+                      compiled INTEGER NOT NULL, proposed_rating TEXT,
+                      review_status TEXT NOT NULL DEFAULT 'legacy', reviewer_name TEXT,
+                      reviewer_model TEXT, reviewer_reasoning_effort TEXT,
+                      review_attempts INTEGER NOT NULL DEFAULT 0,
+                      review_log_json TEXT NOT NULL,
+                      FOREIGN KEY (collection_key, exercise_id)
+                        REFERENCES cards (collection_key, exercise_id));
+                    """
+                )
+
+            connection = PracticeStore(database).connect()
+            try:
+                columns = {row[1] for row in connection.execute("PRAGMA table_info(reviews)")}
+                version = connection.execute(
+                    "SELECT value FROM schema_metadata WHERE key = 'schema_version'"
+                ).fetchone()[0]
+            finally:
+                connection.close()
+            self.assertIn("solve_duration_ms", columns)
+            self.assertIn("feedback_duration_ms", columns)
+            self.assertEqual(version, "5")
 
 
 class SchedulerIntegrationTests(unittest.TestCase):

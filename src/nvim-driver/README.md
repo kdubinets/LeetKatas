@@ -317,6 +317,12 @@ path for use with another file manager or editor.
 FSRS schedule. On success, the driver selects and opens the next due or unseen
 exercise.
 
+Active learner time is stored with each completed review. Solve time accumulates
+across retries, feedback-reading time runs while completed feedback is visible,
+and both pause when Neovim loses focus or is suspended. Compiler, reviewer,
+follow-up, and rating-process waits are excluded. Older reviews and skipped or
+abandoned attempts have no tracked duration rather than a zero duration.
+
 `:PracticeAccept` records the evaluator's proposed rating without requiring the
 user to restate it, then selects and opens the next exercise.
 
@@ -332,6 +338,23 @@ changing the original exercises.
 
 Commands should reject actions that are invalid in the current state, such as
 rating before submission, with a short explanatory message.
+
+### Review statistics
+
+`:PracticeStats [directory]` or `<Space>pt` opens a read-only statistics split.
+It uses the active collection when a session exists, otherwise the configured
+default; an explicit directory overrides both. Press `r` to refresh the snapshot
+or `q` to close it without changing practice state.
+
+The dashboard shows today's completed reviews, first-time introductions, rating
+distribution, tracked time, due-now and later-today workload; current unseen,
+Learning, Review (shown as Learned), and Relearning counts; the cards presently
+scheduled tomorrow and across the next seven local calendar days; and a 30-day
+daily history table. Due and forecast figures reflect current FSRS due dates and
+do not simulate ratings that have not happened. Historical reviews of removed
+exercises remain visible, while removed exercises are excluded from current
+collection and forecast counts. Dates use the machine's local timezone; SQLite
+timestamps remain UTC.
 
 ## Neovim Commands and Key Mappings
 
@@ -359,6 +382,7 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>pm` | `:PracticeNote` | Capture a note for the active exercise. |
 | `<Space>pf` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
 | `<Space>po` | `:PracticeNotes` | Open the personal notes directory. |
+| `<Space>pt` | `:PracticeStats` | Show current-collection statistics. |
 | `<Space>pq` | `:PracticeQuit` | End the session. |
 
 The numeric rating mappings should be displayed in the feedback UI so they do
