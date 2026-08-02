@@ -18,6 +18,7 @@ from practice_scheduler import (
     database_path,
     ensure_utc,
 )
+from practice_environment import TargetEnvironmentError, load_collection_environment
 
 
 class RequestError(ValueError):
@@ -42,7 +43,7 @@ def required_string(request: dict[str, Any], name: str) -> str:
 
 
 def exercise_order(
-    collection: Path, exercises: list[dict[str, str]]
+    collection: Path, exercises: list[dict[str, Any]]
 ) -> list[str] | None:
     order_file = collection / "exercise_order.md"
     if not order_file.is_file():
@@ -91,6 +92,7 @@ def select_exercise(
 ) -> dict[str, Any]:
     collection_key = canonical_collection(required_string(request, "exercise_directory"))
     collection = Path(collection_key)
+    target_environment = load_collection_environment(collection)
     source_extension = required_string(request, "source_extension")
     metadata_extension = required_string(request, "metadata_extension")
     previous_id = request.get("previous_exercise_id")
@@ -101,7 +103,7 @@ def select_exercise(
         raise RequestError("source_extension must start with a dot")
     if not metadata_extension.startswith("."):
         raise RequestError("metadata_extension must start with a dot")
-    exercises: list[dict[str, str]] = []
+    exercises: list[dict[str, Any]] = []
     for source in sorted(collection.glob(f"*{source_extension}")):
         if not source.is_file():
             continue
@@ -112,6 +114,11 @@ def select_exercise(
                     "id": source.stem,
                     "source_path": str(source.resolve()),
                     "metadata_path": str(metadata.resolve()),
+                    **(
+                        {"target_environment": target_environment}
+                        if target_environment is not None
+                        else {}
+                    ),
                 }
             )
 
@@ -178,7 +185,14 @@ def select_exercise(
 def main() -> int:
     try:
         response = select_exercise(read_request())
-    except (OSError, RequestError, SchedulerError, UnicodeError, sqlite3.Error) as error:
+    except (
+        OSError,
+        RequestError,
+        SchedulerError,
+        TargetEnvironmentError,
+        UnicodeError,
+        sqlite3.Error,
+    ) as error:
         json.dump({"error": str(error)}, sys.stdout)
         sys.stdout.write("\n")
         return 1

@@ -7,6 +7,7 @@ Neovim practice driver:
 - `evaluate_exercise.py` evaluates a submitted working copy.
 - `record_rating.py` records the final rating and updates its FSRS card.
 - `practice_scheduler.py` provides shared FSRS and SQLite behavior.
+- `prompts/` contains adapter-specific reviewer instructions.
 
 The commands communicate with callers through stable JSON input and output
 contracts. Language-specific discovery and evaluation behavior belongs here,
@@ -32,7 +33,9 @@ whose `compiled` field is `false`.
 ```
 
 It returns an `exercise` object containing `id`, `source_path`, and
-`metadata_path`. The paths are absolute. The oldest due exercise is selected
+`metadata_path`. When the collection contains a valid `environment.json`, the
+object also contains its structured `target_environment`. The paths are
+absolute. The oldest due exercise is selected
 first. When none is due and `exercise_order.md` exists, unseen exercises follow
 its line order. The file contains one unadorned exercise basename per line and
 must cover every discovered exercise exactly once. Collections without the file
@@ -41,20 +44,35 @@ previous exercise is excluded when an alternative of the same scheduling class
 is available. When every exercise has scheduling state and none is due, the
 command returns `exercise: null` and the UTC `next_due` timestamp.
 
-`evaluate_exercise.py` accepts source and metadata paths plus a command array.
-One or more arguments must contain the literal `{source}` placeholder. The
-command is executed directly without a shell.
+`evaluate_exercise.py` accepts source and metadata paths, an optional structured
+`target_environment`, and a command array. One or more arguments must contain
+the literal `{source}` placeholder. The command is executed directly without a
+shell.
 
 ```json
 {
   "source_path": "/temporary/working-copy.cpp",
   "metadata_path": "/collection/exercise.md",
+  "target_environment": {
+    "language": {
+      "name": "C++",
+      "version": "C++20"
+    }
+  },
   "command": ["g++", "-std=c++20", "-fsyntax-only", "{source}"]
 }
 ```
 
-It returns `compiled`, `diagnostics`, `metadata`, and `proposed_rating`. The
-proposed rating is `good` for exit status zero and `fail` otherwise.
+It returns `compiled`, `diagnostics`, `metadata`, structured reviewer state, and
+a nullable `proposed_rating`. Validation success is evidence for the reviewer;
+it does not determine the rating by itself. Reviewer executables receive the
+starter and submitted source, exercise metadata, optional target environment,
+and a language-neutral `validation` object containing `command`, `succeeded`,
+and `diagnostics`.
+
+The Codex adapter reads its instructions from
+`prompts/codex_reviewer.txt`. Other reviewer adapters can use independent prompt
+files without changing the generic reviewer request or response contract.
 
 `record_rating.py` accepts:
 

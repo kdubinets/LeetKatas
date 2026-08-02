@@ -24,6 +24,10 @@ assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered
 
 local collection = vim.fn.tempname() .. "-practice-test"
 assert(vim.fn.mkdir(collection, "p") == 1, "could not create test collection")
+vim.fn.writefile({ vim.json.encode({
+  language = { name = "C++", version = "C++20" },
+  libraries = { { name = "C++ standard library", version = "C++20" } },
+}) }, collection .. "/environment.json")
 local function create_exercise(name)
   local source = collection .. "/" .. name .. ".cpp"
   vim.fn.writefile({

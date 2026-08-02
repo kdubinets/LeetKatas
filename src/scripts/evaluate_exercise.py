@@ -4,6 +4,7 @@ from __future__ import annotations
 import json, subprocess, sys
 from pathlib import Path
 from typing import Any
+from practice_environment import TargetEnvironmentError, validate_target_environment
 from reviewer_protocol import ReviewerError, configured_reviewer, review_request
 
 class RequestError(ValueError): pass
@@ -49,9 +50,12 @@ def evaluate(request: dict[str,Any]):
     except subprocess.TimeoutExpired: compiled=False; diagnostics="Evaluation timed out after 30 seconds."
     progress("compilation_finished", compiled=compiled)
     metadata_text=metadata.read_text(encoding="utf-8")
+    target_environment = request.get("target_environment")
+    if target_environment is not None:
+        target_environment = validate_target_environment(target_environment)
     reviewer_command,name=configured_reviewer(request)
     if reviewer_command:
-        evidence={"starter_source":starter.read_text(encoding="utf-8"),"submitted_source":source.read_text(encoding="utf-8"),"metadata":metadata_text,"compiler":{"command":command,"compiled":compiled,"diagnostics":diagnostics}}
+        evidence={"starter_source":starter.read_text(encoding="utf-8"),"submitted_source":source.read_text(encoding="utf-8"),"exercise_metadata":metadata_text,"target_environment":target_environment,"validation":{"command":command,"succeeded":compiled,"diagnostics":diagnostics}}
         review=review_request(evidence,reviewer_command,progress=progress)
     else:
         progress("review_finished", status="unavailable", attempts=0)
@@ -61,6 +65,6 @@ def evaluate(request: dict[str,Any]):
     return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"review":{**review,"reviewer":name},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
 def main():
     try: response=evaluate(read_request())
-    except (OSError,UnicodeError,RequestError,ReviewerError) as e: json.dump({"error":str(e)},sys.stdout); sys.stdout.write("\n"); return 1
+    except (OSError,UnicodeError,RequestError,ReviewerError,TargetEnvironmentError) as e: json.dump({"error":str(e)},sys.stdout); sys.stdout.write("\n"); return 1
     json.dump(response,sys.stdout); sys.stdout.write("\n"); return 0
 if __name__=="__main__": raise SystemExit(main())

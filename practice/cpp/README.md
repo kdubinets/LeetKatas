@@ -14,6 +14,7 @@ cpp/
 │   ├── README.md
 │   └── core/
 │       ├── collection_spec.md
+│       ├── environment.json
 │       ├── exercise_manifest.md
 │       ├── exercise_order.md
 │       └── 108 exercise pairs
@@ -49,7 +50,8 @@ The validator compiles temporary completed forms through a pipe; it does not mod
 
 1. Create `collections/<descriptive_name>/`.
 2. Write `collection_spec.md` before generating exercises.
-3. Create `exercise_manifest.md` and treat it as the collection inventory.
-4. Add `exercise_order.md` when the collection has a canonical introduction order.
-5. Generate and validate exercises in reviewable batches.
-6. Reassess gaps after each batch and freeze the collection when only weak variants remain.
+3. Add `environment.json` when the evaluation harness should receive explicit target-language, library, or tool restrictions.
+4. Create `exercise_manifest.md` and treat it as the collection inventory.
+5. Add `exercise_order.md` when the collection has a canonical introduction order.
+6. Generate and validate exercises in reviewable batches.
+7. Reassess gaps after each batch and freeze the collection when only weak variants remain.

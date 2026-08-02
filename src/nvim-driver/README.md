@@ -147,9 +147,10 @@ The editor should operate in terms of generic actions:
 - `evaluate`: evaluate a submitted working file and return structured feedback.
 - `record`: accept the final rating and attempt context.
 
-Language-specific values are provided by the isolated entry-point profile. For
-the initial collection these are the source extension, practice marker, and
-C++20 compiler command. They are passed into generic workflow and script
+Language-specific values are provided by the isolated entry-point profile and
+optional collection `environment.json`. For the initial collection these are
+the source extension, practice marker, C++20 compiler command, and structured
+C++20 target environment. They are passed into generic workflow and script
 interfaces as configuration. A later Python profile should be addable without
 redesigning the Neovim workflow.
 

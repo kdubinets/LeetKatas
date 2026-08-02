@@ -16,6 +16,8 @@ Complete and frozen unless corrections or further changes are explicitly request
 
 The collection targets idiomatic C++ up to and including C++20. Exercises may teach facilities introduced by earlier standards when those facilities remain appropriate C++20 practice.
 
+The machine-readable `environment.json` supplies this C++20 target and standard-library boundary to the practice evaluator and reviewer.
+
 ## Level and Purpose
 
 These are Level A implementation-fluency exercises. They train fast, idiomatic translation of an already-understood operation into C++ rather than algorithm discovery.

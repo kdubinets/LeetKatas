@@ -249,6 +249,7 @@ function M.submit()
     source_path = state.working_path,
     starter_source_path = state.exercise.source_path,
     metadata_path = state.exercise.metadata_path,
+    target_environment = state.exercise.target_environment,
     command = config.evaluation_command,
     reviewer = config.reviewer,
     progress_path = state.progress_path,

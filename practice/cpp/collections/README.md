@@ -6,6 +6,7 @@ Each exercise collection lives in its own descriptively named subdirectory. The 
 
 ```text
 collections/<collection_name>/
+├── environment.json             # optional machine-readable target environment
 ├── collection_spec.md
 ├── exercise_manifest.md
 ├── <exercise_name>.cpp
@@ -22,6 +23,34 @@ The collection specification must define:
 - Current status: planned, active, or frozen.
 
 The manifest must identify each exercise's primary skill clearly enough to detect overlap.
+
+An optional `environment.json` supplies the target language version, available
+libraries, and restrictions to the evaluation harness and reviewer. It describes
+what is available, not what an exercise must use; technique requirements belong
+in the exercise metadata. For example:
+
+```json
+{
+  "language": {
+    "name": "C++",
+    "version": "C++20"
+  },
+  "libraries": [
+    {
+      "name": "C++ standard library",
+      "version": "C++20"
+    }
+  ],
+  "restrictions": [
+    "No third-party libraries"
+  ]
+}
+```
+
+`language.name` and `language.version` are required non-empty strings.
+`implementation` may optionally identify a runtime or compiler, while
+`libraries` and `restrictions` are optional arrays. Library entries require a
+name and may include a version.
 
 An optional `exercise_order.md` defines a canonical introduction order. It must
 contain every exercise basename exactly once, one unadorned basename per line.

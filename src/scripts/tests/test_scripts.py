@@ -8,11 +8,14 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 
+from codex_reviewer import build_prompt  # noqa: E402
+from evaluate_exercise import evaluate  # noqa: E402
 from record_rating import record_rating  # noqa: E402
 from select_exercise import select_exercise  # noqa: E402
 
@@ -56,6 +59,40 @@ class SelectExerciseTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             self.assertEqual(response["exercise"]["id"], "complete")
             self.assertTrue(Path(response["exercise"]["source_path"]).is_absolute())
+            self.assertNotIn("target_environment", response["exercise"])
+
+    def test_includes_optional_collection_target_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "complete")
+            target_environment = {
+                "language": {"name": "Python", "version": "3.12"},
+                "libraries": [
+                    {"name": "Python standard library", "version": "3.12"},
+                    {"name": "itertools", "version": "standard library"},
+                ],
+            }
+            (directory / "environment.json").write_text(
+                json.dumps(target_environment)
+            )
+
+            result, response = run_script("select_exercise.py", self.request(directory))
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(
+                response["exercise"]["target_environment"], target_environment
+            )
+
+    def test_rejects_invalid_collection_target_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "complete")
+            (directory / "environment.json").write_text('{"language": "C++"}')
+
+            result, response = run_script("select_exercise.py", self.request(directory))
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("target environment language", response["error"])
 
     def test_avoids_the_previous_exercise_when_an_alternative_exists(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -148,6 +185,10 @@ class SelectExerciseTests(unittest.TestCase):
             )
 
             self.assertEqual(response["exercise"]["id"], "fill_fixed_array")
+            self.assertEqual(
+                response["exercise"]["target_environment"]["language"],
+                {"name": "C++", "version": "C++20"},
+            )
 
     def test_reports_an_empty_collection_as_a_command_error(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -252,6 +293,76 @@ class EvaluateExerciseTests(unittest.TestCase):
                 ],
             )
             self.assertTrue(events[1]["compiled"])
+
+    def test_passes_target_environment_as_language_neutral_review_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "valid.cpp"
+            metadata = directory / "valid.md"
+            source.write_text("int solve() { return 1; }\n")
+            metadata.write_text("# Solution\n")
+            request = self.request(source, metadata)
+            request["target_environment"] = {
+                "language": {"name": "C++", "version": "C++20"}
+            }
+            request["reviewer"] = {"command": ["fake-reviewer"]}
+            review = {
+                "status": "available",
+                "attempts": 1,
+                "feedback": {"proposed_rating": "good"},
+                "failure": None,
+            }
+
+            with patch("evaluate_exercise.review_request", return_value=review) as reviewer:
+                response = evaluate(request)
+
+            evidence = reviewer.call_args.args[0]
+            self.assertEqual(
+                evidence["target_environment"], request["target_environment"]
+            )
+            self.assertEqual(evidence["exercise_metadata"], "# Solution\n")
+            self.assertTrue(evidence["validation"]["succeeded"])
+            self.assertNotIn("compiler", evidence)
+            self.assertEqual(response["proposed_rating"], "good")
+
+    def test_rejects_invalid_target_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "valid.cpp"
+            metadata = directory / "valid.md"
+            source.write_text("int solve() { return 1; }\n")
+            metadata.write_text("# Solution\n")
+            request = self.request(source, metadata)
+            request["target_environment"] = {
+                "language": {"name": "C++", "version": ""}
+            }
+
+            result, response = run_script("evaluate_exercise.py", request)
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("language.version", response["error"])
+
+
+class CodexReviewerTests(unittest.TestCase):
+    def test_builds_prompt_from_adapter_specific_file_and_appends_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            prompt_path = Path(temporary) / "reviewer.txt"
+            prompt_path.write_text("Adapter-specific instructions.\n")
+            evidence = {"submitted_source": "answer()"}
+
+            with patch("codex_reviewer.PROMPT_PATH", prompt_path):
+                prompt = build_prompt(evidence)
+
+            self.assertTrue(prompt.startswith("Adapter-specific instructions.\n\n"))
+            encoded_evidence = prompt.split("Review evidence:\n", 1)[1]
+            self.assertEqual(json.loads(encoded_evidence), evidence)
+
+    def test_default_prompt_contains_rating_and_validation_calibration(self) -> None:
+        prompt = build_prompt({})
+
+        self.assertIn("failed validation does not automatically require `fail`", prompt)
+        self.assertIn("target environment", prompt)
+        self.assertIn("recall difficulty and confidence", prompt)
 
 
 class RecordRatingTests(unittest.TestCase):

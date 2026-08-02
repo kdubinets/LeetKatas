@@ -7,12 +7,15 @@ if len(sys.argv) > 1 and sys.argv[1] == "--check":
     raise SystemExit(0)
 
 request = json.load(sys.stdin)
-compiled = request["compiler"]["compiled"]
+compiled = request["validation"]["succeeded"]
+target_language = request["target_environment"]["language"]
+if target_language != {"name": "C++", "version": "C++20"}:
+    raise ValueError("expected the collection target environment")
 json.dump(
     {
         "verdict": "correct" if compiled else "incorrect",
         "summary": "The submitted implementation is correct." if compiled else "The submission does not compile.",
-        "correctness_analysis": "The compiler evidence and implementation support the verdict.",
+        "correctness_analysis": "The validation evidence and implementation support the verdict.",
         "major_issues": [] if compiled else ["Compilation failed."],
         "minor_issues": [],
         "code_quality_analysis": "The implementation is concise and idiomatic.",
