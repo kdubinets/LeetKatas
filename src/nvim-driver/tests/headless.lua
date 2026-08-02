@@ -197,6 +197,9 @@ assert(feedback:find("Primary", 1, true) and feedback:find("Ratings", 1, true)
 assert(not feedback:find("Version notes in review", 1, true),
   "expanded detailed review should not repeat the version-notes indicator")
 assert(feedback:find("Version notes", 1, true), "version notes were not shown in detailed review")
+assert(feedback:find("Improved implementation", 1, true)
+  and feedback:find("return 40 + 2;", 1, true),
+  "fake reviewer improved implementation was not shown in expanded details")
 assert(not feedback:find("c Compiler", 1, true),
   "compiler shortcut was shown without compiler details")
 assert(not feedback:find("t Chat", 1, true),
@@ -417,8 +420,6 @@ assert(vim.json.decode(archived[1][2]).feedback.summary
 local ui = require("practice.ui")
 local excellent = vim.deepcopy(successful_result)
 excellent.proposed_rating = "excellent"
-excellent.review.feedback.improved_implementation = "return 42;"
-excellent.review.feedback.improvement_explanation = "This form is more direct."
 local excellent_buffer = ui.open_feedback(vim.api.nvim_get_current_win(), excellent, {})
 assert(buffer_text(excellent_buffer):find("Detailed review  [d expand]", 1, true),
   "Excellent feedback did not start with detailed review collapsed")
@@ -430,6 +431,14 @@ assert(buffer_text(excellent_buffer):find("Improved implementation in review", 1
   "collapsed Excellent feedback did not advertise the improved implementation")
 assert(not buffer_text(excellent_buffer):find("Later versions:", 1, true),
   "collapsed Excellent feedback exposed version notes by default")
+vim.api.nvim_set_current_buf(excellent_buffer)
+press("d")
+assert(buffer_text(excellent_buffer):find("Detailed review  [d collapse]", 1, true),
+  "Excellent detailed review did not expand")
+assert(buffer_text(excellent_buffer):find("Version notes in review", 1, true),
+  "expanding an initially collapsed review removed the version-notes indicator")
+assert(buffer_text(excellent_buffer):find("Improved implementation in review", 1, true),
+  "expanding an initially collapsed review removed the improved-implementation indicator")
 ui.close_feedback()
 
 local synthetic = {
@@ -481,6 +490,22 @@ assert(directory_opened or log_text:find("Practice notes: "
   "PracticeNotes neither opened nor reported the configured directory")
 assert(log_text:find("process_started", 1, true), "process start was not logged")
 assert(log_text:find("process_finished", 1, true), "process result was not logged")
+local feedback_diagnostic_found = false
+for _, line in ipairs(vim.fn.readfile(vim.env.PRACTICE_LOG)) do
+  local ok, entry = pcall(vim.json.decode, line)
+  if ok and entry.event == "feedback_opened" and entry.review_started_collapsed
+      and entry.has_improved_implementation and entry.has_version_notes then
+    assert(entry.rendered_improved_hint and entry.buffer_improved_hint,
+      "feedback diagnostics did not observe the improved-implementation hint")
+    assert(entry.rendered_version_hint and entry.buffer_version_hint,
+      "feedback diagnostics did not observe the version-notes hint")
+    assert(entry.feedback_window_displays_buffer,
+      "feedback diagnostics reported a window/buffer mismatch")
+    feedback_diagnostic_found = true
+    break
+  end
+end
+assert(feedback_diagnostic_found, "collapsed feedback diagnostics were not logged")
 vim.fn.delete(collection, "rf")
 
 print("Neovim practice headless workflow passed")

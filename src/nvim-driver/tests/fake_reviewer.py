@@ -50,8 +50,14 @@ json.dump(
         "code_quality_analysis": "The implementation is concise and idiomatic.",
         "proposed_rating": rating,
         "rating_explanation": "The rating follows the practice rubric.",
-        "improved_implementation": "return 42;" if verdict != "correct" else None,
-        "improvement_explanation": "This replacement compiles and returns the requested answer." if verdict != "correct" else None,
+        "improved_implementation": (
+            "return 40 + 2;" if verdict == "correct" else "return 42;"
+        ),
+        "improvement_explanation": (
+            "This equivalent form demonstrates that correct reviews may include an improvement."
+            if verdict == "correct"
+            else "This replacement compiles and returns the requested answer."
+        ),
         "alternative_implementation": None,
         "alternative_explanation": None,
         "version_notes": (
