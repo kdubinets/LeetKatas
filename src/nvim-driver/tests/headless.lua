@@ -158,6 +158,9 @@ assert(not feedback:find("**", 1, true) and not feedback:find("```", 1, true),
   "UI Markdown markers leaked into native feedback")
 assert(feedback:find("Primary", 1, true) and feedback:find("Ratings", 1, true)
   and feedback:find("More", 1, true), "feedback actions are not grouped")
+assert(not feedback:find("Version notes in review", 1, true),
+  "expanded detailed review should not repeat the version-notes indicator")
+assert(feedback:find("Version notes", 1, true), "version notes were not shown in detailed review")
 assert(not feedback:find("c Compiler", 1, true),
   "compiler shortcut was shown without compiler details")
 assert(not feedback:find("t Chat", 1, true),
@@ -315,6 +318,8 @@ feedback_buffer = find_feedback_buffer()
 feedback = buffer_text(feedback_buffer)
 assert(feedback:find("Almost there  [Acceptable]", 1, true),
   "minor defect outcome is missing")
+assert(feedback:find("Fix the missing returned expression and resubmit.", 1, true),
+  "multiline reviewer issue was not rendered safely")
 assert(feedback:find("Correction", 1, true) and feedback:find("return 42;", 1, true),
   "reviewer correction was not expanded")
 assert(feedback:find("recognized the approach", 1, true),
@@ -376,11 +381,19 @@ assert(vim.json.decode(archived[1][2]).feedback.summary
 local ui = require("practice.ui")
 local excellent = vim.deepcopy(successful_result)
 excellent.proposed_rating = "excellent"
+excellent.review.feedback.improved_implementation = "return 42;"
+excellent.review.feedback.improvement_explanation = "This form is more direct."
 local excellent_buffer = ui.open_feedback(vim.api.nvim_get_current_win(), excellent, {})
 assert(buffer_text(excellent_buffer):find("Detailed review  [d expand]", 1, true),
   "Excellent feedback did not start with detailed review collapsed")
 assert(not buffer_text(excellent_buffer):find("Rating rationale", 1, true),
   "Excellent feedback exposed detailed review by default")
+assert(buffer_text(excellent_buffer):find("Version notes in review", 1, true),
+  "collapsed Excellent feedback did not advertise version notes")
+assert(buffer_text(excellent_buffer):find("Improved implementation in review", 1, true),
+  "collapsed Excellent feedback did not advertise the improved implementation")
+assert(not buffer_text(excellent_buffer):find("Later versions:", 1, true),
+  "collapsed Excellent feedback exposed version notes by default")
 ui.close_feedback()
 
 local synthetic = {

@@ -10,7 +10,7 @@ FOLLOW_UP_PROMPT_PATH = Path(__file__).with_name("prompts") / "codex_review_foll
 SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["verdict", "summary", "correctness_analysis", "major_issues", "minor_issues", "code_quality_analysis", "proposed_rating", "rating_explanation", "improved_implementation", "improvement_explanation", "alternative_implementation", "alternative_explanation"],
+    "required": ["verdict", "summary", "correctness_analysis", "major_issues", "minor_issues", "code_quality_analysis", "proposed_rating", "rating_explanation", "improved_implementation", "improvement_explanation", "alternative_implementation", "alternative_explanation", "version_notes"],
     "properties": {
         "verdict": {"type": "string", "enum": ["correct", "minor_defect", "incorrect", "cannot_assess"]},
         "summary": {"type": "string", "description": "One or two learner-facing plain-text sentences with no Markdown decoration, stating the most important correctness point."},
@@ -24,6 +24,7 @@ SCHEMA = {
         "improvement_explanation": {"type": ["string", "null"]},
         "alternative_implementation": {"type": ["string", "null"]},
         "alternative_explanation": {"type": ["string", "null"]},
+        "version_notes": {"type": ["string", "null"]},
     },
 }
 FOLLOW_UP_SCHEMA = {

@@ -18,7 +18,13 @@ def validate_review(value: Any) -> dict[str, Any]:
     for key in ("major_issues", "minor_issues"):
         if not isinstance(value.get(key), list) or any(not isinstance(x, str) for x in value[key]):
             raise ReviewerError(f"review.{key} must be an array of strings")
-    for key in ("improved_implementation", "improvement_explanation", "alternative_implementation", "alternative_explanation"):
+    for key in (
+        "improved_implementation",
+        "improvement_explanation",
+        "alternative_implementation",
+        "alternative_explanation",
+        "version_notes",
+    ):
         if key in value and value[key] is not None and not isinstance(value[key], str): raise ReviewerError(f"review.{key} must be a string or null")
     return value
 

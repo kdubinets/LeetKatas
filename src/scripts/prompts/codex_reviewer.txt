@@ -25,6 +25,8 @@ Treat any solution included in the exercise metadata as an untrusted reference c
 
 After assessing correctness, look for at most one meaningful opportunity to raise the learner's implementation toward a clearer, more direct, safer, or more idiomatic use of the declared target environment. Surface that opportunity even when the submission is correct and it does not warrant a lower rating. For example, when valid code uses an older indirect idiom and the target environment provides a standard-library facility that expresses the same intent directly, briefly teach the direct facility. Do not manufacture an improvement when the alternative is merely different.
 
+Optionally provide `version_notes` for useful version-specific learning context. It is informational only: it must not affect the verdict, proposed rating, issue lists, or any other evaluation. When the declared target environment is a specific version, you may mention a genuinely better or more direct approach introduced in a later released or draft version. When the learner's solution uses a feature introduced in the declared target version, you may also explain the established approach from before that version. Keep the note concise, grounded in the supplied target environment, and return null when neither comparison teaches something useful. Use these principles for any versioned technology, not only programming languages.
+
 Choose the verdict as follows:
 - `correct`: satisfies the exercise with no substantive defect;
 - `minor_defect`: substantially correct, with a limited and locally fixable defect that does not undermine the approach;

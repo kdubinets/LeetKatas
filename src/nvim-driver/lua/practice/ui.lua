@@ -69,10 +69,13 @@ local function clean_inline_ranges(value)
 end
 
 local function add_line(render, text, context, highlight)
-  table.insert(render.lines, text or "")
-  render.contexts[#render.lines] = context or render.contexts[#render.lines - 1]
-  if highlight then
-    table.insert(render.highlights, { #render.lines - 1, 0, -1, highlight })
+  local normalized = tostring(text or ""):gsub("\r\n?", "\n")
+  for _, line in ipairs(vim.split(normalized, "\n", { plain = true })) do
+    table.insert(render.lines, line)
+    render.contexts[#render.lines] = context or render.contexts[#render.lines - 1]
+    if highlight then
+      table.insert(render.highlights, { #render.lines - 1, 0, -1, highlight })
+    end
   end
 end
 
@@ -257,6 +260,14 @@ local function build_feedback(result)
   add_line(render, "More      ? Ask reviewer   m Note   n Skip",
     { section = "Actions", logical_section = "actions" }, "PracticeAction")
   local details = { "d Review" }
+  if not expanded.review and review then
+    if type(review.version_notes) == "string" and review.version_notes ~= "" then
+      table.insert(details, "Version notes in review")
+    end
+    if type(review.improved_implementation) == "string" and review.improved_implementation ~= "" then
+      table.insert(details, "Improved implementation in review")
+    end
+  end
   if type(result.diagnostics) == "string" and result.diagnostics ~= "" then
     table.insert(details, "c Compiler")
   end
@@ -294,6 +305,13 @@ local function build_feedback(result)
         add_line(render, "Rating rationale", { section = "Detailed review", logical_section = "review" },
           "PracticeHeading")
         add_text(render, review.rating_explanation,
+          { section = "Detailed review", logical_section = "review" })
+        blank(render)
+      end
+      if type(review.version_notes) == "string" and review.version_notes ~= "" then
+        add_line(render, "Version notes", { section = "Detailed review", logical_section = "review" },
+          "PracticeHeading")
+        add_text(render, review.version_notes,
           { section = "Detailed review", logical_section = "review" })
         blank(render)
       end

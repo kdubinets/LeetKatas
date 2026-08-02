@@ -14,7 +14,7 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 
-from codex_reviewer import build_prompt  # noqa: E402
+from codex_reviewer import SCHEMA, build_prompt  # noqa: E402
 from evaluate_exercise import evaluate, parse_metadata_sections  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
 from record_rating import record_rating  # noqa: E402
@@ -442,6 +442,10 @@ class EvaluateExerciseTests(unittest.TestCase):
 
 
 class CodexReviewerTests(unittest.TestCase):
+    def test_strict_schema_requires_every_declared_property(self) -> None:
+        self.assertEqual(set(SCHEMA["properties"]), set(SCHEMA["required"]))
+        self.assertIn("null", SCHEMA["properties"]["version_notes"]["type"])
+
     def test_builds_prompt_from_adapter_specific_file_and_appends_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             prompt_path = Path(temporary) / "reviewer.txt"
@@ -465,6 +469,8 @@ class CodexReviewerTests(unittest.TestCase):
         self.assertIn("untrusted reference candidate, not as a gold standard", prompt)
         self.assertIn("look for at most one meaningful opportunity", prompt)
         self.assertIn("one or two learner-facing plain-text sentences", prompt)
+        self.assertIn("Optionally provide `version_notes`", prompt)
+        self.assertIn("must not affect the verdict, proposed rating", prompt)
 
     def test_follow_up_prompt_uses_separate_instructions(self) -> None:
         prompt = build_prompt({"question": "Why?"}, follow_up=True)

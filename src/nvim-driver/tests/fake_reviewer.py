@@ -43,7 +43,10 @@ json.dump(
         "summary": summary,
         "correctness_analysis": "The validation evidence and implementation support the verdict.",
         "major_issues": ["The returned value does not satisfy the exercise."] if verdict == "incorrect" else [],
-        "minor_issues": ["Compilation failed because of a local syntax error."] if not compiled else [],
+        "minor_issues": [
+            "Compilation failed because of a local syntax error.\n"
+            "Fix the missing returned expression and resubmit."
+        ] if not compiled else [],
         "code_quality_analysis": "The implementation is concise and idiomatic.",
         "proposed_rating": rating,
         "rating_explanation": "The rating follows the practice rubric.",
@@ -51,6 +54,11 @@ json.dump(
         "improvement_explanation": "This replacement compiles and returns the requested answer." if verdict != "correct" else None,
         "alternative_implementation": None,
         "alternative_explanation": None,
+        "version_notes": (
+            "Later versions: prefer the newer direct standard facility when it is available.\n"
+            "Earlier versions: use the established C++17-compatible idiom."
+            if verdict == "correct" else None
+        ),
     },
     sys.stdout,
 )
