@@ -157,7 +157,11 @@ local function open_selected_exercise(exercise)
     return
   end
 
-  local working_path = state.session_directory .. "/" .. vim.fs.basename(exercise.source_path)
+  local extension = vim.fn.fnamemodify(exercise.source_path, ":e")
+  local working_path = vim.fn.tempname()
+  if extension ~= "" then
+    working_path = working_path .. "." .. extension
+  end
   local copied, copy_error = vim.uv.fs_copyfile(exercise.source_path, working_path)
   if not copied then
     state.status = "idle"
@@ -174,7 +178,6 @@ local function open_selected_exercise(exercise)
     config.practice_marker
   )
   state.status = "solving"
-  ui.notify("Exercise: " .. exercise.id)
 end
 
 local function select_next()

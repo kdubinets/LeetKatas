@@ -99,6 +99,10 @@ assert(original_sources[first_state.exercise.id], "unexpected selected exercise"
 local first_id = first_state.exercise.id
 assert(first_state.working_path ~= original_sources[first_state.exercise.id],
   "original source was opened for editing")
+assert(vim.fs.basename(first_state.working_path) ~= vim.fs.basename(original_sources[first_state.exercise.id]),
+  "working copy repeats the exercise filename")
+assert(not vim.fs.basename(first_state.working_path):find(first_id, 1, true),
+  "working copy filename exposes the exercise slug")
 assert(buffer_text(first_state.source_buffer):find("// Finish:", 1, true), "marker is missing")
 
 vim.api.nvim_set_current_win(first_state.source_window)
