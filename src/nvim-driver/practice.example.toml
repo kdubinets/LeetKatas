@@ -1,0 +1,15 @@
+[practice]
+collection = "~/work/LeetKatas/practice/cpp/collections/core"
+# database_path = "~/.local/share/leetkatas/practice.sqlite3"
+# log_path = "~/.local/state/nvim/leetkatas/practice.log"
+
+[reviewer]
+model = "gpt-5.6-luna"
+reasoning_effort = "low"
+
+[editor]
+indent_width = 4
+which_key_delay_ms = 300
+
+[evaluation]
+compiler = "clang++"

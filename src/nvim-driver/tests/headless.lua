@@ -21,6 +21,10 @@ assert(vim.fn.exists(":PracticeLog") == 2, "PracticeLog was not registered")
 assert(vim.fn.exists(":PracticeDiagnostics") == 2, "PracticeDiagnostics was not registered")
 assert(vim.fn.maparg("<Space>ps", "n") ~= "", "start mapping was not registered")
 assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered")
+assert(vim.o.expandtab, "practice should indent with spaces")
+assert(vim.o.shiftwidth == 4, "practice shiftwidth should be four")
+assert(vim.o.softtabstop == 4, "practice softtabstop should be four")
+assert(vim.o.tabstop == 4, "practice tabstop should be four")
 
 local collection = vim.fn.tempname() .. "-practice-test"
 assert(vim.fn.mkdir(collection, "p") == 1, "could not create test collection")
@@ -100,6 +104,15 @@ assert(feedback:find("Compilation:** SUCCESS", 1, true), "compile result is miss
 assert(feedback:find("return 42;", 1, true), "reference solution is missing")
 assert(feedback:find("The submitted implementation is correct.", 1, true),
   "structured reviewer feedback is missing")
+assert(feedback:find("Rating rationale", 1, true), "review rating rationale is missing")
+local colored_feedback = false
+for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+  if vim.api.nvim_buf_is_valid(buffer) and buffer_text(buffer):find("# Practice Feedback", 1, true) then
+    colored_feedback = #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
+    break
+  end
+end
+assert(colored_feedback, "feedback buffer did not receive color highlights")
 assert(table.concat(vim.fn.readfile(original_sources[first_state.exercise.id]), "\n")
   :find("// Finish:", 1, true),
   "original exercise was modified")
@@ -111,9 +124,26 @@ assert(second_state.exercise.id ~= first_id, "unseen exercise was not selected n
 assert(buffer_text(second_state.source_buffer):find("// Finish:", 1, true),
   "new working copy did not start clean")
 
-vim.api.nvim_buf_set_lines(second_state.source_buffer, 1, 2, false, { "    return 42;" })
+vim.api.nvim_buf_set_lines(second_state.source_buffer, 1, 2, false, { "    return;" })
 practice.submit()
 wait_for("reviewing")
+local correction_visible = false
+for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+  if vim.api.nvim_buf_is_valid(buffer) then
+    local text = buffer_text(buffer)
+    if text:find("# Practice Feedback", 1, true) then
+      correction_visible = text:find("## Corrected implementation", 1, true) ~= nil
+        and text:find("return 42;", 1, true) ~= nil
+      for _, window in ipairs(vim.fn.win_findbuf(buffer)) do
+        assert(vim.wo[window].wrap, "feedback window should wrap")
+        assert(vim.wo[window].linebreak, "feedback wrapping should respect word boundaries")
+        assert(vim.wo[window].breakindent, "wrapped feedback should preserve indentation")
+      end
+      break
+    end
+  end
+end
+assert(correction_visible, "reviewer correction was not rendered")
 practice.accept()
 wait_for("complete")
 local complete_state = practice.get_state()

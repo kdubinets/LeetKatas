@@ -6,6 +6,7 @@ Neovim practice driver:
 - `select_exercise.py` selects a due or unseen exercise from a collection.
 - `evaluate_exercise.py` evaluates a submitted working copy.
 - `record_rating.py` records the final rating and updates its FSRS card.
+- `load_practice_config.py` validates and normalizes the optional user TOML file.
 - `practice_scheduler.py` provides shared FSRS and SQLite behavior.
 - `prompts/` contains adapter-specific reviewer instructions.
 
@@ -17,6 +18,9 @@ Each command reads one JSON object from standard input and writes one JSON
 object to standard output. A nonzero exit status means the command or request
 failed. An exercise that does not compile is a successful evaluation command
 whose `compiled` field is `false`.
+
+Relative paths returned by `load_practice_config.py` are resolved against the
+directory containing the configuration file.
 
 ## Protocols
 

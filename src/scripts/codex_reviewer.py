@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Codex CLI reviewer implementing the generic reviewer executable contract."""
 from __future__ import annotations
-import json, os, subprocess, sys, tempfile
+import argparse, json, os, subprocess, sys, tempfile
 from pathlib import Path
 
 PROMPT_PATH = Path(__file__).with_name("prompts") / "codex_reviewer.txt"
@@ -29,9 +29,17 @@ def build_prompt(request: dict) -> str:
     instructions = PROMPT_PATH.read_text(encoding="utf-8").rstrip()
     return instructions + "\n\nReview evidence:\n" + json.dumps(request)
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--model")
+    parser.add_argument("--effort", choices=("minimal", "low", "medium", "high", "xhigh"))
+    return parser.parse_args()
+
 def main() -> int:
+    args = parse_args()
     executable=os.environ.get("PRACTICE_CODEX","codex")
-    if len(sys.argv)>1 and sys.argv[1]=="--check":
+    if args.check:
         return subprocess.run([executable,"--version"],check=False).returncode
     request=json.load(sys.stdin)
     prompt=build_prompt(request)
@@ -39,8 +47,10 @@ def main() -> int:
         schema_path = Path(directory) / "review-schema.json"
         schema_path.write_text(json.dumps(SCHEMA), encoding="utf-8")
         command=[executable,"exec","--ephemeral","--sandbox","read-only","--skip-git-repo-check","--output-schema",str(schema_path),"--output-last-message",str(Path(directory)/"review.json")]
-        model=os.environ.get("PRACTICE_REVIEW_MODEL")
+        model=os.environ.get("PRACTICE_REVIEW_MODEL") or args.model
         if model: command += ["--model",model]
+        effort=os.environ.get("PRACTICE_REVIEW_EFFORT") or args.effort
+        if effort: command += ["--config",f'model_reasoning_effort="{effort}"']
         result=subprocess.run(command,input=prompt,text=True,capture_output=True,check=False,cwd=directory)
         output=Path(directory)/"review.json"
         if result.returncode or not output.is_file():

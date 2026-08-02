@@ -37,6 +37,6 @@ A failed validation does not automatically require `fail`. For example, an other
 
 Use `proposed_rating: null` only with `cannot_assess`. The learner will account for recall difficulty and confidence when accepting or overriding the proposed rating, so do not infer either from the source.
 
-Keep all feedback specific, concise, and tied to the evidence. Provide an improved implementation only when it would materially clarify a correction. Provide an alternative implementation only when it teaches a meaningfully different useful approach. Otherwise return null for those fields.
+Keep all feedback specific, concise, and tied to the evidence. For an `incorrect` or `minor_defect` verdict, provide a corrected implementation that directly fixes the learner's submission and briefly explain the correction. For a `correct` verdict, provide an improved implementation only when it would materially clarify a non-required improvement. Provide an alternative implementation only when it teaches a meaningfully different useful approach. Otherwise return null for those fields.
 
 Return only JSON conforming to the requested schema.

@@ -16,6 +16,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 from codex_reviewer import build_prompt  # noqa: E402
 from evaluate_exercise import evaluate  # noqa: E402
+from load_practice_config import ConfigError, load_config  # noqa: E402
 from record_rating import record_rating  # noqa: E402
 from select_exercise import select_exercise  # noqa: E402
 
@@ -29,6 +30,52 @@ def run_script(name: str, request: object) -> tuple[subprocess.CompletedProcess[
         text=True,
     )
     return result, json.loads(result.stdout)
+
+
+class PracticeConfigTests(unittest.TestCase):
+    def test_missing_config_uses_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            self.assertEqual(load_config(Path(temporary) / "missing.toml"), {})
+
+    def test_loads_settings_and_resolves_relative_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            path = directory / "practice.toml"
+            path.write_text(
+                """
+[practice]
+collection = "collections/core"
+
+[reviewer]
+model = "gpt-5.6-luna"
+reasoning_effort = "low"
+
+[editor]
+indent_width = 2
+which_key_delay_ms = 150
+
+[evaluation]
+compiler = "g++"
+""".strip()
+            )
+
+            config = load_config(path)
+
+            self.assertEqual(config["practice"]["collection"], str(directory / "collections/core"))
+            self.assertEqual(config["reviewer"]["model"], "gpt-5.6-luna")
+            self.assertEqual(config["editor"]["indent_width"], 2)
+            self.assertEqual(config["evaluation"]["compiler"], "g++")
+
+    def test_rejects_unknown_or_invalid_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "practice.toml"
+            path.write_text("[reviewer]\nreasoning_effort = \"extreme\"\n")
+            with self.assertRaises(ConfigError):
+                load_config(path)
+
+            path.write_text("[editor]\nunknown = 1\n")
+            with self.assertRaises(ConfigError):
+                load_config(path)
 
 
 class SelectExerciseTests(unittest.TestCase):
@@ -363,6 +410,7 @@ class CodexReviewerTests(unittest.TestCase):
         self.assertIn("failed validation does not automatically require `fail`", prompt)
         self.assertIn("target environment", prompt)
         self.assertIn("recall difficulty and confidence", prompt)
+        self.assertIn("provide a corrected implementation", prompt)
 
 
 class RecordRatingTests(unittest.TestCase):

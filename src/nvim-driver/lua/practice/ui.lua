@@ -3,6 +3,18 @@ local log = require("practice.log")
 
 local feedback_buffer = nil
 local feedback_window = nil
+local feedback_namespace = vim.api.nvim_create_namespace("practice_feedback")
+
+local function define_highlights()
+  vim.api.nvim_set_hl(0, "PracticeSuccess", { default = true, link = "DiagnosticOk" })
+  vim.api.nvim_set_hl(0, "PracticeFailure", { default = true, link = "DiagnosticError" })
+  vim.api.nvim_set_hl(0, "PracticeWarning", { default = true, link = "DiagnosticWarn" })
+  vim.api.nvim_set_hl(0, "PracticeProgress", { default = true, link = "DiagnosticInfo" })
+  vim.api.nvim_set_hl(0, "PracticeHeading", { default = true, link = "Title" })
+  vim.api.nvim_set_hl(0, "PracticeHint", { default = true, link = "Comment" })
+end
+
+define_highlights()
 
 local function valid_buffer(buffer)
   return buffer ~= nil and vim.api.nvim_buf_is_valid(buffer)
@@ -17,6 +29,52 @@ local function append_text(lines, text)
   vim.list_extend(lines, text_lines)
 end
 
+local function append_issues(lines, heading, issues)
+  if type(issues) ~= "table" or #issues == 0 then
+    return
+  end
+  vim.list_extend(lines, { "", "**" .. heading .. ":**" })
+  for _, issue in ipairs(issues) do
+    table.insert(lines, "- " .. tostring(issue))
+  end
+end
+
+local function append_implementation(lines, heading, implementation, explanation)
+  if type(implementation) ~= "string" or implementation == "" then
+    return
+  end
+  vim.list_extend(lines, { "", "### " .. heading, "", "```" })
+  append_text(lines, implementation)
+  vim.list_extend(lines, { "```", "" })
+  if type(explanation) == "string" and explanation ~= "" then
+    append_text(lines, explanation)
+  end
+end
+
+local function color_feedback(lines)
+  vim.api.nvim_buf_clear_namespace(feedback_buffer, feedback_namespace, 0, -1)
+  for index, line in ipairs(lines) do
+    local group = nil
+    if vim.startswith(line, "#") then
+      group = "PracticeHeading"
+    elseif line:find("SUCCESS", 1, true) or vim.startswith(line, "✓") then
+      group = "PracticeSuccess"
+    elseif line:find("FAILED", 1, true) or vim.startswith(line, "✗") then
+      group = "PracticeFailure"
+    elseif line:find("Unavailable", 1, true) or line:find("unavailable", 1, true) then
+      group = "PracticeWarning"
+    elseif line:find("Working", 1, true) or line:find("Compiling", 1, true)
+        or line:find("review", 1, true) or line:find("Reviewer", 1, true) then
+      group = "PracticeProgress"
+    elseif vim.startswith(line, "The final feedback") or vim.startswith(line, "Return to the source") then
+      group = "PracticeHint"
+    end
+    if group then
+      vim.api.nvim_buf_add_highlight(feedback_buffer, feedback_namespace, group, index - 1, 0, -1)
+    end
+  end
+end
+
 local function set_feedback_lines(lines)
   if not valid_buffer(feedback_buffer) then
     return
@@ -28,6 +86,7 @@ local function set_feedback_lines(lines)
   vim.bo[feedback_buffer].buftype = "nofile"
   vim.bo[feedback_buffer].bufhidden = "wipe"
   vim.bo[feedback_buffer].swapfile = false
+  color_feedback(lines)
   vim.bo[feedback_buffer].modifiable = false
   vim.bo[feedback_buffer].readonly = true
 end
@@ -60,6 +119,8 @@ local function ensure_feedback(source_window, focus_feedback)
   vim.wo[feedback_window].relativenumber = false
   vim.wo[feedback_window].signcolumn = "no"
   vim.wo[feedback_window].wrap = true
+  vim.wo[feedback_window].linebreak = true
+  vim.wo[feedback_window].breakindent = true
   if not focus_feedback and valid_window(source_window) then
     vim.api.nvim_set_current_win(source_window)
   end
@@ -149,7 +210,18 @@ function M.open_feedback(source_window, result)
   vim.list_extend(lines, { "```", "", "## Reviewer", "", "**Status:** " .. tostring(result.review.status), "" })
   if result.review.status == "available" and result.review.feedback then
     local review = result.review.feedback
-    append_text(lines, "**Verdict:** " .. review.verdict .. "\n\n" .. review.summary .. "\n\n" .. review.correctness_analysis .. "\n\n**Code quality:** " .. review.code_quality_analysis)
+    append_text(lines, "**Verdict:** " .. review.verdict .. "\n\n" .. review.summary
+      .. "\n\n" .. review.correctness_analysis)
+    append_issues(lines, "Major issues", review.major_issues)
+    append_issues(lines, "Minor issues", review.minor_issues)
+    vim.list_extend(lines, { "", "**Code quality:** " .. review.code_quality_analysis })
+    if type(review.rating_explanation) == "string" and review.rating_explanation ~= "" then
+      vim.list_extend(lines, { "", "**Rating rationale:** " .. review.rating_explanation })
+    end
+    append_implementation(lines, "Corrected implementation", review.improved_implementation,
+      review.improvement_explanation)
+    append_implementation(lines, "Alternative implementation", review.alternative_implementation,
+      review.alternative_explanation)
   else
     append_text(lines, "Reviewer unavailable: " .. tostring(result.review.failure) .. "\n\nChoose a manual rating below.")
   end

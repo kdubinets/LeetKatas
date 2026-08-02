@@ -39,7 +39,11 @@ src/nvim-driver/practice path/to/exercises
 ```
 
 The launcher starts Neovim with its isolated configuration, without the normal
-user configuration or plugins, and starts a practice session automatically.
+user configuration, and starts a practice session automatically. On first use,
+it offers to install the pinned `which-key.nvim` v3.17.0 release into Neovim's
+data directory for this isolated setup. After a short pause on a key prefix
+(for example, Space or `z`), a popup shows the available continuations and their
+descriptions. The cached plugin is used on subsequent launches.
 `PRACTICE_PYTHON` may select a different Python executable and `CXX` may select
 a different C++ compiler executable.
 
@@ -50,6 +54,44 @@ python3 -m pip install -r src/nvim-driver/requirements.txt
 ```
 
 `PRACTICE_DATABASE` may override the persistent SQLite database location.
+
+### User configuration
+
+Personal practice defaults live in
+`${XDG_CONFIG_HOME:-~/.config}/leetkatas/practice.toml`. Set `PRACTICE_CONFIG`
+to load another file. The file is optional; an explicit collection argument or
+environment variable takes precedence over it, and built-in defaults apply when
+a setting is absent. `src/nvim-driver/practice.example.toml` is a copyable
+starting point.
+
+```toml
+[practice]
+collection = "~/work/LeetKatas/practice/cpp/collections/core"
+# database_path = "~/.local/share/leetkatas/practice.sqlite3"
+# log_path = "~/.local/state/nvim/leetkatas/practice.log"
+
+[reviewer]
+model = "gpt-5.6-luna"
+reasoning_effort = "low"
+
+[editor]
+indent_width = 4
+which_key_delay_ms = 300
+
+[evaluation]
+compiler = "clang++"
+```
+
+Relative paths are resolved from the directory containing the configuration
+file. The default collection is a user preference and belongs here; its
+`environment.json` remains separate because it describes the language and
+libraries against which submissions are evaluated.
+
+Supported environment overrides include `PRACTICE_COLLECTION`,
+`PRACTICE_DATABASE`, `PRACTICE_LOG`, `PRACTICE_REVIEW_MODEL`,
+`PRACTICE_REVIEW_EFFORT`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
+directory to `src/nvim-driver/practice` has the highest precedence for the
+collection.
 
 ### Diagnostics and logs
 
@@ -337,8 +379,10 @@ due or ordered-unseen exercise -> edit -> submit -> see compile result and solut
 ```
 
 The loop is operable through the Space-leader mappings, retains syntax
-highlighting, provides no autocomplete assistance, and invokes all three Python
-command boundaries. Due reviews take priority over unseen exercises; an empty
+highlighting, uses four-space indentation with spaces, provides no autocomplete
+assistance, and invokes all three Python command boundaries. Progress and final
+feedback panes color headings, successes, failures, warnings, and active work.
+Due reviews take priority over unseen exercises; an empty
 scheduled queue reports the next due time. A collection's `exercise_order.md`
 controls unseen introductions with one exercise basename per line; collections
 without one use random unseen selection.
