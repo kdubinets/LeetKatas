@@ -12,7 +12,7 @@ SCHEMA = {
     "required": ["verdict", "summary", "correctness_analysis", "major_issues", "minor_issues", "code_quality_analysis", "proposed_rating", "rating_explanation", "improved_implementation", "improvement_explanation", "alternative_implementation", "alternative_explanation"],
     "properties": {
         "verdict": {"type": "string", "enum": ["correct", "minor_defect", "incorrect", "cannot_assess"]},
-        "summary": {"type": "string"},
+        "summary": {"type": "string", "description": "One or two learner-facing plain-text sentences with no Markdown decoration, stating the most important correctness point."},
         "correctness_analysis": {"type": "string"},
         "major_issues": {"type": "array", "items": {"type": "string"}},
         "minor_issues": {"type": "array", "items": {"type": "string"}},

@@ -3,8 +3,11 @@ local log = require("practice.log")
 
 local feedback_buffer = nil
 local feedback_window = nil
-local feedback_metadata_start = nil
 local feedback_namespace = vim.api.nvim_create_namespace("practice_feedback")
+local feedback_contexts = {}
+local feedback_result = nil
+local feedback_callbacks = nil
+local expanded = { review = false, compiler = false, reference = false, help = false }
 
 local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeSuccess", { default = true, link = "DiagnosticOk" })
@@ -13,6 +16,10 @@ local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeProgress", { default = true, link = "DiagnosticInfo" })
   vim.api.nvim_set_hl(0, "PracticeHeading", { default = true, link = "Title" })
   vim.api.nvim_set_hl(0, "PracticeHint", { default = true, link = "Comment" })
+  vim.api.nvim_set_hl(0, "PracticeRating", { default = true, link = "Special" })
+  vim.api.nvim_set_hl(0, "PracticeAction", { default = true, link = "Identifier" })
+  vim.api.nvim_set_hl(0, "PracticeCode", { default = true, link = "String" })
+  vim.api.nvim_set_hl(0, "PracticeCodeBlock", { default = true, link = "PreProc" })
 end
 
 define_highlights()
@@ -25,96 +32,307 @@ local function valid_window(window)
   return window ~= nil and vim.api.nvim_win_is_valid(window)
 end
 
-local function append_text(lines, text)
-  local text_lines = vim.split(text or "", "\n", { plain = true })
-  vim.list_extend(lines, text_lines)
+local function title_case(value)
+  return value:sub(1, 1):upper() .. value:sub(2)
 end
 
-local function append_issues(lines, heading, issues)
-  if type(issues) ~= "table" or #issues == 0 then
-    return
+local function clean_inline(value)
+  value = tostring(value or "")
+  value = value:gsub("%*%*(.-)%*%*", "%1"):gsub("__(.-)__", "%1")
+  value = value:gsub("^%s*#+%s*", ""):gsub("^%s*[-*+]%s+", "")
+  value = value:gsub("`([^`]+)`", "%1")
+  return value
+end
+
+local function clean_inline_ranges(value)
+  value = tostring(value or "")
+  value = value:gsub("%*%*(.-)%*%*", "%1"):gsub("__(.-)__", "%1")
+  value = value:gsub("^%s*#+%s*", ""):gsub("^%s*[-*+]%s+", "")
+  local output, ranges, cursor = "", {}, 1
+  while true do
+    local first, last, code = value:find("`([^`]+)`", cursor)
+    if not first then
+      output = output .. value:sub(cursor)
+      break
+    end
+    output = output .. value:sub(cursor, first - 1)
+    local start_column = #output
+    output = output .. code
+    table.insert(ranges, { start_column, #output })
+    cursor = last + 1
   end
-  vim.list_extend(lines, { "", "**" .. heading .. ":**" })
+  return output, ranges
+end
+
+local function add_line(render, text, context, highlight)
+  table.insert(render.lines, text or "")
+  render.contexts[#render.lines] = context or render.contexts[#render.lines - 1]
+  if highlight then
+    table.insert(render.highlights, { #render.lines - 1, 0, -1, highlight })
+  end
+end
+
+local function add_text(render, text, context, highlight)
+  for _, line in ipairs(vim.split(tostring(text or ""), "\n", { plain = true })) do
+    local cleaned, ranges = clean_inline_ranges(line)
+    add_line(render, cleaned, context, highlight)
+    for _, range in ipairs(ranges) do
+      table.insert(render.highlights, { #render.lines - 1, range[1], range[2], "PracticeCode" })
+    end
+  end
+end
+
+local function blank(render)
+  if #render.lines > 0 and render.lines[#render.lines] ~= "" then
+    add_line(render, "")
+  end
+end
+
+local function add_heading(render, title, id, suffix)
+  blank(render)
+  render.positions[id] = #render.lines + 1
+  add_line(render, title .. (suffix or ""), { section = title, logical_section = id },
+    "PracticeHeading")
+end
+
+local function outcome(result)
+  local review = result.review
+  local feedback = type(review) == "table" and review.status == "available"
+      and type(review.feedback) == "table" and review.feedback or nil
+  if not feedback or feedback.verdict == "cannot_assess" then
+    return "Review unavailable", "PracticeWarning", feedback
+  end
+  if result.compiled and feedback.verdict == "correct" then
+    return "Correct", "PracticeSuccess", feedback
+  elseif feedback.verdict == "minor_defect" then
+    return "Almost there", "PracticeWarning", feedback
+  end
+  return "Needs another attempt", "PracticeFailure", feedback
+end
+
+local function add_code(render, code, context)
+  for _, line in ipairs(vim.split(tostring(code or ""), "\n", { plain = true })) do
+    add_line(render, "    " .. line, context, "PracticeCodeBlock")
+  end
+end
+
+local function add_issues(render, title, issues)
+  if type(issues) ~= "table" or #issues == 0 then return end
+  add_line(render, title, { section = "Detailed review", logical_section = "review" },
+    "PracticeHeading")
   for _, issue in ipairs(issues) do
-    table.insert(lines, "- " .. tostring(issue))
+    add_line(render, "  • " .. clean_inline(issue),
+      { section = "Detailed review", logical_section = "review" })
   end
+  blank(render)
 end
 
-local function append_implementation(lines, heading, implementation, explanation)
-  if type(implementation) ~= "string" or implementation == "" then
+local function add_reference(render, result)
+  local sections = type(result.metadata_sections) == "table" and result.metadata_sections or {}
+  if #sections > 0 then
+    for _, section in ipairs(sections) do
+      local section_context = { section = "Exercise reference — " .. tostring(section.title),
+        logical_section = "reference", metadata_line = section.heading_line }
+      add_line(render, clean_inline(section.title), section_context, "PracticeHeading")
+      for _, block in ipairs(type(section.blocks) == "table" and section.blocks or {}) do
+        if type(block.lines) == "table" then
+          for offset, line in ipairs(block.lines) do
+            local context = { section = "Exercise reference — " .. tostring(section.title),
+              logical_section = "reference", metadata_line = block.start_line + offset - 1 }
+            if block.type == "code" then
+              add_line(render, "    " .. tostring(line), context, "PracticeCodeBlock")
+            else
+              add_line(render, clean_inline(line), context)
+            end
+          end
+        end
+      end
+      blank(render)
+    end
     return
   end
-  vim.list_extend(lines, { "", "### " .. heading, "", "```" })
-  append_text(lines, implementation)
-  vim.list_extend(lines, { "```", "" })
-  if type(explanation) == "string" and explanation ~= "" then
-    append_text(lines, explanation)
-  end
-end
 
-local function color_feedback(lines)
-  vim.api.nvim_buf_clear_namespace(feedback_buffer, feedback_namespace, 0, -1)
-  for index, line in ipairs(lines) do
-    local group = nil
-    if vim.startswith(line, "#") then
-      group = "PracticeHeading"
-    elseif line:find("SUCCESS", 1, true) or vim.startswith(line, "✓") then
-      group = "PracticeSuccess"
-    elseif line:find("FAILED", 1, true) or vim.startswith(line, "✗") then
-      group = "PracticeFailure"
-    elseif line:find("Unavailable", 1, true) or line:find("unavailable", 1, true) then
-      group = "PracticeWarning"
-    elseif line:find("Working", 1, true) or line:find("Compiling", 1, true)
-        or line:find("review", 1, true) or line:find("Reviewer", 1, true) then
-      group = "PracticeProgress"
-    elseif vim.startswith(line, "The final feedback") or vim.startswith(line, "Return to the source") then
-      group = "PracticeHint"
-    end
-    if group then
-      vim.api.nvim_buf_add_highlight(feedback_buffer, feedback_namespace, group, index - 1, 0, -1)
+  -- Legacy or malformed metadata remains readable without Markdown delimiters.
+  local in_fence = false
+  for line_number, line in ipairs(vim.split(result.metadata or "", "\n", { plain = true })) do
+    if line:match("^%s*```") then
+      in_fence = not in_fence
+    else
+      local context = { section = "Exercise reference", logical_section = "reference",
+        metadata_line = line_number }
+      add_line(render, (in_fence and "    " or "") .. clean_inline(line), context,
+        in_fence and "PracticeCodeBlock" or nil)
     end
   end
 end
 
-local function set_feedback_lines(lines)
-  if not valid_buffer(feedback_buffer) then
-    return
+local function build_feedback(result)
+  local render = { lines = {}, contexts = {}, highlights = {}, positions = {} }
+  local status, status_highlight, review = outcome(result)
+  local rating = type(result.proposed_rating) == "string" and title_case(result.proposed_rating) or nil
+  render.positions.outcome = 1
+  add_line(render, status .. (rating and "  [" .. rating .. "]" or ""),
+    { section = "Outcome", logical_section = "outcome" }, status_highlight)
+  if rating then
+    local start = #status + 2
+    table.insert(render.highlights, { 0, start, -1, "PracticeRating" })
   end
+
+  if review and type(review.summary) == "string" and review.summary ~= "" then
+    blank(render)
+    add_text(render, review.summary, { section = "Summary", logical_section = "summary" })
+  elseif type(result.review) == "table" and result.review.failure then
+    blank(render)
+    add_line(render, "Structured review is unavailable. Choose a manual rating.",
+      { section = "Summary", logical_section = "summary" }, "PracticeWarning")
+  end
+
+  if not result.compiled and rating and result.proposed_rating ~= "fail" then
+    blank(render)
+    add_line(render, "The reviewer recognized the approach, but this submission did not compile.",
+      { section = "Summary", logical_section = "summary" }, "PracticeHint")
+  end
+
+  if review and (review.verdict == "minor_defect" or review.verdict == "incorrect") then
+    add_heading(render, "Correction", "correction")
+    if type(review.improved_implementation) == "string" and review.improved_implementation ~= "" then
+      add_code(render, review.improved_implementation,
+        { section = "Correction", logical_section = "correction" })
+    end
+    if type(review.improvement_explanation) == "string" and review.improvement_explanation ~= "" then
+      blank(render)
+      add_text(render, review.improvement_explanation,
+        { section = "Correction", logical_section = "correction" })
+    end
+  end
+
+  add_heading(render, "Actions", "actions")
+  if rating then
+    add_line(render, "Primary   a / <Space>pa  Accept " .. rating .. " and continue",
+      { section = "Actions", logical_section = "actions" }, "PracticeAction")
+  else
+    add_line(render, "Primary   Choose a manual rating to continue",
+      { section = "Actions", logical_section = "actions" }, "PracticeWarning")
+  end
+  add_line(render, "Ratings   1 Fail   2 Acceptable   3 Good   4 Excellent",
+    { section = "Actions", logical_section = "actions" }, "PracticeAction")
+  add_line(render, "More      n Skip   m Note   ? Help",
+    { section = "Actions", logical_section = "actions" }, "PracticeAction")
+
+  if expanded.help then
+    add_heading(render, "Shortcuts", "help", "  [? collapse]")
+    add_line(render, "a accept proposal     1–4 record rating     n skip without recording")
+    add_line(render, "m capture note        d detailed review     c compiler details")
+    add_line(render, "r exercise reference  <CR> default action   ? collapse help")
+    add_line(render, "Leader mappings remain available, including <Space>pr to retry.")
+  end
+
+  local review_suffix = expanded.review and "  [d collapse]" or "  [d expand]"
+  add_heading(render, "Detailed review", "review", review_suffix)
+  if expanded.review then
+    if review then
+      if type(review.correctness_analysis) == "string" and review.correctness_analysis ~= "" then
+        add_line(render, "Correctness", { section = "Detailed review", logical_section = "review" },
+          "PracticeHeading")
+        add_text(render, review.correctness_analysis,
+          { section = "Detailed review", logical_section = "review" })
+        blank(render)
+      end
+      add_issues(render, "Major issues", review.major_issues)
+      add_issues(render, "Minor issues", review.minor_issues)
+      if type(review.code_quality_analysis) == "string" and review.code_quality_analysis ~= "" then
+        add_line(render, "Code quality", { section = "Detailed review", logical_section = "review" },
+          "PracticeHeading")
+        add_text(render, review.code_quality_analysis,
+          { section = "Detailed review", logical_section = "review" })
+        blank(render)
+      end
+      if type(review.rating_explanation) == "string" and review.rating_explanation ~= "" then
+        add_line(render, "Rating rationale", { section = "Detailed review", logical_section = "review" },
+          "PracticeHeading")
+        add_text(render, review.rating_explanation,
+          { section = "Detailed review", logical_section = "review" })
+        blank(render)
+      end
+      if review.verdict == "correct" and type(review.improved_implementation) == "string"
+          and review.improved_implementation ~= "" then
+        add_line(render, "Improved implementation",
+          { section = "Detailed review", logical_section = "review" }, "PracticeHeading")
+        add_code(render, review.improved_implementation,
+          { section = "Detailed review", logical_section = "review" })
+        add_text(render, review.improvement_explanation or "",
+          { section = "Detailed review", logical_section = "review" })
+        blank(render)
+      end
+      if type(review.alternative_implementation) == "string"
+          and review.alternative_implementation ~= "" then
+        add_line(render, "Alternative implementation",
+          { section = "Detailed review", logical_section = "review" }, "PracticeHeading")
+        add_code(render, review.alternative_implementation,
+          { section = "Detailed review", logical_section = "review" })
+        add_text(render, review.alternative_explanation or "",
+          { section = "Detailed review", logical_section = "review" })
+      end
+      add_line(render, "Reviewer: " .. tostring(result.review.reviewer or "unknown")
+          .. (type(result.review.model) == "string" and " · " .. result.review.model or ""),
+        { section = "Detailed review", logical_section = "review" }, "PracticeHint")
+    else
+      add_line(render, clean_inline(result.review.failure or "No structured review was returned."),
+        { section = "Detailed review", logical_section = "review" }, "PracticeWarning")
+    end
+  end
+
+  if type(result.diagnostics) == "string" and result.diagnostics ~= "" then
+    local suffix = expanded.compiler and "  [c collapse]" or "  [c expand]"
+    add_heading(render, "Compiler details", "compiler", suffix)
+    if expanded.compiler then
+      add_code(render, result.diagnostics,
+        { section = "Compiler details", logical_section = "compiler" })
+    end
+  end
+
+  local reference_suffix = expanded.reference and "  [r collapse]" or "  [r expand]"
+  add_heading(render, "Exercise reference", "reference", reference_suffix)
+  if expanded.reference then add_reference(render, result) end
+  return render
+end
+
+local function set_feedback_lines(render)
+  if not valid_buffer(feedback_buffer) then return end
   vim.bo[feedback_buffer].modifiable = true
   vim.bo[feedback_buffer].readonly = false
-  vim.api.nvim_buf_set_lines(feedback_buffer, 0, -1, false, lines)
-  vim.bo[feedback_buffer].filetype = "markdown"
+  vim.api.nvim_buf_set_lines(feedback_buffer, 0, -1, false, render.lines)
+  vim.bo[feedback_buffer].filetype = "practice-feedback"
   vim.bo[feedback_buffer].buftype = "nofile"
   vim.bo[feedback_buffer].bufhidden = "wipe"
   vim.bo[feedback_buffer].swapfile = false
-  color_feedback(lines)
+  vim.api.nvim_buf_clear_namespace(feedback_buffer, feedback_namespace, 0, -1)
+  for _, mark in ipairs(render.highlights) do
+    vim.api.nvim_buf_add_highlight(feedback_buffer, feedback_namespace,
+      mark[4], mark[1], mark[2], mark[3])
+  end
+  feedback_contexts = render.contexts
   vim.bo[feedback_buffer].modifiable = false
   vim.bo[feedback_buffer].readonly = true
 end
 
 local function ensure_feedback(source_window, focus_feedback)
   if valid_window(feedback_window) and valid_buffer(feedback_buffer) then
-    if focus_feedback then
-      vim.api.nvim_set_current_win(feedback_window)
-    end
+    if focus_feedback then vim.api.nvim_set_current_win(feedback_window) end
     return
   end
   M.close_feedback()
-  if valid_window(source_window) then
-    vim.api.nvim_set_current_win(source_window)
-  end
-  if vim.o.columns < 120 then
-    vim.cmd("botright split")
-  else
-    vim.cmd("botright vsplit")
-  end
+  if valid_window(source_window) then vim.api.nvim_set_current_win(source_window) end
+  if vim.o.columns < 120 then vim.cmd("botright split") else vim.cmd("botright vsplit") end
   feedback_window = vim.api.nvim_get_current_win()
   feedback_buffer = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_win_set_buf(feedback_window, feedback_buffer)
   if vim.o.columns < 120 then
-    vim.api.nvim_win_set_height(feedback_window, math.max(10, math.floor(vim.o.lines / 3)))
+    vim.api.nvim_win_set_height(feedback_window, math.max(10, math.floor(vim.o.lines * 0.45)))
   else
-    vim.api.nvim_win_set_width(feedback_window, math.max(40, math.floor(vim.o.columns / 3)))
+    local available = math.max(40, vim.o.columns - 40)
+    vim.api.nvim_win_set_width(feedback_window,
+      math.min(math.max(52, math.floor(vim.o.columns * 0.40)), available))
   end
   vim.wo[feedback_window].number = false
   vim.wo[feedback_window].relativenumber = false
@@ -127,123 +345,99 @@ local function ensure_feedback(source_window, focus_feedback)
   end
 end
 
+local function render_feedback(cursor_section)
+  if not feedback_result or not valid_buffer(feedback_buffer) then return end
+  local render = build_feedback(feedback_result)
+  set_feedback_lines(render)
+  if valid_window(feedback_window) then
+    local line = render.positions[cursor_section or "outcome"] or 1
+    vim.api.nvim_win_set_cursor(feedback_window, { line, 0 })
+  end
+end
+
+local function toggle(name)
+  expanded[name] = not expanded[name]
+  render_feedback(name)
+end
+
+local function callback(name, ...)
+  local fn = feedback_callbacks and feedback_callbacks[name]
+  if fn then fn(...) end
+end
+
+local function install_feedback_mappings()
+  local options = { buffer = feedback_buffer, silent = true, nowait = true }
+  vim.keymap.set("n", "a", function() callback("accept") end,
+    vim.tbl_extend("force", options, { desc = "Accept proposed rating" }))
+  local ratings = { "fail", "acceptable", "good", "excellent" }
+  for index, rating in ipairs(ratings) do
+    vim.keymap.set("n", tostring(index), function() callback("rate", rating) end,
+      vim.tbl_extend("force", options, { desc = "Record " .. title_case(rating) }))
+  end
+  vim.keymap.set("n", "n", function() callback("skip") end,
+    vim.tbl_extend("force", options, { desc = "Skip without recording" }))
+  vim.keymap.set("n", "m", function() callback("note") end,
+    vim.tbl_extend("force", options, { desc = "Capture feedback note" }))
+  vim.keymap.set("n", "d", function() toggle("review") end,
+    vim.tbl_extend("force", options, { desc = "Toggle detailed review" }))
+  vim.keymap.set("n", "c", function() toggle("compiler") end,
+    vim.tbl_extend("force", options, { desc = "Toggle compiler details" }))
+  vim.keymap.set("n", "r", function() toggle("reference") end,
+    vim.tbl_extend("force", options, { desc = "Toggle exercise reference" }))
+  vim.keymap.set("n", "?", function() toggle("help") end,
+    vim.tbl_extend("force", options, { desc = "Toggle feedback shortcuts" }))
+  vim.keymap.set("n", "<CR>", function()
+    local _, _, review = outcome(feedback_result)
+    if type(feedback_result.proposed_rating) ~= "string" then
+      M.notify("No reviewer rating is available; choose a manual rating", vim.log.levels.WARN)
+    elseif review and review.verdict == "correct" and feedback_result.compiled then
+      callback("accept")
+    else
+      callback("retry")
+    end
+  end, vim.tbl_extend("force", options, { desc = "Default feedback action" }))
+end
+
 function M.notify(message, level)
-  log.event("notification", level == vim.log.levels.ERROR and "error" or "info", {
-    message = message,
-    nvim_level = level,
-  })
+  log.event("notification", level == vim.log.levels.ERROR and "error" or "info",
+    { message = message, nvim_level = level })
   vim.notify(message, level or vim.log.levels.INFO, { title = "Practice" })
 end
 
 function M.confirm_discard(action)
-  local choice = vim.fn.confirm(
-    "The current attempt has unsaved changes. Discard them and " .. action .. "?",
-    "&Discard\n&Cancel",
-    2
-  )
-  return choice == 1
+  return vim.fn.confirm("The current attempt has unsaved changes. Discard them and " .. action .. "?",
+    "&Discard\n&Cancel", 2) == 1
 end
 
 function M.close_feedback()
-  if valid_window(feedback_window) then
-    vim.api.nvim_win_close(feedback_window, true)
-  end
-  if valid_buffer(feedback_buffer) then
-    vim.api.nvim_buf_delete(feedback_buffer, { force = true })
-  end
-  feedback_window = nil
-  feedback_buffer = nil
-  feedback_metadata_start = nil
+  if valid_window(feedback_window) then vim.api.nvim_win_close(feedback_window, true) end
+  if valid_buffer(feedback_buffer) then vim.api.nvim_buf_delete(feedback_buffer, { force = true }) end
+  feedback_window, feedback_buffer = nil, nil
+  feedback_contexts, feedback_result, feedback_callbacks = {}, nil, nil
+  expanded = { review = false, compiler = false, reference = false, help = false }
 end
 
 function M.open_source(path, preferred_window, practice_marker)
   M.close_feedback()
-  if valid_window(preferred_window) then
-    vim.api.nvim_set_current_win(preferred_window)
-  end
-
+  if valid_window(preferred_window) then vim.api.nvim_set_current_win(preferred_window) end
   vim.cmd("edit! " .. vim.fn.fnameescape(path))
-  local buffer = vim.api.nvim_get_current_buf()
-  local window = vim.api.nvim_get_current_win()
+  local buffer, window = vim.api.nvim_get_current_buf(), vim.api.nvim_get_current_win()
   vim.bo[buffer].bufhidden = "wipe"
   vim.bo[buffer].swapfile = false
-  vim.bo[buffer].completefunc = ""
-  vim.bo[buffer].omnifunc = ""
-  vim.bo[buffer].tagfunc = ""
-
-  local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
-  for index, line in ipairs(lines) do
+  vim.bo[buffer].completefunc, vim.bo[buffer].omnifunc, vim.bo[buffer].tagfunc = "", "", ""
+  for index, line in ipairs(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)) do
     local marker_start = line:find(practice_marker, 1, true)
-    if marker_start then
-      vim.api.nvim_win_set_cursor(window, { index, marker_start - 1 })
-      break
-    end
+    if marker_start then vim.api.nvim_win_set_cursor(window, { index, marker_start - 1 }); break end
   end
   return buffer, window
 end
 
-function M.open_feedback(source_window, result)
+function M.open_feedback(source_window, result, callbacks)
   ensure_feedback(source_window, true)
-
-  local compilation = result.compiled and "SUCCESS" or "FAILED"
-  local proposed = "Unavailable"
-  if type(result.proposed_rating) == "string" then
-    proposed = result.proposed_rating:sub(1, 1):upper() .. result.proposed_rating:sub(2)
-  end
-  local lines = {
-    "# Practice Feedback",
-    "",
-    "**Compilation:** " .. compilation,
-    "",
-    "**Proposed rating:** " .. proposed,
-    "",
-    "- `<Space>pa` accept " .. proposed,
-    "- `<Space>p1` Fail",
-    "- `<Space>p2` Acceptable",
-    "- `<Space>p3` Good",
-    "- `<Space>p4` Excellent",
-    "- `<Space>pn` skip without recording",
-    "- `<Space>pm` capture a follow-up note",
-    "",
-    "## Compiler diagnostics",
-    "",
-    "```text",
-  }
-  append_text(lines, result.diagnostics ~= "" and result.diagnostics or "(none)")
-  vim.list_extend(lines, { "```", "", "## Reviewer", "", "**Status:** " .. tostring(result.review.status), "" })
-  if type(result.review.model) == "string" then
-    local reviewer_details = "**Model:** " .. result.review.model
-    if type(result.review.reasoning_effort) == "string" then
-      reviewer_details = reviewer_details .. " (" .. result.review.reasoning_effort .. " effort)"
-    end
-    vim.list_extend(lines, { reviewer_details, "" })
-  end
-  if result.review.status == "available" and result.review.feedback then
-    local review = result.review.feedback
-    append_text(lines, "**Verdict:** " .. review.verdict .. "\n\n" .. review.summary
-      .. "\n\n" .. review.correctness_analysis)
-    append_issues(lines, "Major issues", review.major_issues)
-    append_issues(lines, "Minor issues", review.minor_issues)
-    vim.list_extend(lines, { "", "**Code quality:** " .. review.code_quality_analysis })
-    if type(review.rating_explanation) == "string" and review.rating_explanation ~= "" then
-      vim.list_extend(lines, { "", "**Rating rationale:** " .. review.rating_explanation })
-    end
-    local improvement_title = review.verdict == "correct" and "Improved implementation"
-      or "Corrected implementation"
-    append_implementation(lines, improvement_title, review.improved_implementation,
-      review.improvement_explanation)
-    append_implementation(lines, "Alternative implementation", review.alternative_implementation,
-      review.alternative_explanation)
-  else
-    append_text(lines, "Reviewer unavailable: " .. tostring(result.review.failure) .. "\n\nChoose a manual rating below.")
-  end
-  vim.list_extend(lines, { "", "---", "" })
-  feedback_metadata_start = #lines + 1
-  append_text(lines, result.metadata)
-
-  set_feedback_lines(lines)
-  vim.api.nvim_win_set_cursor(feedback_window, { 1, 0 })
-
+  feedback_result, feedback_callbacks = result, callbacks or {}
+  expanded.review = result.proposed_rating ~= "excellent"
+  render_feedback("outcome")
+  install_feedback_mappings()
   return feedback_buffer, feedback_window
 end
 
@@ -254,85 +448,70 @@ function M.open_progress(source_window)
 end
 
 function M.update_progress(elapsed_seconds, events)
-  if not valid_buffer(feedback_buffer) then
-    return
-  end
-  feedback_metadata_start = nil
+  if not valid_buffer(feedback_buffer) then return end
   local frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
   local frame = frames[(math.floor(elapsed_seconds * 10) % #frames) + 1]
-  local compilation = nil
-  local attempt = nil
+  local compilation, attempt, retry_delay, review_finished = nil, nil, nil, nil
   local maximum_attempts = 3
-  local retry_delay = nil
-  local review_finished = nil
   for _, event in ipairs(events) do
-    if event.event == "compilation_finished" then
-      compilation = event.compiled
+    if event.event == "compilation_finished" then compilation = event.compiled
     elseif event.event == "review_attempt_started" then
-      attempt = event.attempt
-      maximum_attempts = event.maximum_attempts or maximum_attempts
-      retry_delay = nil
-    elseif event.event == "review_retry_scheduled" then
-      retry_delay = event.delay_seconds
-    elseif event.event == "review_finished" then
-      review_finished = event.status
-    end
+      attempt, maximum_attempts, retry_delay = event.attempt,
+        event.maximum_attempts or maximum_attempts, nil
+    elseif event.event == "review_retry_scheduled" then retry_delay = event.delay_seconds
+    elseif event.event == "review_finished" then review_finished = event.status end
   end
-  local lines = {
-    "# Practice Evaluation",
-    "",
-    string.format("%s **Working…** %.1fs", frame, elapsed_seconds),
-    "",
-    "✓ Source saved",
-  }
+  local render = { lines = {}, contexts = {}, highlights = {}, positions = {} }
+  add_line(render, "Practice evaluation", { section = "Practice evaluation" }, "PracticeHeading")
+  add_line(render, string.format("%s Working… %.1fs", frame, elapsed_seconds),
+    { section = "Practice evaluation" }, "PracticeProgress")
+  blank(render)
+  add_line(render, "✓ Source saved", { section = "Practice evaluation" }, "PracticeSuccess")
   if compilation == nil then
-    table.insert(lines, frame .. " Compiling submission")
+    add_line(render, frame .. " Compiling submission", { section = "Practice evaluation" },
+      "PracticeProgress")
   else
-    table.insert(lines, (compilation and "✓" or "✗") .. " Compilation "
-      .. (compilation and "succeeded" or "failed; continuing to review"))
+    add_line(render, (compilation and "✓ Compilation succeeded" or
+      "✗ Compilation failed; continuing to review"), { section = "Practice evaluation" },
+      compilation and "PracticeSuccess" or "PracticeWarning")
     if review_finished then
-      table.insert(lines, "✓ Reviewer finished: " .. review_finished)
+      add_line(render, "✓ Reviewer finished: " .. review_finished,
+        { section = "Practice evaluation" }, "PracticeSuccess")
     elseif retry_delay then
-      table.insert(lines, string.format("%s Reviewer retry %d of %d in %.1fs", frame,
-        (attempt or 0) + 1, maximum_attempts, retry_delay))
+      add_line(render, string.format("%s Reviewer retry %d of %d in %.1fs", frame,
+        (attempt or 0) + 1, maximum_attempts, retry_delay),
+        { section = "Practice evaluation" }, "PracticeProgress")
     elseif attempt then
-      table.insert(lines, string.format("%s LLM review — attempt %d of %d", frame,
-        attempt, maximum_attempts))
+      add_line(render, string.format("%s Reviewer attempt %d of %d", frame, attempt,
+        maximum_attempts), { section = "Practice evaluation" }, "PracticeProgress")
     else
-      table.insert(lines, frame .. " Starting LLM reviewer")
+      add_line(render, frame .. " Starting reviewer", { section = "Practice evaluation" },
+        "PracticeProgress")
     end
   end
-  vim.list_extend(lines, { "", "The final feedback will replace this pane automatically." })
-  set_feedback_lines(lines)
+  blank(render)
+  add_line(render, "Final feedback will replace this pane automatically.",
+    { section = "Practice evaluation" }, "PracticeHint")
+  set_feedback_lines(render)
 end
 
 function M.show_progress_error(error_message)
-  feedback_metadata_start = nil
-  set_feedback_lines({
-    "# Practice Evaluation Failed",
-    "",
-    tostring(error_message),
-    "",
-    "Return to the source, correct the configuration or submission, and check again.",
-  })
+  local render = { lines = {}, contexts = {}, highlights = {}, positions = {} }
+  add_line(render, "Practice evaluation failed", { section = "Evaluation error" },
+    "PracticeFailure")
+  blank(render)
+  add_text(render, error_message, { section = "Evaluation error" })
+  blank(render)
+  add_line(render, "Return to the source, correct the problem, and submit again.",
+    { section = "Evaluation error" }, "PracticeHint")
+  set_feedback_lines(render)
 end
 
 function M.feedback_context(buffer, line)
-  if not valid_buffer(feedback_buffer) or buffer ~= feedback_buffer then
-    return nil
-  end
-  local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
-  local section = nil
-  for index = math.min(line, #lines), 1, -1 do
-    if not section and vim.startswith(lines[index], "#") then
-      section = lines[index]
-    end
-  end
-  return {
-    section = section,
-    metadata_line = feedback_metadata_start and line >= feedback_metadata_start
-      and line - feedback_metadata_start + 1 or nil,
-  }
+  if not valid_buffer(feedback_buffer) or buffer ~= feedback_buffer then return nil end
+  local context = feedback_contexts[line] or {}
+  return { section = context.section, metadata_line = context.metadata_line,
+    logical_section = context.logical_section }
 end
 
 return M

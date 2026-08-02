@@ -236,16 +236,19 @@ from the compiler and reviewer. It reports compilation completion, reviewer
 attempts, and retry delays, then replaces itself with the final feedback.
 The progress channel is a temporary JSON-lines file so the evaluator's stdout
 remains reserved for its final protocol response. The pane becomes a dedicated
-read-only feedback buffer in a vertical split to the right of the source. The
-source remains visible in the main window so the submitted code and reference
-answer can be compared side by side. The feedback
-buffer presents:
+read-only `practice-feedback` buffer beside the source. Its opening view shows
+the learner-facing outcome and proposed rating, concise reviewer summary, an
+expanded correction for defective submissions, and grouped actions. A failed
+compilation does not cap a positive reviewer rating; the feedback explains when
+the reviewer recognized the approach despite the compiler result.
 
-- Whether compilation succeeded.
-- Compiler diagnostics, when present.
-- The exercise metadata and reference solution.
-- The proposed rating.
-- A clear prompt to accept or override the rating.
+Detailed review evidence, non-empty compiler diagnostics, and the parsed
+exercise reference follow lower in the buffer. Detailed review starts expanded
+unless the proposed rating is `Excellent`; compiler details and the reference
+start collapsed. Use `d`, `c`, and `r` to toggle them, or `?` for shortcut help. Structured
+metadata is displayed without headings or fence delimiters; raw metadata is a
+sanitized compatibility fallback. Extmark highlights distinguish outcomes,
+ratings, actions, headings, hints, inline code, and code blocks.
 
 This is an ordinary scratch buffer managed by the driver, not Neovim's special
 preview window. That gives the driver predictable control over its contents,
@@ -253,8 +256,9 @@ focus, lifetime, and mappings. The buffer is not associated with a file, cannot
 be modified, and is discarded when the user rates the attempt, skips, or quits.
 Focus moves to it after evaluation so its rating shortcuts work immediately.
 
-The feedback split uses roughly one third of the editor width. When the editor
-is narrower than 120 columns, it uses a bottom horizontal split instead.
+The wide feedback split targets 40% of the editor with a 52-column minimum
+while preserving usable source space. Below 120 columns it uses a bottom split
+at approximately 45% of the editor height.
 
 Evaluation and rating calls are asynchronous so a future LLM call will not
 freeze the editor.
@@ -289,6 +293,10 @@ exercise.
 `:PracticeAccept` records the evaluator's proposed rating without requiring the
 user to restate it, then selects and opens the next exercise.
 
+`:PracticeRetry` closes feedback and returns to the unchanged working source
+without recording a rating. The previous result remains in session memory only
+until the next submission or exercise transition and is never archived.
+
 `:PracticeNext` explicitly skips without changing scheduling state and selects
 again from the scheduled queue.
 
@@ -315,6 +323,7 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>ps` | `:PracticeStart` | Start or restart a practice session. |
 | `<Space>pc` | `:PracticeSubmit` | Check/submit the current solution. |
 | `<Space>pa` | `:PracticeAccept` | Accept the proposed rating and continue. |
+| `<Space>pr` | `:PracticeRetry` | Return to editing without recording. |
 | `<Space>p1` | `:PracticeRate fail` | Record Fail and continue. |
 | `<Space>p2` | `:PracticeRate acceptable` | Record Acceptable and continue. |
 | `<Space>p3` | `:PracticeRate good` | Record Good and continue. |
@@ -335,6 +344,12 @@ The workflow mappings are normal-mode mappings. The practice buffer should
 make their purpose discoverable through mapping descriptions. Practice-only
 mappings may be buffer-local, except for the start mapping, which must be
 available before a practice buffer exists.
+
+The feedback buffer additionally maps `a`, `1`–`4`, `n`, and `m` directly to
+accept, rate, skip, and note. `d`, `c`, and `r` toggle detailed review, compiler
+details, and the reference; `?` toggles shortcut help. `<CR>` accepts a correct
+proposal, retries a defective result, or shows the manual-rating hint when no
+proposal exists. All leader mappings remain available.
 
 ## Project Layout
 
@@ -381,6 +396,8 @@ idle -> selecting -> solving -> evaluating -> reviewing -> recording
 - `complete`: all exercises have been introduced and none is currently due.
 
 `PracticeNext` moves from `solving` or `reviewing` to a new `solving` state.
+`PracticeRetry` moves from `reviewing` back to `solving` without changing the
+working source or recording a rating; resubmission follows the normal path.
 `PracticeQuit` returns a stable solving, reviewing, or complete state to `idle`. Commands
 that would replace the session ask the user to wait while a script is running.
 

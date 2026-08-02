@@ -67,8 +67,13 @@ shell.
 }
 ```
 
-It returns `compiled`, `diagnostics`, `metadata`, structured reviewer state, and
-a nullable `proposed_rating`. Validation success is evidence for the reviewer;
+It returns `compiled`, `diagnostics`, raw `metadata`, additive
+`metadata_sections`, structured reviewer state, and a nullable
+`proposed_rating`. `metadata_sections` is a best-effort ordered parse of
+level-one headings, prose, and fenced code. Sections and blocks carry one-based
+source line information, and code blocks retain their language. Malformed or
+legacy metadata may produce an empty or partial parse while raw `metadata`
+remains the compatibility fallback. Validation success is evidence for the reviewer;
 it does not determine the rating by itself. Reviewer executables receive the
 starter and submitted source, exercise metadata, optional target environment,
 and a language-neutral `validation` object containing `command`, `succeeded`,

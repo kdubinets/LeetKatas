@@ -18,6 +18,7 @@ local state = {
   previous_id = nil,
   exercise = nil,
   result = nil,
+  previous_result = nil,
   next_due = nil,
   session_directory = nil,
   working_path = nil,
@@ -106,6 +107,7 @@ local function delete_working_copy()
   end
   state.exercise = nil
   state.result = nil
+  state.previous_result = nil
   state.working_path = nil
   state.source_buffer = nil
   state.next_due = nil
@@ -309,6 +311,7 @@ function M.submit()
     return
   end
 
+  state.previous_result = nil
   state.status = "evaluating"
   start_progress()
   process.run(config.python, script_path("evaluate_exercise.py"), {
@@ -331,6 +334,8 @@ function M.submit()
     if type(response.compiled) ~= "boolean"
       or type(response.diagnostics) ~= "string"
       or type(response.metadata) ~= "string"
+      or (response.metadata_sections ~= nil and response.metadata_sections ~= vim.NIL
+        and type(response.metadata_sections) ~= "table")
       or type(response.submitted_source) ~= "string"
       or (response.proposed_rating ~= vim.NIL and response.proposed_rating ~= nil and not RATINGS[response.proposed_rating])
     then
@@ -341,8 +346,36 @@ function M.submit()
 
     state.result = response
     state.status = "reviewing"
-    ui.open_feedback(state.source_window, response)
+    ui.open_feedback(state.source_window, response, {
+      accept = M.accept,
+      rate = M.rate,
+      retry = M.retry,
+      skip = M.next,
+      note = M.note,
+    })
   end)
+end
+
+function M.retry()
+  if state.status ~= "reviewing" then
+    ui.notify("Retry is available only while reviewing feedback", vim.log.levels.WARN)
+    return
+  end
+  state.previous_result = state.result
+  state.result = nil
+  ui.close_feedback()
+  if valid_buffer(state.source_buffer) then
+    local windows = vim.fn.win_findbuf(state.source_buffer)
+    if #windows > 0 then
+      state.source_window = windows[1]
+      vim.api.nvim_set_current_win(state.source_window)
+    elseif state.source_window and vim.api.nvim_win_is_valid(state.source_window) then
+      vim.api.nvim_set_current_win(state.source_window)
+      vim.api.nvim_win_set_buf(state.source_window, state.source_buffer)
+    end
+  end
+  state.status = "solving"
+  ui.notify("Returned to the unchanged source; no rating was recorded")
 end
 
 function M.rate(rating)

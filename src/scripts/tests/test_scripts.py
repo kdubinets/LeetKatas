@@ -15,7 +15,7 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 
 from codex_reviewer import build_prompt  # noqa: E402
-from evaluate_exercise import evaluate  # noqa: E402
+from evaluate_exercise import evaluate, parse_metadata_sections  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
 from record_rating import record_rating  # noqa: E402
 from select_exercise import select_exercise  # noqa: E402
@@ -288,6 +288,13 @@ class EvaluateExerciseTests(unittest.TestCase):
             self.assertIsNone(response["proposed_rating"])
             self.assertEqual(response["review"]["status"], "unavailable")
             self.assertEqual(response["metadata"], metadata.read_text())
+            self.assertEqual(response["metadata_sections"], [{
+                "title": "Solution", "heading_line": 1, "blocks": [
+                    {"type": "text", "start_line": 2, "lines": [""]},
+                    {"type": "code", "language": "cpp", "start_line": 4,
+                     "lines": ["return 1;"]},
+                ],
+            }])
 
     def test_failed_compilation_is_a_valid_fail_result(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -448,6 +455,58 @@ class CodexReviewerTests(unittest.TestCase):
         self.assertIn("provide a corrected implementation", prompt)
         self.assertIn("untrusted reference candidate, not as a gold standard", prompt)
         self.assertIn("look for at most one meaningful opportunity", prompt)
+        self.assertIn("one or two learner-facing plain-text sentences", prompt)
+
+
+class MetadataSectionTests(unittest.TestCase):
+    def test_preserves_sections_text_code_language_and_source_lines(self) -> None:
+        metadata = """Preamble
+# Name
+
+Example
+
+# Solution
+Use this:
+
+```cpp
+return 42;
+```
+# Notes
+Unknown section.
+"""
+        self.assertEqual(parse_metadata_sections(metadata), [
+            {"title": "Name", "heading_line": 2, "blocks": [
+                {"type": "text", "start_line": 3, "lines": ["", "Example", ""]},
+            ]},
+            {"title": "Solution", "heading_line": 6, "blocks": [
+                {"type": "text", "start_line": 7, "lines": ["Use this:", ""]},
+                {"type": "code", "language": "cpp", "start_line": 10,
+                 "lines": ["return 42;"]},
+            ]},
+            {"title": "Notes", "heading_line": 12, "blocks": [
+                {"type": "text", "start_line": 13, "lines": ["Unknown section."]},
+            ]},
+        ])
+
+    def test_handles_blank_sections_and_fences_without_languages(self) -> None:
+        self.assertEqual(parse_metadata_sections("# Empty\n# Code\n```\nx();\n```\n"), [
+            {"title": "Empty", "heading_line": 1, "blocks": []},
+            {"title": "Code", "heading_line": 2, "blocks": [
+                {"type": "code", "language": "", "start_line": 4,
+                 "lines": ["x();"]},
+            ]},
+        ])
+
+    def test_returns_no_sections_without_level_one_headings(self) -> None:
+        self.assertEqual(parse_metadata_sections("legacy metadata\n```cpp\nx();\n```\n"), [])
+
+    def test_keeps_unclosed_fence_as_partial_code(self) -> None:
+        self.assertEqual(parse_metadata_sections("# Solution\n```cpp\nx();\n# not a heading\n"), [{
+            "title": "Solution", "heading_line": 1, "blocks": [
+                {"type": "code", "language": "cpp", "start_line": 3,
+                 "lines": ["x();", "# not a heading"]},
+            ],
+        }])
 
 
 class RecordRatingTests(unittest.TestCase):

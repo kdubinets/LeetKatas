@@ -43,4 +43,6 @@ Use `proposed_rating: null` only with `cannot_assess`. The learner will account 
 
 Keep all feedback specific, concise, and tied to the evidence. For an `incorrect` or `minor_defect` verdict, provide a corrected implementation that directly fixes the learner's submission and briefly explain the correction. For a `correct` verdict, provide an improved implementation when it teaches the single meaningful improvement identified above. Provide an alternative implementation only when it teaches a meaningfully different useful approach. Otherwise return null for those fields.
 
+Write `summary` as one or two learner-facing plain-text sentences. Do not use Markdown decoration, headings, lists, or code fences in it. State the single most important correctness point first.
+
 Return only JSON conforming to the requested schema.

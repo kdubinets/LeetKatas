@@ -2,12 +2,81 @@
 """Compile a submission, then pass all evidence to a replaceable reviewer."""
 from __future__ import annotations
 import json, subprocess, sys
+import re
 from pathlib import Path
 from typing import Any
 from practice_environment import TargetEnvironmentError, validate_target_environment
 from reviewer_protocol import ReviewerError, configured_reviewer, review_request
 
 class RequestError(ValueError): pass
+
+HEADING = re.compile(r"^#\s+(.+?)\s*$")
+FENCE = re.compile(r"^```([^`]*)$")
+
+def parse_metadata_sections(metadata: str) -> list[dict[str, Any]]:
+    """Best-effort extraction of level-one sections and fenced code."""
+    source_lines = metadata.splitlines()
+    sections: list[dict[str, Any]] = []
+    section: dict[str, Any] | None = None
+    text_lines: list[str] = []
+    text_start = 0
+    code_lines: list[str] | None = None
+    code_start = 0
+    code_language = ""
+
+    def flush_text() -> None:
+        nonlocal text_lines
+        if section is not None and text_lines:
+            section["blocks"].append({
+                "type": "text", "start_line": text_start, "lines": text_lines,
+            })
+        text_lines = []
+
+    def flush_code() -> None:
+        nonlocal code_lines
+        if section is not None and code_lines is not None:
+            section["blocks"].append({
+                "type": "code", "language": code_language,
+                "start_line": code_start, "lines": code_lines,
+            })
+        code_lines = None
+
+    for line_number, line in enumerate(source_lines, 1):
+        if code_lines is not None:
+            if line.strip() == "```":
+                flush_code()
+            else:
+                code_lines.append(line)
+            continue
+
+        heading = HEADING.match(line)
+        if heading:
+            flush_text()
+            section = {
+                "title": heading.group(1), "heading_line": line_number, "blocks": [],
+            }
+            sections.append(section)
+            continue
+
+        fence = FENCE.match(line)
+        if section is not None and fence:
+            flush_text()
+            code_language = fence.group(1).strip()
+            code_start = line_number + 1
+            code_lines = []
+            continue
+
+        if section is not None:
+            if not text_lines:
+                text_start = line_number
+            text_lines.append(line)
+
+    if code_lines is not None:
+        flush_code()
+    else:
+        flush_text()
+    return sections
+
 def read_request():
     try: value=json.load(sys.stdin)
     except json.JSONDecodeError as e: raise RequestError(f"invalid JSON request: {e.msg}") from e
@@ -66,7 +135,7 @@ def evaluate(request: dict[str,Any]):
         review={"status":"unavailable","attempts":0,"feedback":None,"failure":"no reviewer configured"}
     feedback=review["feedback"]
     progress("evaluation_finished")
-    return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"submitted_source":submitted_source,"review":{**review,"reviewer":name,"model":reviewer_model,"reasoning_effort":reviewer_reasoning_effort},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
+    return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"metadata_sections":parse_metadata_sections(metadata_text),"submitted_source":submitted_source,"review":{**review,"reviewer":name,"model":reviewer_model,"reasoning_effort":reviewer_reasoning_effort},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
 def main():
     try: response=evaluate(read_request())
     except (OSError,UnicodeError,RequestError,ReviewerError,TargetEnvironmentError) as e: json.dump({"error":str(e)},sys.stdout); sys.stdout.write("\n"); return 1

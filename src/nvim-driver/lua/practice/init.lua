@@ -30,6 +30,9 @@ function M.setup(options)
   vim.api.nvim_create_user_command("PracticeAccept", session.accept, {
     desc = "Accept the proposed practice rating",
   })
+  vim.api.nvim_create_user_command("PracticeRetry", session.retry, {
+    desc = "Return to the current source without recording a rating",
+  })
   vim.api.nvim_create_user_command("PracticeRate", function(command)
     session.rate(command.args)
   end, {
@@ -80,6 +83,7 @@ function M.setup(options)
   map("<leader>ps", M.start, "Practice: start")
   map("<leader>pc", M.submit, "Practice: check current solution")
   map("<leader>pa", M.accept, "Practice: after review, accept proposed rating")
+  map("<leader>pr", M.retry, "Practice: retry current exercise without recording")
   map("<leader>p1", function() M.rate("fail") end, "Practice: after review, rate Fail")
   map("<leader>p2", function() M.rate("acceptable") end, "Practice: after review, rate Acceptable")
   map("<leader>p3", function() M.rate("good") end, "Practice: after review, rate Good")
@@ -107,6 +111,10 @@ end
 
 function M.rate(rating)
   session.rate(rating)
+end
+
+function M.retry()
+  session.retry()
 end
 
 function M.next()

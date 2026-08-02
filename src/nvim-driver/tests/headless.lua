@@ -21,15 +21,30 @@ local function buffer_starts_with(buffer, heading)
   return lines[1] == heading
 end
 
+local function find_feedback_buffer()
+  for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "practice-feedback" then
+      return buffer
+    end
+  end
+end
+
+local function press(keys)
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "xt", false)
+  vim.wait(100)
+end
+
 assert(vim.fn.exists(":PracticeStart") == 2, "PracticeStart was not registered")
 assert(vim.fn.exists(":PracticeSubmit") == 2, "PracticeSubmit was not registered")
 assert(vim.fn.exists(":PracticeAccept") == 2, "PracticeAccept was not registered")
+assert(vim.fn.exists(":PracticeRetry") == 2, "PracticeRetry was not registered")
 assert(vim.fn.exists(":PracticeLog") == 2, "PracticeLog was not registered")
 assert(vim.fn.exists(":PracticeDiagnostics") == 2, "PracticeDiagnostics was not registered")
 assert(vim.fn.exists(":PracticeNote") == 2, "PracticeNote was not registered")
 assert(vim.fn.exists(":PracticeNotes") == 2, "PracticeNotes was not registered")
 assert(vim.fn.maparg("<Space>ps", "n") ~= "", "start mapping was not registered")
 assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered")
+assert(vim.fn.maparg("<Space>pr", "n") ~= "", "retry mapping was not registered")
 assert(vim.fn.maparg("<Space>pm", "n") ~= "", "note mapping was not registered")
 assert(vim.fn.maparg("<Space>pm", "x") ~= "", "visual note mapping was not registered")
 assert(vim.fn.maparg("<Space>po", "n") ~= "", "open notes mapping was not registered")
@@ -112,7 +127,7 @@ practice.submit()
 assert(practice.get_state().status == "evaluating", "submit did not enter evaluating state")
 local progress_visible = false
 for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
-  if vim.api.nvim_buf_is_valid(buffer) and buffer_text(buffer):find("# Practice Evaluation", 1, true) then
+  if vim.api.nvim_buf_is_valid(buffer) and buffer_text(buffer):find("Practice evaluation", 1, true) then
     progress_visible = true
     break
   end
@@ -123,32 +138,52 @@ wait_for("reviewing")
 local review_state = practice.get_state()
 assert(review_state.result.compiled == true, "completed source did not compile")
 assert(review_state.result.proposed_rating == "good", "successful compile did not propose Good")
+local successful_result = vim.deepcopy(review_state.result)
 
-local feedback = nil
-for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
-  if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "markdown" then
-    local text = buffer_text(buffer)
-    if buffer_starts_with(buffer, "# Practice Feedback") then
-      feedback = text
-      break
-    end
-  end
-end
+local feedback_buffer = find_feedback_buffer()
+local feedback = feedback_buffer and buffer_text(feedback_buffer) or nil
 assert(feedback, "feedback buffer was not opened")
-assert(feedback:find("Compilation:** SUCCESS", 1, true), "compile result is missing")
-assert(feedback:find("return 42;", 1, true), "reference solution is missing")
+assert(feedback:find("Correct  [Good]", 1, true), "outcome and rating are missing")
 assert(feedback:find("The submitted implementation is correct.", 1, true),
   "structured reviewer feedback is missing")
-assert(feedback:find("Rating rationale", 1, true), "review rating rationale is missing")
-local colored_feedback = false
-for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
-  if vim.api.nvim_buf_is_valid(buffer) and buffer_starts_with(buffer, "# Practice Feedback") then
-    colored_feedback = #vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, {}) > 0
-    break
-  end
-end
+assert(not feedback:find("return 42;", 1, true), "reference should be collapsed by default")
+assert(feedback:find("Rating rationale", 1, true),
+  "details should be expanded by default below Excellent")
+assert(feedback:find("Detailed review  [d collapse]", 1, true),
+  "expanded detailed review did not advertise its toggle")
+assert(not feedback:find("Compiler details", 1, true), "empty diagnostics should be omitted")
+assert(not feedback:find("**", 1, true) and not feedback:find("```", 1, true),
+  "UI Markdown markers leaked into native feedback")
+assert(feedback:find("Primary", 1, true) and feedback:find("Ratings", 1, true)
+  and feedback:find("More", 1, true), "feedback actions are not grouped")
+local colored_feedback = #vim.api.nvim_buf_get_extmarks(feedback_buffer, -1, 0, -1, {}) > 0
 assert(colored_feedback, "feedback buffer did not receive color highlights")
-local feedback_buffer = vim.api.nvim_get_current_buf()
+vim.api.nvim_set_current_buf(feedback_buffer)
+for _, key in ipairs({ "a", "1", "2", "3", "4", "n", "m", "d", "c", "r", "?", "<CR>" }) do
+  assert(vim.fn.maparg(key, "n", false, true).buffer == 1,
+    "missing buffer-local feedback mapping: " .. key)
+end
+
+press("d")
+feedback = buffer_text(feedback_buffer)
+assert(not feedback:find("Rating rationale", 1, true), "d did not collapse detailed review")
+local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+assert(vim.api.nvim_buf_get_lines(feedback_buffer, cursor_line - 1, cursor_line, false)[1]
+  :find("Detailed review", 1, true), "detail toggle did not preserve section cursor")
+press("d")
+assert(buffer_text(feedback_buffer):find("Rating rationale", 1, true),
+  "d did not re-expand detailed review")
+press("r")
+feedback = buffer_text(feedback_buffer)
+assert(feedback:find("return 42;", 1, true), "r did not reveal the parsed reference")
+assert(not feedback:find("# Solution", 1, true) and not feedback:find("```cpp", 1, true),
+  "reference retained Markdown delimiters")
+local reference_line = nil
+for index, line in ipairs(vim.api.nvim_buf_get_lines(feedback_buffer, 0, -1, false)) do
+  if line:find("return 42;", 1, true) then reference_line = index; break end
+end
+assert(reference_line, "reference code line was not found")
+vim.api.nvim_win_set_cursor(0, { reference_line, 0 })
 local review_note = practice.note("exercise-fix")
 assert(review_note and vim.api.nvim_buf_is_valid(review_note), "review note did not open")
 vim.api.nvim_buf_set_lines(review_note, -1, -1, false,
@@ -165,9 +200,11 @@ for _, path in ipairs(note_files) do
   end
 end
 assert(review_note_text, "review note phase is missing")
-assert(review_note_text:find("Section: # Practice Feedback", 1, true),
+assert(review_note_text:find("Section: Exercise reference — Solution", 1, true),
   "review note section is missing")
-assert(review_note_text:find("# Practice Feedback", 1, true),
+assert(review_note_text:find(original_sources[first_id]:gsub("%.cpp$", ".md") .. ":12", 1, true),
+  "review note did not retain exact metadata source line")
+assert(review_note_text:find("return 42;", 1, true),
   "review note excerpt is missing")
 
 local notes = require("practice.notes")
@@ -213,6 +250,16 @@ assert(table.concat(vim.fn.readfile(original_sources[first_state.exercise.id]), 
   :find("// Finish:", 1, true),
   "original exercise was modified")
 
+local first_submission = buffer_text(first_state.source_buffer)
+practice.retry()
+assert(practice.get_state().status == "solving", "retry did not return to solving")
+assert(practice.get_state().previous_result ~= nil, "retry did not retain the previous result")
+assert(buffer_text(first_state.source_buffer) == first_submission, "retry changed the working source")
+assert(find_feedback_buffer() == nil, "retry did not close feedback")
+practice.submit()
+assert(practice.get_state().status == "evaluating", "retry submission did not enter evaluating")
+assert(practice.get_state().previous_result == nil, "new submission retained the previous result")
+wait_for("reviewing")
 practice.accept()
 wait_for("solving")
 local second_state = practice.get_state()
@@ -223,23 +270,39 @@ assert(buffer_text(second_state.source_buffer):find("// Finish:", 1, true),
 vim.api.nvim_buf_set_lines(second_state.source_buffer, 1, 2, false, { "    return;" })
 practice.submit()
 wait_for("reviewing")
-local correction_visible = false
-for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
-  if vim.api.nvim_buf_is_valid(buffer) then
-    local text = buffer_text(buffer)
-    if buffer_starts_with(buffer, "# Practice Feedback") then
-      correction_visible = text:find("## Corrected implementation", 1, true) ~= nil
-        and text:find("return 42;", 1, true) ~= nil
-      for _, window in ipairs(vim.fn.win_findbuf(buffer)) do
-        assert(vim.wo[window].wrap, "feedback window should wrap")
-        assert(vim.wo[window].linebreak, "feedback wrapping should respect word boundaries")
-        assert(vim.wo[window].breakindent, "wrapped feedback should preserve indentation")
-      end
-      break
-    end
-  end
+feedback_buffer = find_feedback_buffer()
+feedback = buffer_text(feedback_buffer)
+assert(feedback:find("Almost there  [Acceptable]", 1, true),
+  "minor defect outcome is missing")
+assert(feedback:find("Correction", 1, true) and feedback:find("return 42;", 1, true),
+  "reviewer correction was not expanded")
+assert(feedback:find("recognized the approach", 1, true),
+  "positive rating after failed compilation was not explained")
+assert(feedback:find("Compiler details", 1, true), "non-empty diagnostics were omitted")
+for _, window in ipairs(vim.fn.win_findbuf(feedback_buffer)) do
+  assert(vim.wo[window].wrap, "feedback window should wrap")
+  assert(vim.wo[window].linebreak, "feedback wrapping should respect word boundaries")
+  assert(vim.wo[window].breakindent, "wrapped feedback should preserve indentation")
 end
-assert(correction_visible, "reviewer correction was not rendered")
+vim.api.nvim_set_current_buf(feedback_buffer)
+press("c")
+assert(buffer_text(feedback_buffer):find("error:", 1, true),
+  "c did not expand compiler diagnostics")
+press("?")
+assert(buffer_text(feedback_buffer):find("Shortcuts", 1, true), "? did not expand shortcut help")
+press("<CR>")
+assert(practice.get_state().status == "solving",
+  "Enter on defective feedback did not return to editing")
+assert(buffer_text(second_state.source_buffer):find("return;", 1, true),
+  "defective-result retry changed the source")
+
+vim.api.nvim_buf_set_lines(second_state.source_buffer, 1, 2, false, { "    return 0;" })
+practice.submit()
+wait_for("reviewing")
+feedback_buffer = find_feedback_buffer()
+feedback = buffer_text(feedback_buffer)
+assert(feedback:find("Needs another attempt  [Fail]", 1, true),
+  "incorrect outcome is missing")
 practice.accept()
 wait_for("complete")
 local complete_state = practice.get_state()
@@ -262,9 +325,54 @@ assert(vim.v.shell_error == 0, "could not inspect the review artifact archive")
 local archived = vim.json.decode(archive_output)
 assert(#archived == 2, "rated submissions were not archived")
 assert(archived[1][1]:find("return 42;", 1, true), "successful submission source was not archived")
-assert(archived[2][1]:find("return;", 1, true), "failed submission source was not archived")
+assert(archived[2][1]:find("return 0;", 1, true), "final incorrect submission was not archived")
+assert(not archived[2][1]:find("return;", 1, true), "retried submission was archived")
 assert(vim.json.decode(archived[1][2]).feedback.summary
   == "The submitted implementation is correct.", "full reviewer response was not archived")
+
+local ui = require("practice.ui")
+local excellent = vim.deepcopy(successful_result)
+excellent.proposed_rating = "excellent"
+local excellent_buffer = ui.open_feedback(vim.api.nvim_get_current_win(), excellent, {})
+assert(buffer_text(excellent_buffer):find("Detailed review  [d expand]", 1, true),
+  "Excellent feedback did not start with detailed review collapsed")
+assert(not buffer_text(excellent_buffer):find("Rating rationale", 1, true),
+  "Excellent feedback exposed detailed review by default")
+ui.close_feedback()
+
+local synthetic = {
+  compiled = false,
+  diagnostics = "",
+  metadata = "# Legacy\n\n```cpp\nreturn 7;\n",
+  metadata_sections = {},
+  proposed_rating = vim.NIL,
+  review = {
+    status = "unavailable", failure = "**legacy** reviewer unavailable",
+    reviewer = "legacy", attempts = 1,
+  },
+}
+local old_columns = vim.o.columns
+vim.o.columns = 160
+local synthetic_buffer, synthetic_window = ui.open_feedback(vim.api.nvim_get_current_win(), synthetic, {})
+assert(vim.api.nvim_win_get_width(synthetic_window) >= 52,
+  "wide feedback did not keep the target minimum width")
+local synthetic_text = buffer_text(synthetic_buffer)
+assert(synthetic_text:find("Review unavailable", 1, true), "unavailable outcome is missing")
+assert(synthetic_text:find("Choose a manual rating", 1, true), "manual-rating hint is missing")
+vim.api.nvim_set_current_win(synthetic_window)
+press("r")
+synthetic_text = buffer_text(synthetic_buffer)
+assert(synthetic_text:find("return 7;", 1, true), "malformed metadata fallback is missing")
+assert(not synthetic_text:find("```", 1, true) and not synthetic_text:find("# Legacy", 1, true),
+  "malformed metadata fallback retained Markdown delimiters")
+ui.close_feedback()
+
+vim.o.columns = 100
+synthetic_buffer, synthetic_window = ui.open_feedback(vim.api.nvim_get_current_win(), synthetic, {})
+assert(vim.api.nvim_win_get_height(synthetic_window) >= 10,
+  "narrow feedback did not receive a usable horizontal height")
+ui.close_feedback()
+vim.o.columns = old_columns
 
 practice.quit()
 assert(practice.get_state().status == "idle", "practice did not return to idle")
