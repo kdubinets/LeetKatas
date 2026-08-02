@@ -51,6 +51,18 @@ python3 -m pip install -r src/nvim-driver/requirements.txt
 
 `PRACTICE_DATABASE` may override the persistent SQLite database location.
 
+### Diagnostics and logs
+
+The driver writes a structured JSON-lines diagnostic log to
+`stdpath("state")/leetkatas/practice.log`. Set `PRACTICE_LOG` to override the
+path. The log rotates to `practice.log.1` at 2 MiB and records session state,
+notifications, subprocess commands, exit status, duration, stderr, and compact
+response summaries. Exercise source and metadata bodies are not logged.
+
+Use `:PracticeDiagnostics` to show the current session ID, state, and log path.
+Use `:PracticeLog` to open the log. When reporting a problem, the approximate
+time or session ID is enough to correlate the relevant events.
+
 ## Long-Term Workflow
 
 The intended complete loop is:
@@ -161,9 +173,14 @@ solution remain hidden until submission.
 ### Submit and review
 
 `:PracticeSubmit` writes the current buffer and invokes the evaluator. Neovim
-then opens a dedicated read-only feedback buffer in a vertical split to the
-right of the source. The source remains visible in the main window so the
-submitted code and reference answer can be compared side by side. The feedback
+immediately opens a live evaluation pane with elapsed time and real progress
+from the compiler and reviewer. It reports compilation completion, reviewer
+attempts, and retry delays, then replaces itself with the final feedback.
+The progress channel is a temporary JSON-lines file so the evaluator's stdout
+remains reserved for its final protocol response. The pane becomes a dedicated
+read-only feedback buffer in a vertical split to the right of the source. The
+source remains visible in the main window so the submitted code and reference
+answer can be compared side by side. The feedback
 buffer presents:
 
 - Whether compilation succeeded.

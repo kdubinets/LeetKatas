@@ -48,8 +48,8 @@ def record_rating(
         raise RequestError("exercise_id must be a non-empty string")
     if not isinstance(compiled, bool):
         raise RequestError("compiled must be a boolean")
-    if proposed_rating not in RATINGS:
-        raise RequestError("proposed_rating must be a valid rating")
+    if proposed_rating is not None and proposed_rating not in RATINGS:
+        raise RequestError("proposed_rating must be a valid rating or null")
     if final_rating not in RATINGS:
         raise RequestError("final_rating must be a valid rating")
     try:
@@ -60,6 +60,10 @@ def record_rating(
             proposed_rating=proposed_rating,
             final_rating=final_rating,
             review_datetime=review_datetime,
+            review_status=request.get("review_status", "available"),
+            reviewer_name=request.get("reviewer_name"),
+            reviewer_model=request.get("reviewer_model"),
+            review_attempts=request.get("review_attempts", 0),
         )
     except SchedulerError as error:
         raise RequestError(str(error)) from error

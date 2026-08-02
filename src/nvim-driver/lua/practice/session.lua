@@ -1,5 +1,6 @@
 local process = require("practice.process")
 local ui = require("practice.ui")
+local log = require("practice.log")
 
 local M = {}
 
@@ -21,6 +22,11 @@ local state = {
   working_path = nil,
   source_buffer = nil,
   source_window = nil,
+  progress_timer = nil,
+  progress_path = nil,
+  progress_started = nil,
+  progress_events = {},
+  progress_event_count = 0,
 }
 
 local config = nil
@@ -41,7 +47,55 @@ local function confirm_abandon(action)
   return not is_modified() or ui.confirm_discard(action)
 end
 
+local function stop_progress()
+  if state.progress_timer then
+    state.progress_timer:stop()
+    state.progress_timer:close()
+  end
+  state.progress_timer = nil
+  state.progress_started = nil
+end
+
+local function read_progress()
+  if not state.progress_path or vim.fn.filereadable(state.progress_path) ~= 1 then
+    return
+  end
+  local events = {}
+  for _, line in ipairs(vim.fn.readfile(state.progress_path)) do
+    local ok, event = pcall(vim.json.decode, line)
+    if ok and type(event) == "table" then
+      table.insert(events, event)
+    end
+  end
+  for index = state.progress_event_count + 1, #events do
+    log.event("evaluation_progress", "info", events[index])
+  end
+  state.progress_event_count = #events
+  state.progress_events = events
+end
+
+local function start_progress()
+  stop_progress()
+  state.progress_path = state.session_directory .. "/evaluation-progress.jsonl"
+  vim.fn.delete(state.progress_path)
+  state.progress_started = vim.uv.hrtime()
+  state.progress_events = {}
+  state.progress_event_count = 0
+  ui.open_progress(state.source_window)
+  local timer = vim.uv.new_timer()
+  state.progress_timer = timer
+  timer:start(0, 100, vim.schedule_wrap(function()
+    if state.progress_timer ~= timer then
+      return
+    end
+    read_progress()
+    local elapsed = (vim.uv.hrtime() - state.progress_started) / 1000000000
+    ui.update_progress(elapsed, state.progress_events)
+  end))
+end
+
 local function delete_working_copy()
+  stop_progress()
   ui.close_feedback()
   if valid_buffer(state.source_buffer) then
     vim.api.nvim_buf_delete(state.source_buffer, { force = true })
@@ -54,6 +108,9 @@ local function delete_working_copy()
   state.working_path = nil
   state.source_buffer = nil
   state.next_due = nil
+  state.progress_path = nil
+  state.progress_events = {}
+  state.progress_event_count = 0
 end
 
 local function reset_session()
@@ -187,20 +244,27 @@ function M.submit()
   end
 
   state.status = "evaluating"
+  start_progress()
   process.run(config.python, script_path("evaluate_exercise.py"), {
     source_path = state.working_path,
+    starter_source_path = state.exercise.source_path,
     metadata_path = state.exercise.metadata_path,
     command = config.evaluation_command,
+    reviewer = config.reviewer,
+    progress_path = state.progress_path,
   }, function(error_message, response)
+    read_progress()
+    stop_progress()
     if error_message then
       state.status = "solving"
+      ui.show_progress_error(error_message)
       ui.notify("Evaluation failed: " .. error_message, vim.log.levels.ERROR)
       return
     end
     if type(response.compiled) ~= "boolean"
       or type(response.diagnostics) ~= "string"
       or type(response.metadata) ~= "string"
-      or not RATINGS[response.proposed_rating]
+      or (response.proposed_rating ~= vim.NIL and response.proposed_rating ~= nil and not RATINGS[response.proposed_rating])
     then
       state.status = "solving"
       ui.notify("Evaluation failed: invalid evaluator response", vim.log.levels.ERROR)
@@ -232,6 +296,9 @@ function M.rate(rating)
     compiled = state.result.compiled,
     proposed_rating = state.result.proposed_rating,
     final_rating = rating,
+    review_status = state.result.review.status,
+    reviewer_name = state.result.review.reviewer,
+    review_attempts = state.result.review.attempts,
   }, function(error_message, response)
     if error_message then
       state.status = "reviewing"
@@ -254,6 +321,10 @@ end
 function M.accept()
   if state.status ~= "reviewing" then
     ui.notify("There is no proposed rating to accept", vim.log.levels.WARN)
+    return
+  end
+  if type(state.result.proposed_rating) ~= "string" then
+    ui.notify("No reviewer rating is available; choose a manual rating", vim.log.levels.WARN)
     return
   end
   M.rate(state.result.proposed_rating)

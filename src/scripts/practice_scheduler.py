@@ -17,7 +17,7 @@ else:
     FSRS_IMPORT_ERROR = None
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 RATING_NAMES = {"fail", "acceptable", "good", "excellent"}
 
 
@@ -142,13 +142,35 @@ class PracticeStore:
                 review_datetime TEXT NOT NULL,
                 final_rating TEXT NOT NULL,
                 compiled INTEGER NOT NULL CHECK (compiled IN (0, 1)),
-                proposed_rating TEXT NOT NULL,
+                proposed_rating TEXT,
+                review_status TEXT NOT NULL DEFAULT 'legacy',
+                reviewer_name TEXT,
+                reviewer_model TEXT,
+                review_attempts INTEGER NOT NULL DEFAULT 0,
                 review_log_json TEXT NOT NULL,
                 FOREIGN KEY (collection_key, exercise_id)
                     REFERENCES cards (collection_key, exercise_id)
             );
             """
         )
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(reviews)")}
+        proposed_info = next((row for row in connection.execute("PRAGMA table_info(reviews)") if row[1] == "proposed_rating"), None)
+        if proposed_info is not None and proposed_info[3]:
+            connection.execute("ALTER TABLE reviews RENAME TO reviews_legacy_v1")
+            connection.execute("""CREATE TABLE reviews (
+                review_id INTEGER PRIMARY KEY AUTOINCREMENT, collection_key TEXT NOT NULL,
+                exercise_id TEXT NOT NULL, review_datetime TEXT NOT NULL, final_rating TEXT NOT NULL,
+                compiled INTEGER NOT NULL CHECK (compiled IN (0, 1)), proposed_rating TEXT,
+                review_log_json TEXT NOT NULL, review_status TEXT NOT NULL DEFAULT 'legacy',
+                reviewer_name TEXT, reviewer_model TEXT, review_attempts INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (collection_key, exercise_id) REFERENCES cards (collection_key, exercise_id))""")
+            connection.execute("""INSERT INTO reviews (review_id,collection_key,exercise_id,review_datetime,final_rating,compiled,proposed_rating,review_log_json)
+                SELECT review_id,collection_key,exercise_id,review_datetime,final_rating,compiled,proposed_rating,review_log_json FROM reviews_legacy_v1""")
+            connection.execute("DROP TABLE reviews_legacy_v1")
+            columns = {"review_status", "reviewer_name", "reviewer_model", "review_attempts"}
+        for name, definition in (("review_status", "TEXT NOT NULL DEFAULT 'legacy'"), ("reviewer_name", "TEXT"), ("reviewer_model", "TEXT"), ("review_attempts", "INTEGER NOT NULL DEFAULT 0")):
+            if name not in columns:
+                connection.execute(f"ALTER TABLE reviews ADD COLUMN {name} {definition}")
         row = connection.execute(
             "SELECT value FROM schema_metadata WHERE key = 'schema_version'"
         ).fetchone()
@@ -157,6 +179,8 @@ class PracticeStore:
                 "INSERT INTO schema_metadata (key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
+        elif row["value"] == "1":
+            connection.execute("UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'", (str(SCHEMA_VERSION),))
         elif row["value"] != str(SCHEMA_VERSION):
             raise SchedulerError(
                 f"unsupported practice database schema version: {row['value']}"
@@ -180,9 +204,13 @@ class PracticeStore:
         collection_key: str,
         exercise_id: str,
         compiled: bool,
-        proposed_rating: str,
+        proposed_rating: str | None,
         final_rating: str,
         review_datetime: datetime | None = None,
+        review_status: str = "available",
+        reviewer_name: str | None = None,
+        reviewer_model: str | None = None,
+        review_attempts: int = 0,
     ) -> dict[str, str | bool]:
         current = ensure_utc(review_datetime)
         scheduler = create_scheduler()
@@ -228,8 +256,9 @@ class PracticeStore:
                 """
                 INSERT INTO reviews (
                     collection_key, exercise_id, review_datetime, final_rating,
-                    compiled, proposed_rating, review_log_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    compiled, proposed_rating, review_log_json, review_status,
+                    reviewer_name, reviewer_model, review_attempts
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     collection_key,
@@ -239,6 +268,10 @@ class PracticeStore:
                     int(compiled),
                     proposed_rating,
                     review_log.to_json(),
+                    review_status,
+                    reviewer_name,
+                    reviewer_model,
+                    review_attempts,
                 ),
             )
             connection.commit()

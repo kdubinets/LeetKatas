@@ -1,4 +1,5 @@
 local session = require("practice.session")
+local log = require("practice.log")
 
 local M = {}
 
@@ -9,6 +10,13 @@ local function map(lhs, rhs, description)
 end
 
 function M.setup(options)
+  log.setup(options.log_path)
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
+      log.event("session_ended", "info", { state = session.get_state().status })
+    end,
+    desc = "Finish the practice diagnostic session",
+  })
   session.setup(options)
 
   vim.api.nvim_create_user_command("PracticeStart", function(command)
@@ -38,6 +46,18 @@ function M.setup(options)
   vim.api.nvim_create_user_command("PracticeQuit", session.quit, {
     desc = "End the coding practice session",
   })
+  vim.api.nvim_create_user_command("PracticeLog", log.open, {
+    desc = "Open the persistent practice diagnostic log",
+  })
+  vim.api.nvim_create_user_command("PracticeDiagnostics", function()
+    local state = session.get_state()
+    log.event("diagnostics_requested", "info", {
+      state = state.status,
+      exercise_id = state.exercise and state.exercise.id or nil,
+    })
+    vim.notify("Practice log: " .. log.path() .. "\nSession: " .. log.session_id()
+      .. "\nState: " .. state.status, vim.log.levels.INFO, { title = "Practice Diagnostics" })
+  end, { desc = "Show practice diagnostic location and session state" })
 
   map("<leader>ps", M.start, "Practice: start")
   map("<leader>pc", M.submit, "Practice: check current solution")

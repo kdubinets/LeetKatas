@@ -17,6 +17,8 @@ end
 assert(vim.fn.exists(":PracticeStart") == 2, "PracticeStart was not registered")
 assert(vim.fn.exists(":PracticeSubmit") == 2, "PracticeSubmit was not registered")
 assert(vim.fn.exists(":PracticeAccept") == 2, "PracticeAccept was not registered")
+assert(vim.fn.exists(":PracticeLog") == 2, "PracticeLog was not registered")
+assert(vim.fn.exists(":PracticeDiagnostics") == 2, "PracticeDiagnostics was not registered")
 assert(vim.fn.maparg("<Space>ps", "n") ~= "", "start mapping was not registered")
 assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered")
 
@@ -64,6 +66,15 @@ assert(buffer_text(first_state.source_buffer):find("// Finish:", 1, true), "mark
 
 vim.api.nvim_buf_set_lines(first_state.source_buffer, 1, 2, false, { "    return 42;" })
 practice.submit()
+assert(practice.get_state().status == "evaluating", "submit did not enter evaluating state")
+local progress_visible = false
+for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+  if vim.api.nvim_buf_is_valid(buffer) and buffer_text(buffer):find("# Practice Evaluation", 1, true) then
+    progress_visible = true
+    break
+  end
+end
+assert(progress_visible, "evaluation progress pane was not opened immediately")
 wait_for("reviewing")
 
 local review_state = practice.get_state()
@@ -83,6 +94,8 @@ end
 assert(feedback, "feedback buffer was not opened")
 assert(feedback:find("Compilation:** SUCCESS", 1, true), "compile result is missing")
 assert(feedback:find("return 42;", 1, true), "reference solution is missing")
+assert(feedback:find("The submitted implementation is correct.", 1, true),
+  "structured reviewer feedback is missing")
 assert(table.concat(vim.fn.readfile(original_sources[first_state.exercise.id]), "\n")
   :find("// Finish:", 1, true),
   "original exercise was modified")
@@ -110,6 +123,11 @@ end
 
 practice.quit()
 assert(practice.get_state().status == "idle", "practice did not return to idle")
+assert(vim.env.PRACTICE_LOG and vim.fn.filereadable(vim.env.PRACTICE_LOG) == 1,
+  "persistent practice log was not created")
+local log_text = table.concat(vim.fn.readfile(vim.env.PRACTICE_LOG), "\n")
+assert(log_text:find("process_started", 1, true), "process start was not logged")
+assert(log_text:find("process_finished", 1, true), "process result was not logged")
 vim.fn.delete(collection, "rf")
 
 print("Neovim practice headless workflow passed")

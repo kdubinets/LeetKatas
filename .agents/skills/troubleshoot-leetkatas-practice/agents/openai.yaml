@@ -1,0 +1,4 @@
+interface:
+  display_name: "Troubleshoot LeetKatas Practice"
+  short_description: "Diagnose practice driver and reviewer failures"
+  default_prompt: "Use $troubleshoot-leetkatas-practice to diagnose why the LeetKatas practice workflow failed."

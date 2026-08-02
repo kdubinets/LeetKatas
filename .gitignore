@@ -1,0 +1,7 @@
+scripts/
+problems/
+logs/
+__pycache__/
+.venv/
+*.tsv
+cpp-problems.tgj

@@ -21,9 +21,14 @@ package.path = table.concat({
 }, ";")
 
 local practice = require("practice")
+local selected_python = vim.env.PRACTICE_PYTHON
+  or (vim.fn.executable(repository_dir .. "/.venv/bin/python") == 1
+    and repository_dir .. "/.venv/bin/python" or "python3")
 
 practice.setup({
-  python = vim.env.PRACTICE_PYTHON or "python3",
+  python = selected_python,
+  log_path = vim.env.PRACTICE_LOG
+    or (vim.fn.stdpath("state") .. "/leetkatas/practice.log"),
   scripts_dir = repository_dir .. "/src/scripts",
   database_path = vim.env.PRACTICE_DATABASE,
   default_directory = vim.env.PRACTICE_COLLECTION
@@ -32,13 +37,15 @@ practice.setup({
   metadata_extension = vim.env.PRACTICE_METADATA_EXTENSION or ".md",
   practice_marker = vim.env.PRACTICE_MARKER or "// Finish:",
   evaluation_command = {
-    vim.env.CXX or "g++",
+    vim.env.CXX or (vim.env.PRACTICE_COMPILER == "gcc" and "g++" or "clang++"),
     "-std=c++20",
     "-Wall",
     "-Wextra",
-    "-Werror",
     "-fsyntax-only",
     "{source}",
+  },
+  reviewer = vim.env.PRACTICE_REVIEWER and { command = { vim.env.PRACTICE_REVIEWER }, name = vim.env.PRACTICE_REVIEWER_NAME } or {
+    command = { selected_python, repository_dir .. "/src/scripts/codex_reviewer.py" }, name = "Codex"
   },
 })
 

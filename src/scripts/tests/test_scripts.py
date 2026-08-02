@@ -189,7 +189,8 @@ class EvaluateExerciseTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0)
             self.assertTrue(response["compiled"])
-            self.assertEqual(response["proposed_rating"], "good")
+            self.assertIsNone(response["proposed_rating"])
+            self.assertEqual(response["review"]["status"], "unavailable")
             self.assertEqual(response["metadata"], metadata.read_text())
 
     def test_failed_compilation_is_a_valid_fail_result(self) -> None:
@@ -206,7 +207,8 @@ class EvaluateExerciseTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0)
             self.assertFalse(response["compiled"])
-            self.assertEqual(response["proposed_rating"], "fail")
+            self.assertIsNone(response["proposed_rating"])
+            self.assertEqual(response["review"]["status"], "unavailable")
             self.assertIn("error:", response["diagnostics"])
             self.assertEqual(response["metadata"], metadata.read_text())
 
@@ -224,6 +226,32 @@ class EvaluateExerciseTests(unittest.TestCase):
 
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("{source} placeholder", response["error"])
+
+    def test_reports_compiler_and_reviewer_progress(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "valid.cpp"
+            metadata = directory / "valid.md"
+            progress = directory / "progress.jsonl"
+            source.write_text("int solve() { return 1; }\n")
+            metadata.write_text("# Solution\n")
+            request = self.request(source, metadata)
+            request["progress_path"] = str(progress)
+
+            result, _ = run_script("evaluate_exercise.py", request)
+
+            self.assertEqual(result.returncode, 0)
+            events = [json.loads(line) for line in progress.read_text().splitlines()]
+            self.assertEqual(
+                [event["event"] for event in events],
+                [
+                    "compilation_started",
+                    "compilation_finished",
+                    "review_finished",
+                    "evaluation_finished",
+                ],
+            )
+            self.assertTrue(events[1]["compiled"])
 
 
 class RecordRatingTests(unittest.TestCase):

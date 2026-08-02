@@ -17,7 +17,13 @@ if [[ ! -d "$collection" ]]; then
 fi
 
 collection=$(cd -- "$collection" && pwd)
-practice_python=${PRACTICE_PYTHON:-python3}
+if [[ -n ${PRACTICE_PYTHON:-} ]]; then
+    practice_python=$PRACTICE_PYTHON
+elif [[ -x $repository_dir/.venv/bin/python ]]; then
+    practice_python=$repository_dir/.venv/bin/python
+else
+    practice_python=python3
+fi
 if ! "$practice_python" -c 'import fsrs' 2>/dev/null; then
     printf 'FSRS dependency is unavailable for %s. Install with: %s -m pip install -r %s/requirements.txt\n' \
         "$practice_python" "$practice_python" "$driver_dir" >&2
@@ -27,4 +33,5 @@ fi
 exec env \
     PRACTICE_COLLECTION="$collection" \
     PRACTICE_AUTOSTART=1 \
+    PRACTICE_PYTHON="$practice_python" \
     nvim --clean -u "$driver_dir/init.lua"
