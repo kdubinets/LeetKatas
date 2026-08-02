@@ -55,6 +55,28 @@ assert(vim.o.shiftwidth == 4, "practice shiftwidth should be four")
 assert(vim.o.softtabstop == 4, "practice softtabstop should be four")
 assert(vim.o.tabstop == 4, "practice tabstop should be four")
 
+local import_folds = require("practice.import_folds")
+local function assert_import_fold(filetype, lines, expected_first, expected_last)
+  local buffer = vim.api.nvim_create_buf(false, true)
+  vim.bo[buffer].filetype = filetype
+  vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines)
+  vim.api.nvim_win_set_buf(0, buffer)
+  import_folds.close(buffer, 0)
+  vim.api.nvim_win_set_cursor(0, { expected_first, 0 })
+  assert(vim.fn.foldclosed(expected_first) == expected_first,
+    filetype .. " imports were not folded closed")
+  assert(vim.fn.foldclosedend(expected_first) == expected_last,
+    filetype .. " import fold has the wrong end")
+  assert(vim.wo.foldtext == "v:lua.PracticeImportFoldText()", filetype .. " fold text was not customised")
+  assert(import_folds.foldtext():find("hidden", 1, true), filetype .. " fold text exposes import text")
+  vim.api.nvim_buf_delete(buffer, { force = true })
+end
+
+assert_import_fold("cpp", { "#include <vector>", "", "#include <string>", "int solve();" }, 1, 3)
+assert_import_fold("cpp", { "#include <vector>", "", "int solve();" }, 1, 2)
+assert_import_fold("python", { "#!/usr/bin/env python3", "import os", "from pathlib import Path", "def solve():" }, 2, 3)
+assert_import_fold("rust", { "use std::collections::HashMap;", "", "use std::fmt;", "fn solve() {}" }, 1, 3)
+
 local collection = vim.fn.tempname() .. "-practice-test"
 assert(vim.fn.mkdir(collection, "p") == 1, "could not create test collection")
 vim.fn.writefile({ vim.json.encode({
@@ -104,6 +126,16 @@ assert(vim.fs.basename(first_state.working_path) ~= vim.fs.basename(original_sou
 assert(not vim.fs.basename(first_state.working_path):find(first_id, 1, true),
   "working copy filename exposes the exercise slug")
 assert(buffer_text(first_state.source_buffer):find("// Finish:", 1, true), "marker is missing")
+local instruction_marks = vim.api.nvim_buf_get_extmarks(first_state.source_buffer,
+  vim.api.nvim_create_namespace("practice_instruction"), 0, -1, { details = true })
+local instruction_highlighted = false
+for _, mark in ipairs(instruction_marks) do
+  if mark[4].hl_group == "PracticeInstruction" then instruction_highlighted = true; break end
+end
+assert(instruction_highlighted, "finish instruction was not highlighted")
+local finish_mapping = vim.fn.maparg("ZZ", "n", false, true)
+assert(type(finish_mapping) == "table" and finish_mapping.buffer == 1,
+  "ZZ is not intercepted in the practice source buffer")
 
 vim.api.nvim_set_current_win(first_state.source_window)
 vim.api.nvim_set_current_buf(first_state.source_buffer)

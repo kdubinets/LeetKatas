@@ -177,6 +177,11 @@ local function open_selected_exercise(exercise)
     state.source_window,
     config.practice_marker
   )
+  vim.keymap.set("n", "ZZ", M.submit, {
+    buffer = state.source_buffer,
+    silent = true,
+    desc = "Practice: submit the current exercise",
+  })
   state.status = "solving"
 end
 

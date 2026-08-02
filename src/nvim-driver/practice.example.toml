@@ -15,6 +15,7 @@ reasoning_effort = "low"
 [editor]
 indent_width = 4
 which_key_delay_ms = 300
+# Exercise import/include preambles are folded closed automatically.
 
 [evaluation]
 compiler = "clang++"

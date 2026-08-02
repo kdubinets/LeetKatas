@@ -88,6 +88,13 @@ which_key_delay_ms = 300
 compiler = "clang++"
 ```
 
+When an exercise opens, its import preamble is folded closed by default. This
+currently recognises C/C++ `#include`, Python `import`/`from`, Rust `use`, and
+common import forms for Go, JavaScript/TypeScript, Java, Kotlin, C#, Ruby, and
+Swift. Use Neovim's normal fold commands (for example `zo` or `za`) to reveal
+it. Support for a new exercise language is added in
+`lua/practice/import_folds.lua` without changing the exercise UI.
+
 Relative paths are resolved from the directory containing the configuration
 file. The default collection is a user preference and belongs here; its
 `environment.json` remains separate because it describes the language and

@@ -1,9 +1,11 @@
 local M = {}
 local log = require("practice.log")
+local import_folds = require("practice.import_folds")
 
 local feedback_buffer = nil
 local feedback_window = nil
 local feedback_namespace = vim.api.nvim_create_namespace("practice_feedback")
+local instruction_namespace = vim.api.nvim_create_namespace("practice_instruction")
 local feedback_contexts = {}
 local feedback_result = nil
 local feedback_callbacks = nil
@@ -18,6 +20,8 @@ local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeHint", { default = true, link = "Comment" })
   vim.api.nvim_set_hl(0, "PracticeRating", { default = true, link = "Special" })
   vim.api.nvim_set_hl(0, "PracticeAction", { default = true, link = "Identifier" })
+  vim.api.nvim_set_hl(0, "PracticeInstruction", { default = true, link = "DiagnosticInfo" })
+  vim.api.nvim_set_hl(0, "PracticeInstructionLead", { default = true, bold = true, underline = true })
   vim.api.nvim_set_hl(0, "PracticeCode", { default = true, link = "String" })
   vim.api.nvim_set_hl(0, "PracticeCodeBlock", { default = true, link = "PreProc" })
   vim.api.nvim_set_hl(0, "PracticeQuestion", { default = true, link = "DiagnosticInfo" })
@@ -488,9 +492,25 @@ function M.open_source(path, preferred_window, practice_marker)
   vim.bo[buffer].bufhidden = "wipe"
   vim.bo[buffer].swapfile = false
   vim.bo[buffer].completefunc, vim.bo[buffer].omnifunc, vim.bo[buffer].tagfunc = "", "", ""
+  import_folds.close(buffer, window)
   for index, line in ipairs(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)) do
     local marker_start = line:find(practice_marker, 1, true)
-    if marker_start then vim.api.nvim_win_set_cursor(window, { index, marker_start - 1 }); break end
+    if marker_start then
+      local marker_column = marker_start - 1
+      vim.api.nvim_buf_set_extmark(buffer, instruction_namespace, index - 1, marker_column, {
+        end_col = #line,
+        hl_group = "PracticeInstruction",
+        priority = 200,
+      })
+      vim.api.nvim_buf_set_extmark(buffer, instruction_namespace, index - 1, marker_column, {
+        end_col = marker_column + #practice_marker,
+        hl_group = "PracticeInstructionLead",
+        hl_mode = "combine",
+        priority = 201,
+      })
+      vim.api.nvim_win_set_cursor(window, { index, marker_column })
+      break
+    end
   end
   return buffer, window
 end
