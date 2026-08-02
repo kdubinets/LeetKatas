@@ -30,6 +30,12 @@ function M.setup(options)
   vim.api.nvim_create_user_command("PracticeAccept", session.accept, {
     desc = "Accept the proposed practice rating",
   })
+  vim.api.nvim_create_user_command("PracticeAsk", function(command)
+    session.ask(command.args ~= "" and command.args or nil)
+  end, {
+    nargs = "*",
+    desc = "Ask the reviewer a follow-up question",
+  })
   vim.api.nvim_create_user_command("PracticeRetry", session.retry, {
     desc = "Return to the current source without recording a rating",
   })
@@ -90,6 +96,7 @@ function M.setup(options)
   map("<leader>p4", function() M.rate("excellent") end, "Practice: after review, rate Excellent")
   map("<leader>pn", M.next, "Practice: next exercise")
   map("<leader>pm", M.note, "Practice: capture a follow-up note")
+  map("<leader>pf", M.ask, "Practice: ask reviewer a follow-up question")
   vim.keymap.set("x", "<leader>pm", ":PracticeNote<CR>", {
     silent = true, desc = "Practice: capture selected context in a follow-up note",
   })
@@ -127,6 +134,10 @@ end
 
 function M.note(kind, first_line, last_line)
   return session.note(kind, first_line, last_line)
+end
+
+function M.ask(question)
+  return session.ask(question)
 end
 
 function M.open_notes()

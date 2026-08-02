@@ -83,6 +83,14 @@ The Codex adapter reads its instructions from
 `prompts/codex_reviewer.txt`. Other reviewer adapters can use independent prompt
 files without changing the generic reviewer request or response contract.
 
+`review_follow_up.py` provides a separate conversational contract. It accepts
+the original evidence, initial review, up to sixteen alternating history
+messages, the latest `question`, and a separately configured reviewer command.
+The external follow-up reviewer returns `{"answer":"..."}`; the bridge adds
+availability, attempt, reviewer, model, and reasoning-effort metadata. The
+Codex adapter selects this contract with `--follow-up` and reads its independent
+instructions from `prompts/codex_review_follow_up.txt`.
+
 `record_rating.py` accepts:
 
 ```json

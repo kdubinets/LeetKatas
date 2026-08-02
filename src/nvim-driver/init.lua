@@ -114,6 +114,10 @@ local practice = require("practice")
 local reviewer_model = environment("PRACTICE_REVIEW_MODEL") or reviewer_config.model or "gpt-5.6-luna"
 local reviewer_reasoning_effort = environment("PRACTICE_REVIEW_EFFORT")
   or reviewer_config.reasoning_effort or "low"
+local follow_up_model = environment("PRACTICE_FOLLOW_UP_MODEL")
+  or reviewer_config.follow_up_model or reviewer_model
+local follow_up_reasoning_effort = environment("PRACTICE_FOLLOW_UP_EFFORT")
+  or reviewer_config.follow_up_reasoning_effort or reviewer_reasoning_effort
 local default_reviewer_command = {
   selected_python,
   repository_dir .. "/src/scripts/codex_reviewer.py",
@@ -121,6 +125,15 @@ local default_reviewer_command = {
   reviewer_model,
   "--effort",
   reviewer_reasoning_effort,
+}
+local default_follow_up_command = {
+  selected_python,
+  repository_dir .. "/src/scripts/codex_reviewer.py",
+  "--follow-up",
+  "--model",
+  follow_up_model,
+  "--effort",
+  follow_up_reasoning_effort,
 }
 local compiler = environment("CXX") or evaluation_config.compiler
 if not compiler then
@@ -157,6 +170,20 @@ practice.setup({
     name = "Codex",
     model = reviewer_model,
     reasoning_effort = reviewer_reasoning_effort,
+  },
+  follow_up_reviewer = (environment("PRACTICE_FOLLOW_UP_REVIEWER")
+      or environment("PRACTICE_REVIEWER")) and {
+    command = { environment("PRACTICE_FOLLOW_UP_REVIEWER")
+      or environment("PRACTICE_REVIEWER") },
+    name = environment("PRACTICE_FOLLOW_UP_REVIEWER_NAME")
+      or environment("PRACTICE_REVIEWER_NAME"),
+    model = follow_up_model,
+    reasoning_effort = follow_up_reasoning_effort,
+  } or {
+    command = default_follow_up_command,
+    name = "Codex",
+    model = follow_up_model,
+    reasoning_effort = follow_up_reasoning_effort,
   },
 })
 

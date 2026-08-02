@@ -8,6 +8,9 @@ review_archive_ttl_days = 30
 [reviewer]
 model = "gpt-5.6-luna"
 reasoning_effort = "low"
+# Follow-up chat defaults to the standard review settings when omitted.
+# follow_up_model = "gpt-5.6-luna"
+# follow_up_reasoning_effort = "low"
 
 [editor]
 indent_width = 4

@@ -29,6 +29,7 @@ local state = {
   progress_started = nil,
   progress_events = {},
   progress_event_count = 0,
+  follow_up_pending = false,
 }
 
 local config = nil
@@ -83,6 +84,7 @@ local function start_progress()
   state.progress_started = vim.uv.hrtime()
   state.progress_events = {}
   state.progress_event_count = 0
+  state.follow_up_pending = false
   ui.open_progress(state.source_window)
   local timer = vim.uv.new_timer()
   state.progress_timer = timer
@@ -114,6 +116,7 @@ local function delete_working_copy()
   state.progress_path = nil
   state.progress_events = {}
   state.progress_event_count = 0
+  state.follow_up_pending = false
 end
 
 local function reset_session()
@@ -283,6 +286,10 @@ function M.start(directory)
     ui.notify("Wait for the current practice operation to finish", vim.log.levels.WARN)
     return
   end
+  if state.follow_up_pending then
+    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
+    return
+  end
   if state.status ~= "idle" and not confirm_abandon("restart practice") then
     return
   end
@@ -352,13 +359,105 @@ function M.submit()
       retry = M.retry,
       skip = M.next,
       note = M.note,
+      ask = M.ask,
     })
+  end)
+end
+
+local function follow_up_messages(turns)
+  local messages = {}
+  local first = math.max(1, #turns - 7)
+  for index = first, #turns do
+    local turn = turns[index]
+    if turn.status == "available" then
+      table.insert(messages, { role = "user", content = turn.question })
+      table.insert(messages, { role = "assistant", content = turn.answer })
+    end
+  end
+  return messages
+end
+
+function M.ask(question)
+  if state.status ~= "reviewing" then
+    ui.notify("A follow-up question can be asked only while reviewing feedback",
+      vim.log.levels.WARN)
+    return
+  end
+  if state.follow_up_pending then
+    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
+    return
+  end
+  if question == nil then
+    vim.ui.input({ prompt = "Ask reviewer: " }, function(value)
+      if value ~= nil then M.ask(value) end
+    end)
+    return
+  end
+  question = vim.trim(tostring(question))
+  if question == "" then return end
+
+  state.result.follow_up = type(state.result.follow_up) == "table"
+      and state.result.follow_up or { turns = {} }
+  local turns = state.result.follow_up.turns
+  local turn = {
+    question = question,
+    status = "pending",
+    reviewer = config.follow_up_reviewer and config.follow_up_reviewer.name or "Reviewer",
+    model = config.follow_up_reviewer and config.follow_up_reviewer.model or nil,
+  }
+  table.insert(turns, turn)
+  state.follow_up_pending = true
+  ui.refresh_feedback("chat")
+
+  process.run(config.python, script_path("review_follow_up.py"), {
+    evidence = {
+      starter_source = table.concat(vim.fn.readfile(state.exercise.source_path), "\n"),
+      submitted_source = state.result.submitted_source,
+      exercise_metadata = state.result.metadata,
+      target_environment = state.exercise.target_environment,
+      validation = {
+        succeeded = state.result.compiled,
+        diagnostics = state.result.diagnostics,
+      },
+    },
+    initial_review = state.result.review,
+    messages = follow_up_messages(turns),
+    question = question,
+    reviewer = config.follow_up_reviewer,
+  }, function(error_message, response)
+    state.follow_up_pending = false
+    if error_message then
+      turn.status = "failed"
+      turn.failure = error_message
+      ui.refresh_feedback("chat")
+      ui.notify("Follow-up failed; details are shown in the feedback pane",
+        vim.log.levels.ERROR)
+      return
+    end
+    turn.reviewer = response.reviewer
+    turn.model = response.model
+    turn.reasoning_effort = response.reasoning_effort
+    if response.status ~= "available" or type(response.answer) ~= "string" then
+      turn.status = "failed"
+      turn.failure = response.failure or "Follow-up response unavailable"
+      ui.refresh_feedback("chat")
+      ui.notify("Follow-up reviewer unavailable; details are shown in the feedback pane",
+        vim.log.levels.WARN)
+      return
+    end
+    turn.status = "available"
+    turn.answer = response.answer
+    ui.refresh_feedback("chat")
   end)
 end
 
 function M.retry()
   if state.status ~= "reviewing" then
     ui.notify("Retry is available only while reviewing feedback", vim.log.levels.WARN)
+    return
+  end
+  if state.follow_up_pending then
+    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
     return
   end
   state.previous_result = state.result
@@ -382,6 +481,10 @@ function M.rate(rating)
   rating = rating and rating:lower() or nil
   if state.status ~= "reviewing" then
     ui.notify("A rating can be recorded only while reviewing feedback", vim.log.levels.WARN)
+    return
+  end
+  if state.follow_up_pending then
+    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
     return
   end
   if not RATINGS[rating] then
@@ -441,6 +544,10 @@ function M.next()
     ui.notify("Next is available only while solving or reviewing", vim.log.levels.WARN)
     return
   end
+  if state.follow_up_pending then
+    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
+    return
+  end
   if not confirm_abandon("open the next exercise") then
     return
   end
@@ -457,6 +564,10 @@ function M.quit()
     or state.status == "selecting"
   then
     ui.notify("Wait for the current practice operation to finish", vim.log.levels.WARN)
+    return
+  end
+  if state.follow_up_pending then
+    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
     return
   end
   if not confirm_abandon("quit practice") then

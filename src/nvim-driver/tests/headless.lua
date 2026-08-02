@@ -37,6 +37,7 @@ end
 assert(vim.fn.exists(":PracticeStart") == 2, "PracticeStart was not registered")
 assert(vim.fn.exists(":PracticeSubmit") == 2, "PracticeSubmit was not registered")
 assert(vim.fn.exists(":PracticeAccept") == 2, "PracticeAccept was not registered")
+assert(vim.fn.exists(":PracticeAsk") == 2, "PracticeAsk was not registered")
 assert(vim.fn.exists(":PracticeRetry") == 2, "PracticeRetry was not registered")
 assert(vim.fn.exists(":PracticeLog") == 2, "PracticeLog was not registered")
 assert(vim.fn.exists(":PracticeDiagnostics") == 2, "PracticeDiagnostics was not registered")
@@ -46,6 +47,7 @@ assert(vim.fn.maparg("<Space>ps", "n") ~= "", "start mapping was not registered"
 assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered")
 assert(vim.fn.maparg("<Space>pr", "n") ~= "", "retry mapping was not registered")
 assert(vim.fn.maparg("<Space>pm", "n") ~= "", "note mapping was not registered")
+assert(vim.fn.maparg("<Space>pf", "n") ~= "", "follow-up mapping was not registered")
 assert(vim.fn.maparg("<Space>pm", "x") ~= "", "visual note mapping was not registered")
 assert(vim.fn.maparg("<Space>po", "n") ~= "", "open notes mapping was not registered")
 assert(vim.o.expandtab, "practice should indent with spaces")
@@ -156,13 +158,52 @@ assert(not feedback:find("**", 1, true) and not feedback:find("```", 1, true),
   "UI Markdown markers leaked into native feedback")
 assert(feedback:find("Primary", 1, true) and feedback:find("Ratings", 1, true)
   and feedback:find("More", 1, true), "feedback actions are not grouped")
+assert(not feedback:find("c Compiler", 1, true),
+  "compiler shortcut was shown without compiler details")
+assert(not feedback:find("t Chat", 1, true),
+  "chat shortcut was shown before a follow-up conversation existed")
 local colored_feedback = #vim.api.nvim_buf_get_extmarks(feedback_buffer, -1, 0, -1, {}) > 0
 assert(colored_feedback, "feedback buffer did not receive color highlights")
 vim.api.nvim_set_current_buf(feedback_buffer)
-for _, key in ipairs({ "a", "1", "2", "3", "4", "n", "m", "d", "c", "r", "?", "<CR>" }) do
+for _, key in ipairs({ "a", "1", "2", "3", "4", "n", "m", "d", "c", "r", "t", "?", "<CR>" }) do
   assert(vim.fn.maparg(key, "n", false, true).buffer == 1,
     "missing buffer-local feedback mapping: " .. key)
 end
+assert(not feedback:find("Shortcuts", 1, true), "redundant shortcut help is still displayed")
+
+practice.ask("Why does this satisfy the exercise?")
+local follow_up_completed = vim.wait(10000, function()
+  local turns = practice.get_state().result.follow_up.turns
+  return #turns == 1 and turns[1].status ~= "pending"
+end, 10)
+assert(follow_up_completed, "timed out waiting for follow-up response")
+assert(practice.get_state().result.proposed_rating == "good",
+  "follow-up chat changed the proposed rating")
+feedback = buffer_text(feedback_buffer)
+assert(feedback:find("Follow-up chat  [t collapse]", 1, true),
+  "follow-up chat section was not opened")
+assert(feedback:find("t Chat", 1, true),
+  "chat shortcut was not shown after the conversation appeared")
+assert(feedback:find("You", 1, true)
+  and feedback:find("Why does this satisfy the exercise?", 1, true),
+  "learner question is missing")
+assert(feedback:find("The answer follows from the exercise requirement", 1, true),
+  "reviewer answer is missing")
+assert(feedback:find("gpt%-5%.6%-luna"), "follow-up model is missing")
+assert(next(vim.api.nvim_get_hl(0, { name = "PracticeQuestion" })) ~= nil,
+  "question highlight is missing")
+assert(vim.api.nvim_get_hl(0, { name = "PracticeQuestionLabel" }).bold == true,
+  "question header is not bold")
+assert(vim.api.nvim_get_hl(0, { name = "PracticeAnswerLabel" }).bold == true,
+  "answer header is not bold")
+press("t")
+feedback = buffer_text(feedback_buffer)
+assert(feedback:find("Follow-up chat  [t expand]", 1, true)
+  and not feedback:find("Why does this satisfy the exercise?", 1, true),
+  "follow-up chat did not collapse")
+press("t")
+assert(buffer_text(feedback_buffer):find("Why does this satisfy the exercise?", 1, true),
+  "follow-up chat did not re-expand")
 
 press("d")
 feedback = buffer_text(feedback_buffer)
@@ -279,6 +320,8 @@ assert(feedback:find("Correction", 1, true) and feedback:find("return 42;", 1, t
 assert(feedback:find("recognized the approach", 1, true),
   "positive rating after failed compilation was not explained")
 assert(feedback:find("Compiler details", 1, true), "non-empty diagnostics were omitted")
+assert(feedback:find("c Compiler", 1, true),
+  "compiler shortcut was not shown with compiler details")
 for _, window in ipairs(vim.fn.win_findbuf(feedback_buffer)) do
   assert(vim.wo[window].wrap, "feedback window should wrap")
   assert(vim.wo[window].linebreak, "feedback wrapping should respect word boundaries")
@@ -288,8 +331,8 @@ vim.api.nvim_set_current_buf(feedback_buffer)
 press("c")
 assert(buffer_text(feedback_buffer):find("error:", 1, true),
   "c did not expand compiler diagnostics")
-press("?")
-assert(buffer_text(feedback_buffer):find("Shortcuts", 1, true), "? did not expand shortcut help")
+assert(not buffer_text(feedback_buffer):find("Shortcuts", 1, true),
+  "shortcut help unexpectedly appeared")
 press("<CR>")
 assert(practice.get_state().status == "solving",
   "Enter on defective feedback did not return to editing")

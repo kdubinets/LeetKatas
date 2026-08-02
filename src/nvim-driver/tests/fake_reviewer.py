@@ -7,6 +7,18 @@ if len(sys.argv) > 1 and sys.argv[1] == "--check":
     raise SystemExit(0)
 
 request = json.load(sys.stdin)
+if "question" in request:
+    if not isinstance(request.get("initial_review"), dict):
+        raise ValueError("expected the initial review")
+    if not isinstance(request.get("messages"), list):
+        raise ValueError("expected bounded conversation history")
+    json.dump(
+        {"answer": "The answer follows from the exercise requirement and your return statement."},
+        sys.stdout,
+    )
+    sys.stdout.write("\n")
+    raise SystemExit(0)
+
 compiled = request["validation"]["succeeded"]
 submitted = request["submitted_source"]
 target_language = request["target_environment"]["language"]

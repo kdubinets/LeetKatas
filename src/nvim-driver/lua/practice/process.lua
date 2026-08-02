@@ -21,6 +21,11 @@ local function response_summary(response)
     compiled = response.compiled,
     proposed_rating = response.proposed_rating,
     recorded = response.recorded,
+    status = response.status,
+    reviewer = response.reviewer,
+    model = response.model,
+    reasoning_effort = response.reasoning_effort,
+    attempts = response.attempts,
   }
   if type(response.review) == "table" then
     summary.review = {

@@ -7,7 +7,7 @@ local feedback_namespace = vim.api.nvim_create_namespace("practice_feedback")
 local feedback_contexts = {}
 local feedback_result = nil
 local feedback_callbacks = nil
-local expanded = { review = false, compiler = false, reference = false, help = false }
+local expanded = { review = false, compiler = false, reference = false, chat = true }
 
 local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeSuccess", { default = true, link = "DiagnosticOk" })
@@ -20,6 +20,10 @@ local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeAction", { default = true, link = "Identifier" })
   vim.api.nvim_set_hl(0, "PracticeCode", { default = true, link = "String" })
   vim.api.nvim_set_hl(0, "PracticeCodeBlock", { default = true, link = "PreProc" })
+  vim.api.nvim_set_hl(0, "PracticeQuestion", { default = true, link = "DiagnosticInfo" })
+  vim.api.nvim_set_hl(0, "PracticeAnswer", { default = true, link = "Normal" })
+  vim.api.nvim_set_hl(0, "PracticeQuestionLabel", { default = true, bold = true })
+  vim.api.nvim_set_hl(0, "PracticeAnswerLabel", { default = true, bold = true })
 end
 
 define_highlights()
@@ -127,6 +131,40 @@ local function add_issues(render, title, issues)
   blank(render)
 end
 
+local function add_follow_up_chat(render, result)
+  local follow_up = type(result.follow_up) == "table" and result.follow_up or nil
+  local turns = follow_up and type(follow_up.turns) == "table" and follow_up.turns or {}
+  if #turns == 0 then return end
+
+  local suffix = expanded.chat and "  [t collapse]" or "  [t expand]"
+  add_heading(render, "Follow-up chat", "chat", suffix)
+  if not expanded.chat then return end
+
+  for _, turn in ipairs(turns) do
+    add_line(render, "You", { section = "Follow-up chat", logical_section = "chat" },
+      "PracticeQuestionLabel")
+    add_text(render, turn.question or "", { section = "Follow-up chat", logical_section = "chat" },
+      "PracticeQuestion")
+    blank(render)
+
+    local reviewer = type(turn.reviewer) == "string" and turn.reviewer or "Reviewer"
+    local model = type(turn.model) == "string" and " · " .. turn.model or ""
+    add_line(render, reviewer .. model,
+      { section = "Follow-up chat", logical_section = "chat" }, "PracticeAnswerLabel")
+    if turn.status == "pending" then
+      add_line(render, "Responding…", { section = "Follow-up chat", logical_section = "chat" },
+        "PracticeProgress")
+    elseif turn.status == "failed" then
+      add_text(render, turn.failure or "Follow-up response unavailable.",
+        { section = "Follow-up chat", logical_section = "chat" }, "PracticeWarning")
+    else
+      add_text(render, turn.answer or "", { section = "Follow-up chat", logical_section = "chat" },
+        "PracticeAnswer")
+    end
+    blank(render)
+  end
+end
+
 local function add_reference(render, result)
   local sections = type(result.metadata_sections) == "table" and result.metadata_sections or {}
   if #sections > 0 then
@@ -216,16 +254,21 @@ local function build_feedback(result)
   end
   add_line(render, "Ratings   1 Fail   2 Acceptable   3 Good   4 Excellent",
     { section = "Actions", logical_section = "actions" }, "PracticeAction")
-  add_line(render, "More      n Skip   m Note   ? Help",
+  add_line(render, "More      ? Ask reviewer   m Note   n Skip",
+    { section = "Actions", logical_section = "actions" }, "PracticeAction")
+  local details = { "d Review" }
+  if type(result.diagnostics) == "string" and result.diagnostics ~= "" then
+    table.insert(details, "c Compiler")
+  end
+  table.insert(details, "r Reference")
+  local follow_up = type(result.follow_up) == "table" and result.follow_up or nil
+  if follow_up and type(follow_up.turns) == "table" and #follow_up.turns > 0 then
+    table.insert(details, "t Chat")
+  end
+  add_line(render, "Details   " .. table.concat(details, "   "),
     { section = "Actions", logical_section = "actions" }, "PracticeAction")
 
-  if expanded.help then
-    add_heading(render, "Shortcuts", "help", "  [? collapse]")
-    add_line(render, "a accept proposal     1–4 record rating     n skip without recording")
-    add_line(render, "m capture note        d detailed review     c compiler details")
-    add_line(render, "r exercise reference  <CR> default action   ? collapse help")
-    add_line(render, "Leader mappings remain available, including <Space>pr to retry.")
-  end
+  add_follow_up_chat(render, result)
 
   local review_suffix = expanded.review and "  [d collapse]" or "  [d expand]"
   add_heading(render, "Detailed review", "review", review_suffix)
@@ -384,8 +427,10 @@ local function install_feedback_mappings()
     vim.tbl_extend("force", options, { desc = "Toggle compiler details" }))
   vim.keymap.set("n", "r", function() toggle("reference") end,
     vim.tbl_extend("force", options, { desc = "Toggle exercise reference" }))
-  vim.keymap.set("n", "?", function() toggle("help") end,
-    vim.tbl_extend("force", options, { desc = "Toggle feedback shortcuts" }))
+  vim.keymap.set("n", "t", function() toggle("chat") end,
+    vim.tbl_extend("force", options, { desc = "Toggle follow-up chat" }))
+  vim.keymap.set("n", "?", function() callback("ask") end,
+    vim.tbl_extend("force", options, { desc = "Ask the reviewer a follow-up question" }))
   vim.keymap.set("n", "<CR>", function()
     local _, _, review = outcome(feedback_result)
     if type(feedback_result.proposed_rating) ~= "string" then
@@ -414,7 +459,7 @@ function M.close_feedback()
   if valid_buffer(feedback_buffer) then vim.api.nvim_buf_delete(feedback_buffer, { force = true }) end
   feedback_window, feedback_buffer = nil, nil
   feedback_contexts, feedback_result, feedback_callbacks = {}, nil, nil
-  expanded = { review = false, compiler = false, reference = false, help = false }
+  expanded = { review = false, compiler = false, reference = false, chat = true }
 end
 
 function M.open_source(path, preferred_window, practice_marker)
@@ -445,6 +490,10 @@ function M.open_progress(source_window)
   ensure_feedback(source_window, false)
   M.update_progress(0, {})
   return feedback_buffer, feedback_window
+end
+
+function M.refresh_feedback(cursor_section)
+  render_feedback(cursor_section)
 end
 
 function M.update_progress(elapsed_seconds, events)

@@ -18,6 +18,7 @@ from codex_reviewer import build_prompt  # noqa: E402
 from evaluate_exercise import evaluate, parse_metadata_sections  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
 from record_rating import record_rating  # noqa: E402
+from review_follow_up import ask  # noqa: E402
 from select_exercise import select_exercise  # noqa: E402
 
 
@@ -51,6 +52,8 @@ review_archive_ttl_days = 45
 [reviewer]
 model = "gpt-5.6-luna"
 reasoning_effort = "low"
+follow_up_model = "gpt-5.6-terra"
+follow_up_reasoning_effort = "medium"
 
 [editor]
 indent_width = 2
@@ -67,6 +70,8 @@ compiler = "g++"
             self.assertEqual(config["practice"]["notes_directory"], str(directory / "notes"))
             self.assertEqual(config["practice"]["review_archive_ttl_days"], 45)
             self.assertEqual(config["reviewer"]["model"], "gpt-5.6-luna")
+            self.assertEqual(config["reviewer"]["follow_up_model"], "gpt-5.6-terra")
+            self.assertEqual(config["reviewer"]["follow_up_reasoning_effort"], "medium")
             self.assertEqual(config["editor"]["indent_width"], 2)
             self.assertEqual(config["evaluation"]["compiler"], "g++")
 
@@ -74,6 +79,10 @@ compiler = "g++"
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "practice.toml"
             path.write_text("[reviewer]\nreasoning_effort = \"extreme\"\n")
+            with self.assertRaises(ConfigError):
+                load_config(path)
+
+            path.write_text("[reviewer]\nfollow_up_reasoning_effort = \"extreme\"\n")
             with self.assertRaises(ConfigError):
                 load_config(path)
 
@@ -456,6 +465,62 @@ class CodexReviewerTests(unittest.TestCase):
         self.assertIn("untrusted reference candidate, not as a gold standard", prompt)
         self.assertIn("look for at most one meaningful opportunity", prompt)
         self.assertIn("one or two learner-facing plain-text sentences", prompt)
+
+    def test_follow_up_prompt_uses_separate_instructions(self) -> None:
+        prompt = build_prompt({"question": "Why?"}, follow_up=True)
+
+        self.assertIn("learner's follow-up question", prompt)
+        self.assertIn("do not emit a replacement verdict or rating", prompt)
+        self.assertEqual(
+            json.loads(prompt.split("Follow-up context:\n", 1)[1]),
+            {"question": "Why?"},
+        )
+
+
+class FollowUpReviewTests(unittest.TestCase):
+    def test_uses_separate_reviewer_model_and_returns_answer(self) -> None:
+        request = {
+            "evidence": {"submitted_source": "return 42;"},
+            "initial_review": {"status": "available", "feedback": {}},
+            "messages": [],
+            "question": "Why is this correct?",
+            "reviewer": {
+                "command": ["fake-follow-up"],
+                "name": "Tutor",
+                "model": "follow-up-model",
+                "reasoning_effort": "medium",
+            },
+        }
+        follow_up = {
+            "status": "available",
+            "attempts": 1,
+            "answer": "Because it returns the requested value.",
+            "failure": None,
+        }
+
+        with patch("review_follow_up.follow_up_request", return_value=follow_up) as reviewer:
+            response = ask(request)
+
+        self.assertEqual(reviewer.call_args.args[0]["question"], request["question"])
+        self.assertEqual(response["answer"], follow_up["answer"])
+        self.assertEqual(response["reviewer"], "Tutor")
+        self.assertEqual(response["model"], "follow-up-model")
+        self.assertEqual(response["reasoning_effort"], "medium")
+
+    def test_rejects_excessive_conversation_history(self) -> None:
+        request = {
+            "evidence": {},
+            "initial_review": {},
+            "messages": [
+                {"role": "user", "content": "question"}
+                for _ in range(17)
+            ],
+            "question": "Why?",
+            "reviewer": {"command": ["fake-follow-up"]},
+        }
+
+        with self.assertRaisesRegex(ValueError, "at most 16"):
+            ask(request)
 
 
 class MetadataSectionTests(unittest.TestCase):

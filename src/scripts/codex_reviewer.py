@@ -5,6 +5,7 @@ import argparse, json, os, subprocess, sys, tempfile
 from pathlib import Path
 
 PROMPT_PATH = Path(__file__).with_name("prompts") / "codex_reviewer.txt"
+FOLLOW_UP_PROMPT_PATH = Path(__file__).with_name("prompts") / "codex_review_follow_up.txt"
 
 SCHEMA = {
     "type": "object",
@@ -25,13 +26,25 @@ SCHEMA = {
         "alternative_explanation": {"type": ["string", "null"]},
     },
 }
-def build_prompt(request: dict) -> str:
-    instructions = PROMPT_PATH.read_text(encoding="utf-8").rstrip()
-    return instructions + "\n\nReview evidence:\n" + json.dumps(request)
+FOLLOW_UP_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["answer"],
+    "properties": {
+        "answer": {"type": "string"},
+    },
+}
+
+def build_prompt(request: dict, follow_up: bool = False) -> str:
+    prompt_path = FOLLOW_UP_PROMPT_PATH if follow_up else PROMPT_PATH
+    instructions = prompt_path.read_text(encoding="utf-8").rstrip()
+    label = "Follow-up context" if follow_up else "Review evidence"
+    return instructions + f"\n\n{label}:\n" + json.dumps(request)
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--follow-up", action="store_true")
     parser.add_argument("--model")
     parser.add_argument("--effort", choices=("minimal", "low", "medium", "high", "xhigh"))
     return parser.parse_args()
@@ -42,14 +55,16 @@ def main() -> int:
     if args.check:
         return subprocess.run([executable,"--version"],check=False).returncode
     request=json.load(sys.stdin)
-    prompt=build_prompt(request)
+    prompt=build_prompt(request, follow_up=args.follow_up)
     with tempfile.TemporaryDirectory(prefix="practice-review-") as directory:
         schema_path = Path(directory) / "review-schema.json"
-        schema_path.write_text(json.dumps(SCHEMA), encoding="utf-8")
+        schema_path.write_text(json.dumps(FOLLOW_UP_SCHEMA if args.follow_up else SCHEMA), encoding="utf-8")
         command=[executable,"exec","--ephemeral","--sandbox","read-only","--skip-git-repo-check","--output-schema",str(schema_path),"--output-last-message",str(Path(directory)/"review.json")]
-        model=os.environ.get("PRACTICE_REVIEW_MODEL") or args.model
+        model_environment = "PRACTICE_FOLLOW_UP_MODEL" if args.follow_up else "PRACTICE_REVIEW_MODEL"
+        effort_environment = "PRACTICE_FOLLOW_UP_EFFORT" if args.follow_up else "PRACTICE_REVIEW_EFFORT"
+        model=os.environ.get(model_environment) or args.model
         if model: command += ["--model",model]
-        effort=os.environ.get("PRACTICE_REVIEW_EFFORT") or args.effort
+        effort=os.environ.get(effort_environment) or args.effort
         if effort: command += ["--config",f'model_reasoning_effort="{effort}"']
         result=subprocess.run(command,input=prompt,text=True,capture_output=True,check=False,cwd=directory)
         output=Path(directory)/"review.json"

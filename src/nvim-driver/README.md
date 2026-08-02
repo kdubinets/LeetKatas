@@ -77,6 +77,8 @@ review_archive_ttl_days = 30
 [reviewer]
 model = "gpt-5.6-luna"
 reasoning_effort = "low"
+# follow_up_model = "gpt-5.6-terra"
+# follow_up_reasoning_effort = "medium"
 
 [editor]
 indent_width = 4
@@ -94,7 +96,9 @@ libraries against which submissions are evaluated.
 Supported environment overrides include `PRACTICE_COLLECTION`,
 `PRACTICE_DATABASE`, `PRACTICE_LOG`, `PRACTICE_NOTES_DIRECTORY`,
 `PRACTICE_REVIEW_ARCHIVE_TTL_DAYS`, `PRACTICE_REVIEW_MODEL`,
-`PRACTICE_REVIEW_EFFORT`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
+`PRACTICE_REVIEW_EFFORT`, `PRACTICE_FOLLOW_UP_MODEL`,
+`PRACTICE_FOLLOW_UP_EFFORT`, `PRACTICE_FOLLOW_UP_REVIEWER`,
+`PRACTICE_FOLLOW_UP_REVIEWER_NAME`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
 directory to `src/nvim-driver/practice` has the highest precedence for the
 collection. Review artifacts are retained for 30 days by default; set
 `review_archive_ttl_days` to `0` to disable archiving or up to `3650` days to
@@ -245,7 +249,7 @@ the reviewer recognized the approach despite the compiler result.
 Detailed review evidence, non-empty compiler diagnostics, and the parsed
 exercise reference follow lower in the buffer. Detailed review starts expanded
 unless the proposed rating is `Excellent`; compiler details and the reference
-start collapsed. Use `d`, `c`, and `r` to toggle them, or `?` for shortcut help. Structured
+start collapsed. Use `d`, `c`, and `r` to toggle them. Structured
 metadata is displayed without headings or fence delimiters; raw metadata is a
 sanitized compatibility fallback. Extmark highlights distinguish outcomes,
 ratings, actions, headings, hints, inline code, and code blocks.
@@ -262,6 +266,22 @@ at approximately 45% of the editor height.
 
 Evaluation and rating calls are asynchronous so a future LLM call will not
 freeze the editor.
+
+### Ask the reviewer
+
+While feedback is open, `?`, `:PracticeAsk [question]`, or `<Space>pf` asks the
+reviewer a follow-up question. Omitting the command argument opens an input
+prompt. Questions and answers appear with distinct styling in a Follow-up chat
+section; `t` collapses or expands the conversation. Follow-up requests are
+asynchronous, retain a bounded conversation history, and do not change the
+original verdict or proposed rating.
+
+Follow-up chat uses `reviewer.follow_up_model` and
+`reviewer.follow_up_reasoning_effort` when configured, otherwise it inherits
+the standard review settings. The equivalent environment overrides are
+`PRACTICE_FOLLOW_UP_MODEL` and `PRACTICE_FOLLOW_UP_EFFORT`. Conversation turns
+remain in session memory and are discarded when the learner retries, rates,
+skips, or quits; they are not written to diagnostic logs or review artifacts.
 
 ### Capture personal notes
 
@@ -330,6 +350,7 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>p4` | `:PracticeRate excellent` | Record Excellent and continue. |
 | `<Space>pn` | `:PracticeNext` | Skip and select again. |
 | `<Space>pm` | `:PracticeNote` | Capture a note for the active exercise. |
+| `<Space>pf` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
 | `<Space>po` | `:PracticeNotes` | Open the personal notes directory. |
 | `<Space>pq` | `:PracticeQuit` | End the session. |
 
@@ -346,8 +367,9 @@ mappings may be buffer-local, except for the start mapping, which must be
 available before a practice buffer exists.
 
 The feedback buffer additionally maps `a`, `1`–`4`, `n`, and `m` directly to
-accept, rate, skip, and note. `d`, `c`, and `r` toggle detailed review, compiler
-details, and the reference; `?` toggles shortcut help. `<CR>` accepts a correct
+accept, rate, skip, and note. `d`, `c`, `r`, and `t` toggle detailed review,
+compiler details, the reference, and follow-up chat; `?` asks the reviewer a
+question. `<CR>` accepts a correct
 proposal, retries a defective result, or shows the manual-rating hint when no
 proposal exists. All leader mappings remain available.
 
@@ -369,6 +391,7 @@ src/
     ├── practice_scheduler.py   # SQLite persistence and FSRS integration
     ├── select_exercise.py      # due-first/new-second selection
     ├── evaluate_exercise.py    # initial compiler-backed evaluator
+    ├── review_follow_up.py     # bounded conversational reviewer bridge
     └── record_rating.py        # persistent FSRS review recording
 ```
 

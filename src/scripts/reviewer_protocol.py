@@ -22,6 +22,14 @@ def validate_review(value: Any) -> dict[str, Any]:
         if key in value and value[key] is not None and not isinstance(value[key], str): raise ReviewerError(f"review.{key} must be a string or null")
     return value
 
+def validate_follow_up(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise ReviewerError("follow-up response must be an object")
+    answer = value.get("answer")
+    if not isinstance(answer, str) or not answer.strip():
+        raise ReviewerError("follow-up response.answer must be a non-empty string")
+    return {"answer": answer.strip()}
+
 def review_request(
     request: dict[str, Any],
     command: list[str],
@@ -58,6 +66,52 @@ def review_request(
     if progress:
         progress("review_finished", status="unavailable", attempts=3)
     return {"status": "unavailable", "attempts": 3, "feedback": None, "failure": last}
+
+def follow_up_request(
+    request: dict[str, Any],
+    command: list[str],
+    timeout: float = 60,
+) -> dict[str, Any]:
+    last = "follow-up reviewer failed"
+    for attempt in range(1, 4):
+        try:
+            result = subprocess.run(
+                command,
+                input=json.dumps(request),
+                text=True,
+                capture_output=True,
+                timeout=timeout,
+                check=False,
+            )
+            if result.returncode != 0:
+                raise ReviewerError(
+                    (result.stderr or result.stdout or "follow-up reviewer exited unsuccessfully").strip()
+                )
+            try:
+                value = json.loads(result.stdout)
+            except json.JSONDecodeError as error:
+                raise ReviewerError(f"malformed follow-up reviewer JSON: {error.msg}") from error
+            response = validate_follow_up(value)
+            return {
+                "status": "available",
+                "attempts": attempt,
+                "answer": response["answer"],
+                "failure": None,
+            }
+        except FileNotFoundError:
+            return {
+                "status": "unavailable",
+                "attempts": attempt,
+                "answer": None,
+                "failure": f"follow-up reviewer executable is not available: {command[0]}",
+            }
+        except ReviewerError as error:
+            last = str(error)
+        except subprocess.TimeoutExpired:
+            last = f"follow-up reviewer timed out after {timeout:g} seconds"
+        if attempt < 3:
+            time.sleep(0.5 * (2 ** (attempt - 1)))
+    return {"status": "unavailable", "attempts": 3, "answer": None, "failure": last}
 
 def configured_reviewer(request: dict[str, Any]) -> tuple[list[str] | None, str]:
     config = request.get("reviewer")
