@@ -4,6 +4,7 @@ local log = require("practice.log")
 local M = {}
 
 local RATINGS = { "fail", "acceptable", "good", "excellent" }
+local NOTE_KINDS = { "follow-up", "research", "exercise-fix" }
 
 local function map(lhs, rhs, description)
   vim.keymap.set("n", lhs, rhs, { silent = true, desc = description })
@@ -46,6 +47,23 @@ function M.setup(options)
   vim.api.nvim_create_user_command("PracticeQuit", session.quit, {
     desc = "End the coding practice session",
   })
+  vim.api.nvim_create_user_command("PracticeNote", function(command)
+    session.note(command.args ~= "" and command.args or nil,
+      command.range > 0 and command.line1 or nil,
+      command.range > 0 and command.line2 or nil)
+  end, {
+    nargs = "?",
+    range = true,
+    complete = function(argument_lead)
+      return vim.tbl_filter(function(kind)
+        return vim.startswith(kind, argument_lead:lower())
+      end, NOTE_KINDS)
+    end,
+    desc = "Capture a note for the active practice exercise",
+  })
+  vim.api.nvim_create_user_command("PracticeNotes", session.open_notes, {
+    desc = "Open the practice notes directory",
+  })
   vim.api.nvim_create_user_command("PracticeLog", log.open, {
     desc = "Open the persistent practice diagnostic log",
   })
@@ -67,6 +85,11 @@ function M.setup(options)
   map("<leader>p3", function() M.rate("good") end, "Practice: after review, rate Good")
   map("<leader>p4", function() M.rate("excellent") end, "Practice: after review, rate Excellent")
   map("<leader>pn", M.next, "Practice: next exercise")
+  map("<leader>pm", M.note, "Practice: capture a follow-up note")
+  vim.keymap.set("x", "<leader>pm", ":PracticeNote<CR>", {
+    silent = true, desc = "Practice: capture selected context in a follow-up note",
+  })
+  map("<leader>po", M.open_notes, "Practice: open notes directory")
   map("<leader>pq", M.quit, "Practice: quit")
 end
 
@@ -92,6 +115,14 @@ end
 
 function M.quit()
   session.quit()
+end
+
+function M.note(kind, first_line, last_line)
+  return session.note(kind, first_line, last_line)
+end
+
+function M.open_notes()
+  session.open_notes()
 end
 
 function M.get_state()

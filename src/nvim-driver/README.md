@@ -54,6 +54,8 @@ python3 -m pip install -r src/nvim-driver/requirements.txt
 ```
 
 `PRACTICE_DATABASE` may override the persistent SQLite database location.
+`PRACTICE_NOTES_DIRECTORY` may override the directory used for personal
+practice notes.
 
 ### User configuration
 
@@ -69,6 +71,7 @@ starting point.
 collection = "~/work/LeetKatas/practice/cpp/collections/core"
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
+# notes_directory = "~/.local/share/leetkatas/notes"
 
 [reviewer]
 model = "gpt-5.6-luna"
@@ -88,10 +91,10 @@ file. The default collection is a user preference and belongs here; its
 libraries against which submissions are evaluated.
 
 Supported environment overrides include `PRACTICE_COLLECTION`,
-`PRACTICE_DATABASE`, `PRACTICE_LOG`, `PRACTICE_REVIEW_MODEL`,
-`PRACTICE_REVIEW_EFFORT`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
-directory to `src/nvim-driver/practice` has the highest precedence for the
-collection.
+`PRACTICE_DATABASE`, `PRACTICE_LOG`, `PRACTICE_NOTES_DIRECTORY`,
+`PRACTICE_REVIEW_MODEL`, `PRACTICE_REVIEW_EFFORT`, `PRACTICE_COMPILER`, and
+`CXX`. Passing a collection directory to `src/nvim-driver/practice` has the
+highest precedence for the collection.
 
 ### Diagnostics and logs
 
@@ -244,6 +247,27 @@ is narrower than 120 columns, it uses a bottom horizontal split instead.
 Evaluation and rating calls are asynchronous so a future LLM call will not
 freeze the editor.
 
+### Capture personal notes
+
+`:PracticeNote [kind]` opens a Markdown composer for the active exercise while
+solving, evaluating, or reviewing. The optional kind is `follow-up` (the
+default), `research`, or `exercise-fix`. `<Space>pm` captures the current line;
+using it on a visual selection captures up to ten selected lines. Source notes
+point back to the original exercise rather than its temporary working copy.
+Feedback notes retain the current feedback section and a bounded excerpt.
+
+Save with `:write` or `<C-s>`. A blank note is not written. Notes use readable,
+chronological names such as
+`2026-08-02-14-21-35--lower_bound_index.md`; a numeric suffix prevents an
+existing file from being overwritten. Each file is independent, so notes may
+be edited, moved, or deleted with ordinary filesystem tools.
+
+The default directory is `${XDG_DATA_HOME:-~/.local/share}/leetkatas/notes`.
+Configure `practice.notes_directory` or `PRACTICE_NOTES_DIRECTORY` to place it
+elsewhere. `:PracticeNotes` or `<Space>po` edits that directory. An installed
+directory handler can display it; otherwise the driver reports the absolute
+path for use with another file manager or editor.
+
 ### Rate and continue
 
 `:PracticeRate {rating}` records the selected rating and updates the exercise's
@@ -284,6 +308,8 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>p3` | `:PracticeRate good` | Record Good and continue. |
 | `<Space>p4` | `:PracticeRate excellent` | Record Excellent and continue. |
 | `<Space>pn` | `:PracticeNext` | Skip and select again. |
+| `<Space>pm` | `:PracticeNote` | Capture a note for the active exercise. |
+| `<Space>po` | `:PracticeNotes` | Open the personal notes directory. |
 | `<Space>pq` | `:PracticeQuit` | End the session. |
 
 The numeric rating mappings should be displayed in the feedback UI so they do
@@ -309,6 +335,7 @@ src/
 │   └── lua/practice/
 │       ├── init.lua            # setup, commands, and mappings
 │       ├── session.lua         # state machine and working-copy lifecycle
+│       ├── notes.lua           # per-file personal note composition
 │       ├── process.lua         # Python subprocess/JSON adapter
 │       └── ui.lua              # solving and feedback presentation
 └── scripts/
@@ -364,6 +391,7 @@ Run the automated checks from the repository root with:
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s src/scripts/tests -v
 shellcheck src/nvim-driver/practice
 PRACTICE_AUTOSTART=0 PRACTICE_DATABASE=/tmp/leetkatas-headless.sqlite3 \
+  PRACTICE_NOTES_DIRECTORY=/tmp/leetkatas-headless-notes \
   nvim --headless --clean \
   -u src/nvim-driver/init.lua -l src/nvim-driver/tests/headless.lua
 ```

@@ -122,6 +122,9 @@ practice.setup({
     or (vim.fn.stdpath("state") .. "/leetkatas/practice.log"),
   scripts_dir = repository_dir .. "/src/scripts",
   database_path = environment("PRACTICE_DATABASE") or practice_config.database_path,
+  notes_directory = environment("PRACTICE_NOTES_DIRECTORY") or practice_config.notes_directory
+    or ((environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share"))
+      .. "/leetkatas/notes"),
   default_directory = environment("PRACTICE_COLLECTION") or practice_config.collection
     or repository_dir .. "/practice/cpp/collections/core",
   source_extension = environment("PRACTICE_SOURCE_EXTENSION") or ".cpp",

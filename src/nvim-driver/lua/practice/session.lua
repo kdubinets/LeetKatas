@@ -1,6 +1,7 @@
 local process = require("practice.process")
 local ui = require("practice.ui")
 local log = require("practice.log")
+local notes = require("practice.notes")
 
 local M = {}
 
@@ -205,6 +206,71 @@ end
 
 function M.setup(options)
   config = options
+  notes.setup(options)
+end
+
+local function note_excerpt(buffer, first_line, last_line)
+  local lines = vim.api.nvim_buf_get_lines(buffer, first_line - 1,
+    math.min(last_line, first_line + 9), false)
+  local excerpt = table.concat(lines, "\n")
+  if #excerpt > 1024 then
+    excerpt = excerpt:sub(1, 1021) .. "..."
+  end
+  return excerpt
+end
+
+function M.note(kind, first_line, last_line)
+  if state.status ~= "solving" and state.status ~= "evaluating"
+    and state.status ~= "reviewing"
+  then
+    ui.notify("A note can be captured only while an exercise is active", vim.log.levels.WARN)
+    return nil
+  end
+  if not state.exercise then
+    ui.notify("The active exercise context is unavailable", vim.log.levels.ERROR)
+    return nil
+  end
+
+  local buffer = vim.api.nvim_get_current_buf()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local selected = first_line ~= nil
+  first_line = first_line or cursor[1]
+  last_line = last_line or first_line
+  local context_text = nil
+  local section = nil
+  if buffer == state.source_buffer then
+    context_text = state.exercise.source_path .. ":" .. first_line .. ":" .. (cursor[2] + 1)
+  else
+    local feedback = ui.feedback_context(buffer, first_line)
+    if not feedback then
+      ui.notify("Open the practice source or feedback buffer before capturing a note",
+        vim.log.levels.WARN)
+      return nil
+    end
+    section = feedback.section
+    if feedback.metadata_line then
+      context_text = state.exercise.metadata_path .. ":" .. feedback.metadata_line
+    else
+      context_text = state.status == "evaluating" and "evaluation progress" or "practice feedback"
+    end
+  end
+
+  local composer = notes.compose({
+    collection = state.collection,
+    exercise_id = state.exercise.id,
+    phase = state.status,
+    session_id = log.session_id(),
+    context = context_text,
+    section = section,
+    excerpt = note_excerpt(buffer, first_line, selected and last_line or first_line),
+    filename_timestamp = os.date("%Y-%m-%d-%H-%M-%S"),
+    created_at = os.date("%Y-%m-%d %H:%M:%S %z"),
+  }, kind)
+  return composer
+end
+
+function M.open_notes()
+  notes.open_directory()
 end
 
 function M.start(directory)

@@ -45,6 +45,7 @@ class PracticeConfigTests(unittest.TestCase):
                 """
 [practice]
 collection = "collections/core"
+notes_directory = "notes"
 
 [reviewer]
 model = "gpt-5.6-luna"
@@ -62,6 +63,7 @@ compiler = "g++"
             config = load_config(path)
 
             self.assertEqual(config["practice"]["collection"], str(directory / "collections/core"))
+            self.assertEqual(config["practice"]["notes_directory"], str(directory / "notes"))
             self.assertEqual(config["reviewer"]["model"], "gpt-5.6-luna")
             self.assertEqual(config["editor"]["indent_width"], 2)
             self.assertEqual(config["evaluation"]["compiler"], "g++")

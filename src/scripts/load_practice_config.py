@@ -23,6 +23,7 @@ SCHEMA: dict[str, dict[str, type]] = {
         "collection": str,
         "database_path": str,
         "log_path": str,
+        "notes_directory": str,
     },
     "reviewer": {
         "model": str,
@@ -37,7 +38,12 @@ SCHEMA: dict[str, dict[str, type]] = {
     },
 }
 EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
-PATH_KEYS = {("practice", "collection"), ("practice", "database_path"), ("practice", "log_path")}
+PATH_KEYS = {
+    ("practice", "collection"),
+    ("practice", "database_path"),
+    ("practice", "log_path"),
+    ("practice", "notes_directory"),
+}
 
 
 def default_config_path() -> Path:

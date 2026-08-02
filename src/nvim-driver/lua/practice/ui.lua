@@ -3,6 +3,7 @@ local log = require("practice.log")
 
 local feedback_buffer = nil
 local feedback_window = nil
+local feedback_metadata_start = nil
 local feedback_namespace = vim.api.nvim_create_namespace("practice_feedback")
 
 local function define_highlights()
@@ -152,6 +153,7 @@ function M.close_feedback()
   end
   feedback_window = nil
   feedback_buffer = nil
+  feedback_metadata_start = nil
 end
 
 function M.open_source(path, preferred_window, practice_marker)
@@ -201,6 +203,7 @@ function M.open_feedback(source_window, result)
     "- `<Space>p3` Good",
     "- `<Space>p4` Excellent",
     "- `<Space>pn` skip without recording",
+    "- `<Space>pm` capture a follow-up note",
     "",
     "## Compiler diagnostics",
     "",
@@ -226,6 +229,7 @@ function M.open_feedback(source_window, result)
     append_text(lines, "Reviewer unavailable: " .. tostring(result.review.failure) .. "\n\nChoose a manual rating below.")
   end
   vim.list_extend(lines, { "", "---", "" })
+  feedback_metadata_start = #lines + 1
   append_text(lines, result.metadata)
 
   set_feedback_lines(lines)
@@ -244,6 +248,7 @@ function M.update_progress(elapsed_seconds, events)
   if not valid_buffer(feedback_buffer) then
     return
   end
+  feedback_metadata_start = nil
   local frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
   local frame = frames[(math.floor(elapsed_seconds * 10) % #frames) + 1]
   local compilation = nil
@@ -293,6 +298,7 @@ function M.update_progress(elapsed_seconds, events)
 end
 
 function M.show_progress_error(error_message)
+  feedback_metadata_start = nil
   set_feedback_lines({
     "# Practice Evaluation Failed",
     "",
@@ -300,6 +306,24 @@ function M.show_progress_error(error_message)
     "",
     "Return to the source, correct the configuration or submission, and check again.",
   })
+end
+
+function M.feedback_context(buffer, line)
+  if not valid_buffer(feedback_buffer) or buffer ~= feedback_buffer then
+    return nil
+  end
+  local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+  local section = nil
+  for index = math.min(line, #lines), 1, -1 do
+    if not section and vim.startswith(lines[index], "#") then
+      section = lines[index]
+    end
+  end
+  return {
+    section = section,
+    metadata_line = feedback_metadata_start and line >= feedback_metadata_start
+      and line - feedback_metadata_start + 1 or nil,
+  }
 end
 
 return M
