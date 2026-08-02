@@ -331,6 +331,7 @@ function M.submit()
     if type(response.compiled) ~= "boolean"
       or type(response.diagnostics) ~= "string"
       or type(response.metadata) ~= "string"
+      or type(response.submitted_source) ~= "string"
       or (response.proposed_rating ~= vim.NIL and response.proposed_rating ~= nil and not RATINGS[response.proposed_rating])
     then
       state.status = "solving"
@@ -365,7 +366,12 @@ function M.rate(rating)
     final_rating = rating,
     review_status = state.result.review.status,
     reviewer_name = state.result.review.reviewer,
+    reviewer_model = state.result.review.model,
+    reviewer_reasoning_effort = state.result.review.reasoning_effort,
     review_attempts = state.result.review.attempts,
+    submitted_source = state.result.submitted_source,
+    review_response = state.result.review,
+    review_archive_ttl_days = config.review_archive_ttl_days,
   }, function(error_message, response)
     if error_message then
       state.status = "reviewing"

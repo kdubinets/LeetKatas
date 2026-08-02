@@ -26,6 +26,8 @@ local function response_summary(response)
     summary.review = {
       status = response.review.status,
       reviewer = response.review.reviewer,
+      model = response.review.model,
+      reasoning_effort = response.review.reasoning_effort,
       attempts = response.review.attempts,
     }
   end

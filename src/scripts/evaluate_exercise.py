@@ -53,16 +53,20 @@ def evaluate(request: dict[str,Any]):
     target_environment = request.get("target_environment")
     if target_environment is not None:
         target_environment = validate_target_environment(target_environment)
+    submitted_source=source.read_text(encoding="utf-8")
     reviewer_command,name=configured_reviewer(request)
+    reviewer_config = request.get("reviewer")
+    reviewer_model = reviewer_config.get("model") if isinstance(reviewer_config, dict) and isinstance(reviewer_config.get("model"), str) else None
+    reviewer_reasoning_effort = reviewer_config.get("reasoning_effort") if isinstance(reviewer_config, dict) and isinstance(reviewer_config.get("reasoning_effort"), str) else None
     if reviewer_command:
-        evidence={"starter_source":starter.read_text(encoding="utf-8"),"submitted_source":source.read_text(encoding="utf-8"),"exercise_metadata":metadata_text,"target_environment":target_environment,"validation":{"command":command,"succeeded":compiled,"diagnostics":diagnostics}}
+        evidence={"starter_source":starter.read_text(encoding="utf-8"),"submitted_source":submitted_source,"exercise_metadata":metadata_text,"target_environment":target_environment,"validation":{"command":command,"succeeded":compiled,"diagnostics":diagnostics}}
         review=review_request(evidence,reviewer_command,progress=progress)
     else:
         progress("review_finished", status="unavailable", attempts=0)
         review={"status":"unavailable","attempts":0,"feedback":None,"failure":"no reviewer configured"}
     feedback=review["feedback"]
     progress("evaluation_finished")
-    return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"review":{**review,"reviewer":name},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
+    return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"submitted_source":submitted_source,"review":{**review,"reviewer":name,"model":reviewer_model,"reasoning_effort":reviewer_reasoning_effort},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
 def main():
     try: response=evaluate(read_request())
     except (OSError,UnicodeError,RequestError,ReviewerError,TargetEnvironmentError) as e: json.dump({"error":str(e)},sys.stdout); sys.stdout.write("\n"); return 1

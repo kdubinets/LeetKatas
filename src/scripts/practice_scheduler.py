@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,7 @@ else:
     FSRS_IMPORT_ERROR = None
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 4
 RATING_NAMES = {"fail", "acceptable", "good", "excellent"}
 
 
@@ -146,6 +147,7 @@ class PracticeStore:
                 review_status TEXT NOT NULL DEFAULT 'legacy',
                 reviewer_name TEXT,
                 reviewer_model TEXT,
+                reviewer_reasoning_effort TEXT,
                 review_attempts INTEGER NOT NULL DEFAULT 0,
                 review_log_json TEXT NOT NULL,
                 FOREIGN KEY (collection_key, exercise_id)
@@ -162,15 +164,27 @@ class PracticeStore:
                 exercise_id TEXT NOT NULL, review_datetime TEXT NOT NULL, final_rating TEXT NOT NULL,
                 compiled INTEGER NOT NULL CHECK (compiled IN (0, 1)), proposed_rating TEXT,
                 review_log_json TEXT NOT NULL, review_status TEXT NOT NULL DEFAULT 'legacy',
-                reviewer_name TEXT, reviewer_model TEXT, review_attempts INTEGER NOT NULL DEFAULT 0,
+                reviewer_name TEXT, reviewer_model TEXT, reviewer_reasoning_effort TEXT,
+                review_attempts INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (collection_key, exercise_id) REFERENCES cards (collection_key, exercise_id))""")
             connection.execute("""INSERT INTO reviews (review_id,collection_key,exercise_id,review_datetime,final_rating,compiled,proposed_rating,review_log_json)
                 SELECT review_id,collection_key,exercise_id,review_datetime,final_rating,compiled,proposed_rating,review_log_json FROM reviews_legacy_v1""")
             connection.execute("DROP TABLE reviews_legacy_v1")
-            columns = {"review_status", "reviewer_name", "reviewer_model", "review_attempts"}
-        for name, definition in (("review_status", "TEXT NOT NULL DEFAULT 'legacy'"), ("reviewer_name", "TEXT"), ("reviewer_model", "TEXT"), ("review_attempts", "INTEGER NOT NULL DEFAULT 0")):
+            columns = {"review_status", "reviewer_name", "reviewer_model", "reviewer_reasoning_effort", "review_attempts"}
+        for name, definition in (("review_status", "TEXT NOT NULL DEFAULT 'legacy'"), ("reviewer_name", "TEXT"), ("reviewer_model", "TEXT"), ("reviewer_reasoning_effort", "TEXT"), ("review_attempts", "INTEGER NOT NULL DEFAULT 0")):
             if name not in columns:
                 connection.execute(f"ALTER TABLE reviews ADD COLUMN {name} {definition}")
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS review_artifacts (
+                review_id INTEGER PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                submitted_source TEXT NOT NULL,
+                review_response_json TEXT NOT NULL,
+                FOREIGN KEY (review_id) REFERENCES reviews (review_id)
+                    ON DELETE CASCADE
+            )"""
+        )
         row = connection.execute(
             "SELECT value FROM schema_metadata WHERE key = 'schema_version'"
         ).fetchone()
@@ -179,7 +193,7 @@ class PracticeStore:
                 "INSERT INTO schema_metadata (key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
-        elif row["value"] == "1":
+        elif row["value"] in {"1", "2", "3"}:
             connection.execute("UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'", (str(SCHEMA_VERSION),))
         elif row["value"] != str(SCHEMA_VERSION):
             raise SchedulerError(
@@ -210,13 +224,27 @@ class PracticeStore:
         review_status: str = "available",
         reviewer_name: str | None = None,
         reviewer_model: str | None = None,
+        reviewer_reasoning_effort: str | None = None,
         review_attempts: int = 0,
+        submitted_source: str | None = None,
+        review_response: dict[str, Any] | None = None,
+        review_archive_ttl_days: int = 30,
     ) -> dict[str, str | bool]:
         current = ensure_utc(review_datetime)
         scheduler = create_scheduler()
         connection = self.connect()
+        archive_enabled = (
+            review_archive_ttl_days > 0
+            and submitted_source is not None
+            and review_response is not None
+        )
+        if archive_enabled:
+            self.path.chmod(0o600)
         try:
             connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "DELETE FROM review_artifacts WHERE expires_at <= ?", (current.isoformat(),)
+            )
             row = connection.execute(
                 """
                 SELECT card_json FROM cards
@@ -252,13 +280,14 @@ class PracticeStore:
                     timestamp,
                 ),
             )
-            connection.execute(
+            review_cursor = connection.execute(
                 """
                 INSERT INTO reviews (
                     collection_key, exercise_id, review_datetime, final_rating,
                     compiled, proposed_rating, review_log_json, review_status,
-                    reviewer_name, reviewer_model, review_attempts
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    reviewer_name, reviewer_model, reviewer_reasoning_effort,
+                    review_attempts
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     collection_key,
@@ -271,9 +300,27 @@ class PracticeStore:
                     review_status,
                     reviewer_name,
                     reviewer_model,
+                    reviewer_reasoning_effort,
                     review_attempts,
                 ),
             )
+            if archive_enabled:
+                expires_at = current + timedelta(days=review_archive_ttl_days)
+                connection.execute(
+                    """
+                    INSERT INTO review_artifacts (
+                        review_id, created_at, expires_at, submitted_source,
+                        review_response_json
+                    ) VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        review_cursor.lastrowid,
+                        current.isoformat(),
+                        expires_at.isoformat(),
+                        submitted_source,
+                        json.dumps(review_response, ensure_ascii=False, separators=(",", ":")),
+                    ),
+                )
             connection.commit()
         except Exception:
             connection.rollback()

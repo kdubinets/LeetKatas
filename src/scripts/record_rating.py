@@ -43,6 +43,9 @@ def record_rating(
     compiled = request.get("compiled")
     proposed_rating = request.get("proposed_rating")
     final_rating = request.get("final_rating")
+    submitted_source = request.get("submitted_source")
+    review_response = request.get("review_response")
+    review_archive_ttl_days = request.get("review_archive_ttl_days", 30)
 
     if not isinstance(exercise_id, str) or not exercise_id:
         raise RequestError("exercise_id must be a non-empty string")
@@ -52,6 +55,14 @@ def record_rating(
         raise RequestError("proposed_rating must be a valid rating or null")
     if final_rating not in RATINGS:
         raise RequestError("final_rating must be a valid rating")
+    if type(review_archive_ttl_days) is not int or not 0 <= review_archive_ttl_days <= 3650:
+        raise RequestError("review_archive_ttl_days must be an integer between 0 and 3650")
+    if submitted_source is not None and not isinstance(submitted_source, str):
+        raise RequestError("submitted_source must be a string or null")
+    if review_response is not None and not isinstance(review_response, dict):
+        raise RequestError("review_response must be an object or null")
+    if (submitted_source is None) != (review_response is None):
+        raise RequestError("submitted_source and review_response must be provided together")
     try:
         return PracticeStore(database_path(request)).record_review(
             collection_key=collection_key,
@@ -63,7 +74,11 @@ def record_rating(
             review_status=request.get("review_status", "available"),
             reviewer_name=request.get("reviewer_name"),
             reviewer_model=request.get("reviewer_model"),
+            reviewer_reasoning_effort=request.get("reviewer_reasoning_effort"),
             review_attempts=request.get("review_attempts", 0),
+            submitted_source=submitted_source,
+            review_response=review_response,
+            review_archive_ttl_days=review_archive_ttl_days,
         )
     except SchedulerError as error:
         raise RequestError(str(error)) from error

@@ -3,6 +3,7 @@ collection = "~/work/LeetKatas/practice/cpp/collections/core"
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
 # notes_directory = "~/.local/share/leetkatas/notes"
+review_archive_ttl_days = 30
 
 [reviewer]
 model = "gpt-5.6-luna"

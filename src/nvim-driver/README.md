@@ -72,6 +72,7 @@ collection = "~/work/LeetKatas/practice/cpp/collections/core"
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
 # notes_directory = "~/.local/share/leetkatas/notes"
+review_archive_ttl_days = 30
 
 [reviewer]
 model = "gpt-5.6-luna"
@@ -92,9 +93,12 @@ libraries against which submissions are evaluated.
 
 Supported environment overrides include `PRACTICE_COLLECTION`,
 `PRACTICE_DATABASE`, `PRACTICE_LOG`, `PRACTICE_NOTES_DIRECTORY`,
-`PRACTICE_REVIEW_MODEL`, `PRACTICE_REVIEW_EFFORT`, `PRACTICE_COMPILER`, and
-`CXX`. Passing a collection directory to `src/nvim-driver/practice` has the
-highest precedence for the collection.
+`PRACTICE_REVIEW_ARCHIVE_TTL_DAYS`, `PRACTICE_REVIEW_MODEL`,
+`PRACTICE_REVIEW_EFFORT`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
+directory to `src/nvim-driver/practice` has the highest precedence for the
+collection. Review artifacts are retained for 30 days by default; set
+`review_archive_ttl_days` to `0` to disable archiving or up to `3650` days to
+change retention.
 
 ### Diagnostics and logs
 
@@ -102,7 +106,15 @@ The driver writes a structured JSON-lines diagnostic log to
 `stdpath("state")/leetkatas/practice.log`. Set `PRACTICE_LOG` to override the
 path. The log rotates to `practice.log.1` at 2 MiB and records session state,
 notifications, subprocess commands, exit status, duration, stderr, and compact
-response summaries. Exercise source and metadata bodies are not logged.
+response summaries. Reviewer summaries include the configured model and
+reasoning effort. Exercise source, metadata bodies, and full reviewer responses
+are not logged.
+
+After a rating is recorded, the exact submitted source and complete structured
+reviewer response are archived in the practice SQLite database. Expired
+artifacts are deleted when the next rating is recorded, while compact review and
+FSRS history remain. A database containing archived source is restricted to the
+current user (`0600`).
 
 Use `:PracticeDiagnostics` to show the current session ID, state, and log path.
 Use `:PracticeLog` to open the log. When reporting a problem, the approximate

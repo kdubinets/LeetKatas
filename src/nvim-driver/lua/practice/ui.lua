@@ -211,6 +211,13 @@ function M.open_feedback(source_window, result)
   }
   append_text(lines, result.diagnostics ~= "" and result.diagnostics or "(none)")
   vim.list_extend(lines, { "```", "", "## Reviewer", "", "**Status:** " .. tostring(result.review.status), "" })
+  if type(result.review.model) == "string" then
+    local reviewer_details = "**Model:** " .. result.review.model
+    if type(result.review.reasoning_effort) == "string" then
+      reviewer_details = reviewer_details .. " (" .. result.review.reasoning_effort .. " effort)"
+    end
+    vim.list_extend(lines, { reviewer_details, "" })
+  end
   if result.review.status == "available" and result.review.feedback then
     local review = result.review.feedback
     append_text(lines, "**Verdict:** " .. review.verdict .. "\n\n" .. review.summary
@@ -221,7 +228,9 @@ function M.open_feedback(source_window, result)
     if type(review.rating_explanation) == "string" and review.rating_explanation ~= "" then
       vim.list_extend(lines, { "", "**Rating rationale:** " .. review.rating_explanation })
     end
-    append_implementation(lines, "Corrected implementation", review.improved_implementation,
+    local improvement_title = review.verdict == "correct" and "Improved implementation"
+      or "Corrected implementation"
+    append_implementation(lines, improvement_title, review.improved_implementation,
       review.improvement_explanation)
     append_implementation(lines, "Alternative implementation", review.alternative_implementation,
       review.alternative_explanation)

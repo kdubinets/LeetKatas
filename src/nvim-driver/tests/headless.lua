@@ -251,6 +251,21 @@ for _, source in pairs(original_sources) do
     "an original exercise was modified")
 end
 
+local archive_output = vim.fn.system({
+  "python3", "-c",
+  "import json,sqlite3,sys; c=sqlite3.connect(sys.argv[1]); "
+    .. "rows=c.execute('SELECT submitted_source,review_response_json FROM review_artifacts ORDER BY review_id').fetchall(); "
+    .. "print(json.dumps(rows))",
+  vim.env.PRACTICE_DATABASE,
+})
+assert(vim.v.shell_error == 0, "could not inspect the review artifact archive")
+local archived = vim.json.decode(archive_output)
+assert(#archived == 2, "rated submissions were not archived")
+assert(archived[1][1]:find("return 42;", 1, true), "successful submission source was not archived")
+assert(archived[2][1]:find("return;", 1, true), "failed submission source was not archived")
+assert(vim.json.decode(archived[1][2]).feedback.summary
+  == "The submitted implementation is correct.", "full reviewer response was not archived")
+
 practice.quit()
 assert(practice.get_state().status == "idle", "practice did not return to idle")
 practice.open_notes()

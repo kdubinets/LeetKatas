@@ -87,14 +87,22 @@ files without changing the generic reviewer request or response contract.
   "compiled": true,
   "proposed_rating": "good",
   "final_rating": "excellent",
+  "reviewer_model": "gpt-5.6-luna",
+  "reviewer_reasoning_effort": "low",
+  "submitted_source": "int solve() { return 1; }\n",
+  "review_response": {"status": "available", "feedback": {}},
+  "review_archive_ttl_days": 30,
   "database_path": "optional-database-override"
 }
 ```
 
 It maps `fail`, `acceptable`, `good`, and `excellent` to FSRS Again, Hard, Good,
-and Easy. The updated card and immutable review log are committed together. A
-successful response contains `recorded`, the next UTC `due` timestamp, and the
-card `state`.
+and Easy. The updated card and immutable review log are committed together,
+including reviewer model and reasoning effort when provided. A successful
+response contains `recorded`, the next UTC `due` timestamp, and the card
+`state`. When submission and review artifacts are supplied, they are stored in
+`review_artifacts` for the configured TTL and expired artifacts are purged by a
+subsequent rating. A TTL of zero disables new artifact storage.
 
 If `database_path` is omitted, both scheduler commands use
 `PRACTICE_DATABASE`, then `$XDG_DATA_HOME/leetkatas/practice.sqlite3`, and

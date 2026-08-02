@@ -46,6 +46,7 @@ class PracticeConfigTests(unittest.TestCase):
 [practice]
 collection = "collections/core"
 notes_directory = "notes"
+review_archive_ttl_days = 45
 
 [reviewer]
 model = "gpt-5.6-luna"
@@ -64,6 +65,7 @@ compiler = "g++"
 
             self.assertEqual(config["practice"]["collection"], str(directory / "collections/core"))
             self.assertEqual(config["practice"]["notes_directory"], str(directory / "notes"))
+            self.assertEqual(config["practice"]["review_archive_ttl_days"], 45)
             self.assertEqual(config["reviewer"]["model"], "gpt-5.6-luna")
             self.assertEqual(config["editor"]["indent_width"], 2)
             self.assertEqual(config["evaluation"]["compiler"], "g++")
@@ -76,6 +78,10 @@ compiler = "g++"
                 load_config(path)
 
             path.write_text("[editor]\nunknown = 1\n")
+            with self.assertRaises(ConfigError):
+                load_config(path)
+
+            path.write_text("[practice]\nreview_archive_ttl_days = 3651\n")
             with self.assertRaises(ConfigError):
                 load_config(path)
 
@@ -374,6 +380,33 @@ class EvaluateExerciseTests(unittest.TestCase):
             self.assertNotIn("compiler", evidence)
             self.assertEqual(response["proposed_rating"], "good")
 
+    def test_reports_configured_reviewer_model_and_effort(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            source = directory / "valid.cpp"
+            metadata = directory / "valid.md"
+            source.write_text("int solve() { return 1; }\n")
+            metadata.write_text("# Solution\n")
+            request = self.request(source, metadata)
+            request["reviewer"] = {
+                "command": ["fake-reviewer"],
+                "name": "Codex",
+                "model": "gpt-5.6-luna",
+                "reasoning_effort": "low",
+            }
+            review = {
+                "status": "available",
+                "attempts": 1,
+                "feedback": {"proposed_rating": "good"},
+                "failure": None,
+            }
+
+            with patch("evaluate_exercise.review_request", return_value=review):
+                response = evaluate(request)
+
+            self.assertEqual(response["review"]["model"], "gpt-5.6-luna")
+            self.assertEqual(response["review"]["reasoning_effort"], "low")
+
     def test_rejects_invalid_target_environment(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
@@ -413,6 +446,8 @@ class CodexReviewerTests(unittest.TestCase):
         self.assertIn("target environment", prompt)
         self.assertIn("recall difficulty and confidence", prompt)
         self.assertIn("provide a corrected implementation", prompt)
+        self.assertIn("untrusted reference candidate, not as a gold standard", prompt)
+        self.assertIn("look for at most one meaningful opportunity", prompt)
 
 
 class RecordRatingTests(unittest.TestCase):
@@ -461,6 +496,107 @@ class RecordRatingTests(unittest.TestCase):
             self.assertEqual(selected_result.returncode, 0)
             self.assertIsNone(selected_response["exercise"])
             self.assertEqual(selected_response["next_due"], response["due"])
+
+    def test_persists_reviewer_model_and_reasoning_effort(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "example")
+            request = self.request(directory, "good")
+            request.update(
+                reviewer_model="gpt-5.6-luna",
+                reviewer_reasoning_effort="low",
+            )
+
+            result, _ = run_script("record_rating.py", request)
+
+            self.assertEqual(result.returncode, 0)
+            with sqlite3.connect(directory / "practice.sqlite3") as connection:
+                stored = connection.execute(
+                    "SELECT reviewer_model, reviewer_reasoning_effort FROM reviews"
+                ).fetchone()
+            self.assertEqual(stored, ("gpt-5.6-luna", "low"))
+
+    def test_archives_submission_and_full_review_with_ttl(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            database = directory / "practice.sqlite3"
+            self.create_pair(directory, "example")
+            request = self.request(directory, "good")
+            request.update(
+                submitted_source="int solve() { return 2; }\n",
+                review_response={
+                    "status": "available",
+                    "feedback": {"summary": "Correct, with a clearer alternative."},
+                },
+                review_archive_ttl_days=7,
+            )
+            reviewed_at = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
+
+            record_rating(request, reviewed_at)
+
+            with sqlite3.connect(database) as connection:
+                stored = connection.execute(
+                    """SELECT created_at, expires_at, submitted_source,
+                              review_response_json
+                       FROM review_artifacts"""
+                ).fetchone()
+            self.assertEqual(stored[0], reviewed_at.isoformat())
+            self.assertEqual(
+                stored[1], (reviewed_at + timedelta(days=7)).isoformat()
+            )
+            self.assertEqual(stored[2], request["submitted_source"])
+            self.assertEqual(json.loads(stored[3]), request["review_response"])
+            self.assertEqual(database.stat().st_mode & 0o777, 0o600)
+
+    def test_purges_expired_artifacts_when_recording_a_review(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            database = directory / "practice.sqlite3"
+            self.create_pair(directory, "example")
+            self.create_pair(directory, "later")
+            first = self.request(directory, "good")
+            first.update(
+                submitted_source="first submission",
+                review_response={"status": "available", "feedback": {}},
+                review_archive_ttl_days=1,
+            )
+            reviewed_at = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
+            record_rating(first, reviewed_at)
+
+            later = self.request(directory, "good")
+            later.update(
+                exercise_id="later",
+                submitted_source="later submission",
+                review_response={"status": "available", "feedback": {}},
+                review_archive_ttl_days=30,
+            )
+            record_rating(later, reviewed_at + timedelta(days=2))
+
+            with sqlite3.connect(database) as connection:
+                sources = connection.execute(
+                    "SELECT submitted_source FROM review_artifacts"
+                ).fetchall()
+            self.assertEqual(sources, [("later submission",)])
+
+    def test_zero_ttl_disables_artifact_archiving(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "example")
+            request = self.request(directory, "good")
+            request.update(
+                submitted_source="submission",
+                review_response={"status": "available", "feedback": {}},
+                review_archive_ttl_days=0,
+            )
+
+            result, _ = run_script("record_rating.py", request)
+
+            self.assertEqual(result.returncode, 0)
+            with sqlite3.connect(directory / "practice.sqlite3") as connection:
+                count = connection.execute(
+                    "SELECT count(*) FROM review_artifacts"
+                ).fetchone()[0]
+            self.assertEqual(count, 0)
 
     def test_rejects_an_invalid_rating(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

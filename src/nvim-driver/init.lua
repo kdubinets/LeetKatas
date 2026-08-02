@@ -53,6 +53,14 @@ local function environment(name)
   return value ~= nil and value ~= "" and value or nil
 end
 
+local review_archive_ttl_days = tonumber(environment("PRACTICE_REVIEW_ARCHIVE_TTL_DAYS")
+  or practice_config.review_archive_ttl_days or 30)
+if not review_archive_ttl_days or review_archive_ttl_days % 1 ~= 0
+  or review_archive_ttl_days < 0 or review_archive_ttl_days > 3650
+then
+  error("PRACTICE_REVIEW_ARCHIVE_TTL_DAYS must be an integer between 0 and 3650")
+end
+
 local indent_width = editor_config.indent_width or 4
 vim.opt.expandtab = true
 vim.opt.shiftwidth = indent_width
@@ -103,13 +111,16 @@ end
 setup_which_key(editor_config.which_key_delay_ms or 300)
 
 local practice = require("practice")
+local reviewer_model = environment("PRACTICE_REVIEW_MODEL") or reviewer_config.model or "gpt-5.6-luna"
+local reviewer_reasoning_effort = environment("PRACTICE_REVIEW_EFFORT")
+  or reviewer_config.reasoning_effort or "low"
 local default_reviewer_command = {
   selected_python,
   repository_dir .. "/src/scripts/codex_reviewer.py",
   "--model",
-  environment("PRACTICE_REVIEW_MODEL") or reviewer_config.model or "gpt-5.6-luna",
+  reviewer_model,
   "--effort",
-  environment("PRACTICE_REVIEW_EFFORT") or reviewer_config.reasoning_effort or "low",
+  reviewer_reasoning_effort,
 }
 local compiler = environment("CXX") or evaluation_config.compiler
 if not compiler then
@@ -122,6 +133,7 @@ practice.setup({
     or (vim.fn.stdpath("state") .. "/leetkatas/practice.log"),
   scripts_dir = repository_dir .. "/src/scripts",
   database_path = environment("PRACTICE_DATABASE") or practice_config.database_path,
+  review_archive_ttl_days = review_archive_ttl_days,
   notes_directory = environment("PRACTICE_NOTES_DIRECTORY") or practice_config.notes_directory
     or ((environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share"))
       .. "/leetkatas/notes"),
@@ -141,7 +153,10 @@ practice.setup({
   reviewer = environment("PRACTICE_REVIEWER") and {
     command = { environment("PRACTICE_REVIEWER") }, name = environment("PRACTICE_REVIEWER_NAME")
   } or {
-    command = default_reviewer_command, name = "Codex"
+    command = default_reviewer_command,
+    name = "Codex",
+    model = reviewer_model,
+    reasoning_effort = reviewer_reasoning_effort,
   },
 })
 

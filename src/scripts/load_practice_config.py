@@ -24,6 +24,7 @@ SCHEMA: dict[str, dict[str, type]] = {
         "database_path": str,
         "log_path": str,
         "notes_directory": str,
+        "review_archive_ttl_days": int,
     },
     "reviewer": {
         "model": str,
@@ -81,6 +82,9 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
     reviewer = value.get("reviewer", {})
     if "reasoning_effort" in reviewer and reviewer["reasoning_effort"] not in EFFORTS:
         raise ConfigError("reviewer.reasoning_effort must be minimal, low, medium, high, or xhigh")
+    practice = value.get("practice", {})
+    if "review_archive_ttl_days" in practice and not 0 <= practice["review_archive_ttl_days"] <= 3650:
+        raise ConfigError("practice.review_archive_ttl_days must be between 0 and 3650")
 
     for section, name in PATH_KEYS:
         if name in value.get(section, {}):
