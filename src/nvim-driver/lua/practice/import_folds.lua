@@ -66,10 +66,10 @@ end
 
 function M.close(buffer, window)
   local patterns = language_rules[vim.bo[buffer].filetype]
-  if not patterns then return end
+  if not patterns then return nil end
 
   local first, last = find_import_section(vim.api.nvim_buf_get_lines(buffer, 0, -1, false), patterns)
-  if not first then return end
+  if not first then return nil end
 
   local import_count = 0
   for index = first, last do
@@ -87,6 +87,10 @@ function M.close(buffer, window)
     vim.wo.foldtext = "v:lua.PracticeImportFoldText()"
     vim.cmd("silent! normal! zE")
     vim.cmd(string.format("silent! %d,%dfold", first, last))
+    local cursor = vim.api.nvim_win_get_cursor(window)
+    vim.api.nvim_win_set_cursor(window, { first, 0 })
+    vim.cmd("silent! normal! zc")
+    vim.api.nvim_win_set_cursor(window, cursor)
   end)
 
   -- A one-import preamble needs its following blank line to form a fold.
@@ -97,6 +101,25 @@ function M.close(buffer, window)
       virt_lines_above = true,
     })
   end
+  return import_count
+end
+
+function M.toggle(buffer, window)
+  local patterns = language_rules[vim.bo[buffer].filetype]
+  if not patterns then return nil end
+  local first = find_import_section(vim.api.nvim_buf_get_lines(buffer, 0, -1, false), patterns)
+  if not first then return nil end
+
+  if vim.api.nvim_win_call(window, function() return vim.fn.foldclosed(first) == first end) then
+    vim.api.nvim_win_call(window, function()
+      local cursor = vim.api.nvim_win_get_cursor(window)
+      vim.api.nvim_win_set_cursor(window, { first, 0 })
+      vim.cmd("silent! normal! zo")
+      vim.api.nvim_win_set_cursor(window, cursor)
+    end)
+    return vim.b[buffer].practice_import_fold_count or 0, true
+  end
+  return M.close(buffer, window), false
 end
 
 function M.foldtext()

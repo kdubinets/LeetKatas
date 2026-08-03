@@ -58,6 +58,7 @@ assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered
 assert(vim.fn.maparg("<Space>pr", "n") ~= "", "retry mapping was not registered")
 assert(vim.fn.maparg("<Space>pm", "n") ~= "", "note mapping was not registered")
 assert(vim.fn.maparg("<Space>pf", "n") ~= "", "follow-up mapping was not registered")
+assert(vim.fn.maparg("<Space>pi", "n") ~= "", "fold imports mapping was not registered")
 assert(vim.fn.maparg("<Space>pm", "x") ~= "", "visual note mapping was not registered")
 assert(vim.fn.maparg("<Space>po", "n") ~= "", "open notes mapping was not registered")
 assert(vim.fn.maparg("<Space>pt", "n") ~= "", "statistics mapping was not registered")
@@ -157,6 +158,15 @@ assert(vim.fs.basename(first_state.working_path) ~= vim.fs.basename(original_sou
   "working copy repeats the exercise filename")
 assert(not vim.fs.basename(first_state.working_path):find(first_id, 1, true),
   "working copy filename exposes the exercise slug")
+vim.api.nvim_buf_set_lines(first_state.source_buffer, 0, 0, false, { "#include <vector>", "" })
+require("practice.import_folds").close(first_state.source_buffer, first_state.source_window)
+practice.fold_imports()
+assert(vim.api.nvim_win_call(first_state.source_window, function()
+  return vim.fn.foldclosed(1)
+end) == -1, "fold imports did not open the exercise preamble")
+assert(vim.b[first_state.source_buffer].practice_import_fold_count == 1,
+  "fold imports did not record the import count")
+vim.api.nvim_buf_set_lines(first_state.source_buffer, 0, 2, false, {})
 assert(buffer_text(first_state.source_buffer):find("// Finish:", 1, true), "marker is missing")
 local instruction_marks = vim.api.nvim_buf_get_extmarks(first_state.source_buffer,
   vim.api.nvim_create_namespace("practice_instruction"), 0, -1, { details = true })

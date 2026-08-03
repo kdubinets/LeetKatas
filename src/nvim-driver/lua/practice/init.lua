@@ -125,6 +125,7 @@ function M.setup(options)
   map("<leader>pn", M.next, "Practice: next exercise")
   map("<leader>pm", M.note, "Practice: capture a follow-up note")
   map("<leader>pf", M.ask, "Practice: ask reviewer a follow-up question")
+  map("<leader>pi", M.fold_imports, "Practice: toggle imports")
   vim.keymap.set("x", "<leader>pm", ":PracticeNote<CR>", {
     silent = true, desc = "Practice: capture selected context in a follow-up note",
   })
@@ -171,6 +172,10 @@ end
 
 function M.open_notes()
   session.open_notes()
+end
+
+function M.fold_imports()
+  session.fold_imports()
 end
 
 function M.stats(directory)

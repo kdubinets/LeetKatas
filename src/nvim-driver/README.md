@@ -396,6 +396,7 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>pn` | `:PracticeNext` | Skip and select again. |
 | `<Space>pm` | `:PracticeNote` | Capture a note for the active exercise. |
 | `<Space>pf` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
+| `<Space>pi` | — | Toggle the current exercise's import/include preamble. |
 | `<Space>po` | `:PracticeNotes` | Open the personal notes directory. |
 | `<Space>pt` | `:PracticeStats` | Show current-collection statistics. |
 | `<Space>pq` | `:PracticeQuit` | End the session. |

@@ -1,5 +1,6 @@
 local process = require("practice.process")
 local ui = require("practice.ui")
+local import_folds = require("practice.import_folds")
 local log = require("practice.log")
 local notes = require("practice.notes")
 local sync = require("practice.sync")
@@ -68,6 +69,10 @@ end
 
 local function valid_buffer(buffer)
   return buffer ~= nil and vim.api.nvim_buf_is_valid(buffer)
+end
+
+local function valid_window(window)
+  return window ~= nil and vim.api.nvim_win_is_valid(window)
 end
 
 local function script_path(name)
@@ -332,6 +337,27 @@ end
 
 function M.open_notes()
   notes.open_directory()
+end
+
+function M.fold_imports()
+  if valid_buffer(state.source_buffer) then
+    local count = nil
+    local opened = nil
+    for _, window in ipairs(vim.fn.win_findbuf(state.source_buffer)) do
+      if valid_window(window) then
+        local window_count, window_opened = import_folds.toggle(state.source_buffer, window)
+        count = window_count or count
+        opened = window_opened
+      end
+    end
+    if count then
+      ui.notify(string.format("%s %d %s", opened and "Opened" or "Folded", count,
+        count == 1 and "import" or "imports"),
+        vim.log.levels.INFO)
+    else
+      ui.notify("No import/include preamble found", vim.log.levels.INFO)
+    end
+  end
 end
 
 function M.stats(directory)
