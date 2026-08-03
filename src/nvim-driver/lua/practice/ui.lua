@@ -10,7 +10,6 @@ local feedback_contexts = {}
 local feedback_result = nil
 local feedback_callbacks = nil
 local expanded = { review = false, compiler = false, reference = false, chat = true }
-local review_started_collapsed = false
 local stats_buffer = nil
 local stats_window = nil
 
@@ -329,14 +328,6 @@ local function build_feedback(result)
   add_line(render, "More      ? Ask reviewer   m Note   n Skip",
     { section = "Actions", logical_section = "actions" }, "PracticeAction")
   local details = { "d Review" }
-  if review_started_collapsed and review then
-    if type(review.version_notes) == "string" and review.version_notes ~= "" then
-      table.insert(details, "Version notes in review")
-    end
-    if type(review.improved_implementation) == "string" and review.improved_implementation ~= "" then
-      table.insert(details, "Improved implementation in review")
-    end
-  end
   if type(result.diagnostics) == "string" and result.diagnostics ~= "" then
     table.insert(details, "c Compiler")
   end
@@ -548,7 +539,6 @@ function M.close_feedback()
   feedback_window, feedback_buffer = nil, nil
   feedback_contexts, feedback_result, feedback_callbacks = {}, nil, nil
   expanded = { review = false, compiler = false, reference = false, chat = true }
-  review_started_collapsed = false
 end
 
 function M.close_stats()
@@ -632,9 +622,6 @@ end
 function M.open_feedback(source_window, result, callbacks)
   ensure_feedback(source_window, true)
   feedback_result, feedback_callbacks = result, callbacks or {}
-  expanded.review = result.proposed_rating ~= "excellent"
-  review_started_collapsed = not expanded.review
-  local render = render_feedback("outcome")
   local _, _, review = outcome(result)
   local has_improved_implementation = review ~= nil
     and type(review.improved_implementation) == "string"
@@ -642,37 +629,32 @@ function M.open_feedback(source_window, result, callbacks)
   local has_version_notes = review ~= nil
     and type(review.version_notes) == "string"
     and review.version_notes ~= ""
-  local rendered_improved_hint, rendered_version_hint = false, false
+  expanded.review = result.proposed_rating ~= "excellent"
+    or has_improved_implementation or has_version_notes
+  local render = render_feedback("outcome")
+  local rendered_improved_section, rendered_version_section = false, false
   for _, line in ipairs(render and render.lines or {}) do
-    if line:find("Improved implementation in review", 1, true) then
-      rendered_improved_hint = true
-    end
-    if line:find("Version notes in review", 1, true) then
-      rendered_version_hint = true
-    end
+    if line == "Improved implementation" then rendered_improved_section = true end
+    if line == "Version notes" then rendered_version_section = true end
   end
-  local buffer_improved_hint, buffer_version_hint = false, false
+  local buffer_improved_section, buffer_version_section = false, false
   if valid_buffer(feedback_buffer) then
     for _, line in ipairs(vim.api.nvim_buf_get_lines(feedback_buffer, 0, -1, false)) do
-      if line:find("Improved implementation in review", 1, true) then
-        buffer_improved_hint = true
-      end
-      if line:find("Version notes in review", 1, true) then
-        buffer_version_hint = true
-      end
+      if line == "Improved implementation" then buffer_improved_section = true end
+      if line == "Version notes" then buffer_version_section = true end
     end
   end
   log.event("feedback_opened", "info", {
     proposed_rating = type(result.proposed_rating) == "string" and result.proposed_rating or nil,
     review_status = type(result.review) == "table" and result.review.status or nil,
     review_verdict = review and review.verdict or nil,
-    review_started_collapsed = review_started_collapsed,
+    review_started_collapsed = not expanded.review,
     has_improved_implementation = has_improved_implementation,
     has_version_notes = has_version_notes,
-    rendered_improved_hint = rendered_improved_hint,
-    rendered_version_hint = rendered_version_hint,
-    buffer_improved_hint = buffer_improved_hint,
-    buffer_version_hint = buffer_version_hint,
+    rendered_improved_section = rendered_improved_section,
+    rendered_version_section = rendered_version_section,
+    buffer_improved_section = buffer_improved_section,
+    buffer_version_section = buffer_version_section,
     feedback_window_displays_buffer = valid_window(feedback_window)
       and vim.api.nvim_win_get_buf(feedback_window) == feedback_buffer,
   })
