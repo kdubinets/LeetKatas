@@ -14,7 +14,7 @@ from practice_scheduler import (
     PracticeStore,
     RATING_NAMES,
     SchedulerError,
-    canonical_collection,
+    collection_keys,
     database_path,
     deserialize_card,
     ensure_utc,
@@ -63,7 +63,7 @@ def practice_stats(
     current_datetime: datetime | None = None,
     local_zone: tzinfo | None = None,
 ) -> dict[str, Any]:
-    collection_key = canonical_collection(request.get("exercise_directory"))
+    path_key, collection_key, _ = collection_keys(request.get("exercise_directory"))
     source_extension = required_extension(request, "source_extension")
     metadata_extension = required_extension(request, "metadata_extension")
     history_days = request.get("history_days", 30)
@@ -73,9 +73,10 @@ def practice_stats(
     now = ensure_utc(current_datetime)
     today = local_date(now, local_zone)
     tomorrow = today + timedelta(days=1)
-    active_ids = discover_ids(Path(collection_key), source_extension, metadata_extension)
+    active_ids = discover_ids(Path(path_key), source_extension, metadata_extension)
 
     store = PracticeStore(database_path(request))
+    store.adopt_collection_key(path_key, collection_key)
     connection = store.connect()
     try:
         card_rows = connection.execute(

@@ -39,6 +39,9 @@ SCHEMA: dict[str, dict[str, type]] = {
     "evaluation": {
         "compiler": str,
     },
+    "sync": {
+        "supabase_url": str,
+    },
 }
 EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
 PATH_KEYS = {

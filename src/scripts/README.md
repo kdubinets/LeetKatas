@@ -9,6 +9,7 @@ Neovim practice driver:
 - `practice_stats.py` reports collection state, workload, forecasts, timing, and history.
 - `load_practice_config.py` validates and normalizes the optional user TOML file.
 - `practice_scheduler.py` provides shared FSRS and SQLite behavior.
+- `sync_progress.py` optionally synchronizes the append-only review ledger to Supabase.
 - `prompts/` contains adapter-specific reviewer instructions.
 
 The commands communicate with callers through stable JSON input and output
@@ -132,6 +133,44 @@ dates use the process's local timezone while stored review timestamps remain UTC
 If `database_path` is omitted, both scheduler commands use
 `PRACTICE_DATABASE`, then `$XDG_DATA_HOME/leetkatas/practice.sqlite3`, and
 finally `~/.local/share/leetkatas/practice.sqlite3`.
+
+## Optional Supabase backup and synchronization
+
+SQLite remains authoritative for every interactive operation. A collection is
+syncable only when it has a valid `collection.json` containing schema version 1
+and a stable ID; collections without it continue to work locally. On first
+access, path-keyed history is adopted into that stable identity transactionally.
+
+Create a dedicated Supabase project and run `supabase_setup.sql` in its SQL
+editor. Configure only the project URL in TOML:
+
+```toml
+[sync]
+supabase_url = "https://your-project.supabase.co"
+```
+
+Export the server-side key as `PRACTICE_SUPABASE_KEY`. It must never be placed
+in TOML. `PRACTICE_SUPABASE_URL` overrides the configured URL. The remote table
+contains ratings, timestamps, compact compiler/reviewer metadata, and duration
+fields; source, feedback bodies, review artifacts, cards, notes, sessions, and
+diagnostics remain local.
+
+For initial setup, synchronize the existing database on the one canonical
+machine before adding another machine. A secondary machine should start with a
+fresh SQLite database; its first sync downloads the ledger and reconstructs
+cards. For machine-loss recovery, configure a fresh database and the same
+collection/project. If both a legacy local database and the remote already have
+history, sync reports `bootstrap_conflict` and changes neither ledger; use a
+fresh database on that secondary machine.
+
+Automatic sync runs asynchronously at editor startup, session start, and after
+a rating. It never delays selection or replaces an open exercise. Use
+`:PracticeSync` for an explicit result and `:PracticeDiagnostics` for configured
+state, pending uploads, and last success. Network, authentication, paused-project,
+rate-limit, malformed-response, or interrupted-process failures leave local
+practice fully usable and retry on a later trigger. FSRS fuzzing stays enabled,
+so historical statistics converge after synchronization while randomized due
+dates and forecasts can differ slightly between machines.
 
 ## Tests
 

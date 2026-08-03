@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -18,8 +20,9 @@ else:
     FSRS_IMPORT_ERROR = None
 
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 RATING_NAMES = {"fail", "acceptable", "good", "excellent"}
+COLLECTION_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)+$")
 
 
 class SchedulerError(ValueError):
@@ -44,6 +47,34 @@ def canonical_collection(value: Any) -> str:
     if not collection.is_dir():
         raise SchedulerError(f"exercise directory does not exist: {collection}")
     return str(collection.resolve())
+
+
+def collection_identity(collection: str | Path) -> str | None:
+    """Return a collection's portable identity, or None for local-only collections."""
+    metadata = Path(collection) / "collection.json"
+    if not metadata.is_file():
+        return None
+    try:
+        document = json.loads(metadata.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    if (
+        not isinstance(document, dict)
+        or type(document.get("schema_version")) is not int
+        or document["schema_version"] != 1
+    ):
+        return None
+    identity = document.get("id")
+    if not isinstance(identity, str) or not COLLECTION_ID_PATTERN.fullmatch(identity):
+        return None
+    return identity
+
+
+def collection_keys(value: Any) -> tuple[str, str, str | None]:
+    """Return absolute path, scheduler key, and optional synchronization identity."""
+    path_key = canonical_collection(value)
+    identity = collection_identity(path_key)
+    return path_key, identity or path_key, identity
 
 
 def database_path(request: dict[str, Any]) -> Path:
@@ -121,6 +152,19 @@ class PracticeStore:
             raise
 
     def _ensure_schema(self, connection: sqlite3.Connection) -> None:
+        had_reviews_table = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='reviews'"
+        ).fetchone() is not None
+        preexisting_reviews = (
+            connection.execute("SELECT count(*) FROM reviews").fetchone()[0]
+            if had_reviews_table else 0
+        )
+        preexisting_collection_keys = (
+            [row[0] for row in connection.execute(
+                "SELECT DISTINCT collection_key FROM reviews ORDER BY collection_key"
+            )]
+            if preexisting_reviews else []
+        )
         connection.executescript(
             """
             CREATE TABLE IF NOT EXISTS schema_metadata (
@@ -138,6 +182,7 @@ class PracticeStore:
             );
             CREATE TABLE IF NOT EXISTS reviews (
                 review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT NOT NULL,
                 collection_key TEXT NOT NULL,
                 exercise_id TEXT NOT NULL,
                 review_datetime TEXT NOT NULL,
@@ -152,11 +197,16 @@ class PracticeStore:
                 solve_duration_ms INTEGER CHECK (solve_duration_ms >= 0),
                 feedback_duration_ms INTEGER CHECK (feedback_duration_ms >= 0),
                 review_log_json TEXT NOT NULL,
+                remote_confirmed INTEGER NOT NULL DEFAULT 0 CHECK (remote_confirmed IN (0, 1)),
                 FOREIGN KEY (collection_key, exercise_id)
                     REFERENCES cards (collection_key, exercise_id)
             );
             """
         )
+        # Startup can launch selection and best-effort synchronization together.
+        # Serialize the remainder of a schema upgrade so both processes do not
+        # inspect an old table shape and then attempt the same ALTER TABLE.
+        connection.execute("BEGIN IMMEDIATE")
         columns = {row[1] for row in connection.execute("PRAGMA table_info(reviews)")}
         proposed_info = next((row for row in connection.execute("PRAGMA table_info(reviews)") if row[1] == "proposed_rating"), None)
         if proposed_info is not None and proposed_info[3]:
@@ -184,6 +234,43 @@ class PracticeStore:
                 connection.execute(
                     f"ALTER TABLE reviews ADD COLUMN {name} INTEGER CHECK ({name} >= 0)"
                 )
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(reviews)")}
+        if "event_id" not in columns:
+            connection.execute("ALTER TABLE reviews ADD COLUMN event_id TEXT")
+        if "remote_confirmed" not in columns:
+            connection.execute(
+                "ALTER TABLE reviews ADD COLUMN remote_confirmed INTEGER NOT NULL DEFAULT 0"
+            )
+        missing_event_ids = connection.execute(
+            "SELECT review_id FROM reviews WHERE event_id IS NULL OR event_id = ''"
+        ).fetchall()
+        for missing in missing_event_ids:
+            connection.execute(
+                "UPDATE reviews SET event_id = ? WHERE review_id = ?",
+                (str(uuid.uuid4()), missing["review_id"]),
+            )
+        connection.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS reviews_event_id_idx ON reviews(event_id)"
+        )
+        connection.execute(
+            """CREATE TRIGGER IF NOT EXISTS reviews_require_event_id
+               BEFORE INSERT ON reviews
+               WHEN NEW.event_id IS NULL OR NEW.event_id = ''
+               BEGIN SELECT RAISE(ABORT, 'review event_id is required'); END"""
+        )
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS reviews_collection_time_idx "
+            "ON reviews(collection_key, review_datetime, event_id)"
+        )
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS sync_metadata (
+                collection_id TEXT PRIMARY KEY,
+                bootstrap_state TEXT NOT NULL DEFAULT 'uninitialized',
+                last_attempt_at TEXT,
+                last_success_at TEXT,
+                last_error TEXT
+            )"""
+        )
         connection.execute(
             """CREATE TABLE IF NOT EXISTS review_artifacts (
                 review_id INTEGER PRIMARY KEY,
@@ -203,13 +290,71 @@ class PracticeStore:
                 "INSERT INTO schema_metadata (key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
-        elif row["value"] in {"1", "2", "3", "4"}:
+        elif row["value"] in {"1", "2", "3", "4", "5"}:
             connection.execute("UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'", (str(SCHEMA_VERSION),))
         elif row["value"] != str(SCHEMA_VERSION):
             raise SchedulerError(
                 f"unsupported practice database schema version: {row['value']}"
             )
+        legacy_marker = connection.execute(
+            "SELECT value FROM schema_metadata WHERE key = 'legacy_events_migrated'"
+        ).fetchone()
+        if legacy_marker is None:
+            connection.execute(
+                "INSERT INTO schema_metadata (key, value) VALUES ('legacy_events_migrated', ?)",
+                ("1" if had_reviews_table and preexisting_reviews else "0",),
+            )
+            connection.execute(
+                "INSERT INTO schema_metadata (key, value) VALUES ('legacy_collection_keys', ?)",
+                (json.dumps(preexisting_collection_keys, separators=(",", ":")),),
+            )
+        elif connection.execute(
+            "SELECT 1 FROM schema_metadata WHERE key='legacy_collection_keys'"
+        ).fetchone() is None:
+            connection.execute(
+                "INSERT INTO schema_metadata (key, value) VALUES ('legacy_collection_keys', '[]')"
+            )
         connection.commit()
+
+    def adopt_collection_key(self, path_key: str, collection_key: str) -> None:
+        """Transactionally adopt legacy absolute-path state into a stable identity."""
+        if path_key == collection_key:
+            return
+        connection = self.connect()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                """INSERT OR IGNORE INTO cards
+                   (collection_key, exercise_id, card_json, due_at, created_at, updated_at)
+                   SELECT ?, exercise_id, card_json, due_at, created_at, updated_at
+                   FROM cards WHERE collection_key = ?""",
+                (collection_key, path_key),
+            )
+            connection.execute(
+                "UPDATE reviews SET collection_key = ? WHERE collection_key = ?",
+                (collection_key, path_key),
+            )
+            connection.execute("DELETE FROM cards WHERE collection_key = ?", (path_key,))
+            legacy_row = connection.execute(
+                "SELECT value FROM schema_metadata WHERE key='legacy_collection_keys'"
+            ).fetchone()
+            if legacy_row is not None:
+                try:
+                    legacy_keys = json.loads(legacy_row["value"])
+                except json.JSONDecodeError:
+                    legacy_keys = []
+                if path_key in legacy_keys and collection_key not in legacy_keys:
+                    legacy_keys = [collection_key if key == path_key else key for key in legacy_keys]
+                    connection.execute(
+                        "UPDATE schema_metadata SET value=? WHERE key='legacy_collection_keys'",
+                        (json.dumps(legacy_keys, separators=(",", ":")),),
+                    )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
 
     def cards_for_collection(self, collection_key: str) -> dict[str, Any]:
         require_fsrs()
@@ -295,13 +440,14 @@ class PracticeStore:
             review_cursor = connection.execute(
                 """
                 INSERT INTO reviews (
-                    collection_key, exercise_id, review_datetime, final_rating,
+                    event_id, collection_key, exercise_id, review_datetime, final_rating,
                     compiled, proposed_rating, review_log_json, review_status,
                     reviewer_name, reviewer_model, reviewer_reasoning_effort,
                     review_attempts, solve_duration_ms, feedback_duration_ms
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
+                    str(uuid.uuid4()),
                     collection_key,
                     exercise_id,
                     review_log.review_datetime.isoformat(),

@@ -19,3 +19,7 @@ which_key_delay_ms = 300
 
 [evaluation]
 compiler = "clang++"
+
+[sync]
+# Keep the server key only in PRACTICE_SUPABASE_KEY.
+# supabase_url = "https://your-project.supabase.co"

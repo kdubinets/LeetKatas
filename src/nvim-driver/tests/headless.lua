@@ -52,6 +52,7 @@ assert(vim.fn.exists(":PracticeDiagnostics") == 2, "PracticeDiagnostics was not 
 assert(vim.fn.exists(":PracticeNote") == 2, "PracticeNote was not registered")
 assert(vim.fn.exists(":PracticeNotes") == 2, "PracticeNotes was not registered")
 assert(vim.fn.exists(":PracticeStats") == 2, "PracticeStats was not registered")
+assert(vim.fn.exists(":PracticeSync") == 2, "PracticeSync was not registered")
 assert(vim.fn.maparg("<Space>ps", "n") ~= "", "start mapping was not registered")
 assert(vim.fn.maparg("<Space>pa", "n") ~= "", "accept mapping was not registered")
 assert(vim.fn.maparg("<Space>pr", "n") ~= "", "retry mapping was not registered")

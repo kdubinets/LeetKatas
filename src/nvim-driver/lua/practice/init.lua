@@ -1,5 +1,6 @@
 local session = require("practice.session")
 local log = require("practice.log")
+local sync = require("practice.sync")
 
 local M = {}
 
@@ -27,6 +28,7 @@ function M.setup(options)
     desc = "Resume active practice timing",
   })
   session.setup(options)
+  sync.setup(options)
 
   vim.api.nvim_create_user_command("PracticeStart", function(command)
     session.start(command.args ~= "" and command.args or nil)
@@ -88,6 +90,10 @@ function M.setup(options)
     complete = "dir",
     desc = "Show practice statistics for a collection",
   })
+  vim.api.nvim_create_user_command("PracticeSync", function()
+    local state = session.get_state()
+    sync.manual(state.collection or options.default_directory)
+  end, { desc = "Synchronize practice review history" })
   vim.api.nvim_create_user_command("PracticeLog", log.open, {
     desc = "Open the persistent practice diagnostic log",
   })
@@ -97,8 +103,15 @@ function M.setup(options)
       state = state.status,
       exercise_id = state.exercise and state.exercise.id or nil,
     })
-    vim.notify("Practice log: " .. log.path() .. "\nSession: " .. log.session_id()
-      .. "\nState: " .. state.status, vim.log.levels.INFO, { title = "Practice Diagnostics" })
+    sync.diagnostics(state.collection or options.default_directory, function(sync_state)
+      local successful = sync_state.last_success or "never"
+      vim.notify("Practice log: " .. log.path() .. "\nSession: " .. log.session_id()
+        .. "\nState: " .. state.status
+        .. "\nSync configured: " .. tostring(sync_state.configured == true)
+        .. "\nLast successful sync: " .. successful
+        .. "\nPending uploads: " .. tostring(sync_state.pending or 0),
+        vim.log.levels.INFO, { title = "Practice Diagnostics" })
+    end)
   end, { desc = "Show practice diagnostic location and session state" })
 
   map("<leader>ps", M.start, "Practice: start")

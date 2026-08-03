@@ -86,6 +86,9 @@ which_key_delay_ms = 300
 
 [evaluation]
 compiler = "clang++"
+
+[sync]
+# supabase_url = "https://your-project.supabase.co"
 ```
 
 When an exercise opens, its import preamble is folded closed by default. This
@@ -105,7 +108,8 @@ Supported environment overrides include `PRACTICE_COLLECTION`,
 `PRACTICE_REVIEW_ARCHIVE_TTL_DAYS`, `PRACTICE_REVIEW_MODEL`,
 `PRACTICE_REVIEW_EFFORT`, `PRACTICE_FOLLOW_UP_MODEL`,
 `PRACTICE_FOLLOW_UP_EFFORT`, `PRACTICE_FOLLOW_UP_REVIEWER`,
-`PRACTICE_FOLLOW_UP_REVIEWER_NAME`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
+`PRACTICE_FOLLOW_UP_REVIEWER_NAME`, `PRACTICE_SUPABASE_URL`,
+`PRACTICE_SUPABASE_KEY`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
 directory to `src/nvim-driver/practice` has the highest precedence for the
 collection. Review artifacts are retained for 30 days by default; set
 `review_archive_ttl_days` to `0` to disable archiving or up to `3650` days to
@@ -130,6 +134,11 @@ current user (`0600`).
 Use `:PracticeDiagnostics` to show the current session ID, state, and log path.
 Use `:PracticeLog` to open the log. When reporting a problem, the approximate
 time or session ID is enough to correlate the relevant events.
+
+Optional Supabase synchronization is documented in `../scripts/README.md`.
+The key is read only from `PRACTICE_SUPABASE_KEY`; do not store it in TOML.
+`:PracticeSync` reports explicit upload/download results, while automatic
+attempts are silent and never block local practice.
 
 ## Long-Term Workflow
 

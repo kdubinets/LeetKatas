@@ -2,6 +2,7 @@ local process = require("practice.process")
 local ui = require("practice.ui")
 local log = require("practice.log")
 local notes = require("practice.notes")
+local sync = require("practice.sync")
 
 local M = {}
 
@@ -382,6 +383,7 @@ function M.start(directory)
   end
   reset_session()
   state.collection = directory and vim.fn.fnamemodify(directory, ":p") or config.default_directory
+  sync.trigger(state.collection)
   select_next()
 end
 
@@ -625,6 +627,7 @@ function M.rate(rating)
       return
     end
     ui.notify("Rated " .. rating:sub(1, 1):upper() .. rating:sub(2))
+    sync.trigger(state.collection)
     select_next()
   end)
 end

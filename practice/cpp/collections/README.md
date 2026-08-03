@@ -6,6 +6,7 @@ Each exercise collection lives in its own descriptively named subdirectory. The 
 
 ```text
 collections/<collection_name>/
+├── collection.json              # optional stable identity for progress sync
 ├── environment.json             # optional machine-readable target environment
 ├── collection_spec.md
 ├── exercise_manifest.md
@@ -23,6 +24,20 @@ The collection specification must define:
 - Current status: planned, active, or frozen.
 
 The manifest must identify each exercise's primary skill clearly enough to detect overlap.
+
+An optional `collection.json` makes scheduler history portable across checkout
+paths and enables progress synchronization. It contains only a schema version
+and a globally stable collection ID:
+
+```json
+{
+  "schema_version": 1,
+  "id": "leetkatas.cpp.core"
+}
+```
+
+Do not change an ID after publishing a collection. A missing or malformed file
+leaves the collection fully usable as local-only practice.
 
 An optional `environment.json` supplies the target language version, available
 libraries, and restrictions to the evaluation harness and reviewer. It describes

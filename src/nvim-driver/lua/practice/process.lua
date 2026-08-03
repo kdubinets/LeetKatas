@@ -26,6 +26,10 @@ local function response_summary(response)
     model = response.model,
     reasoning_effort = response.reasoning_effort,
     attempts = response.attempts,
+    configured = response.configured,
+    uploaded = response.uploaded,
+    downloaded = response.downloaded,
+    pending = response.pending,
   }
   if type(response.review) == "table" then
     summary.review = {

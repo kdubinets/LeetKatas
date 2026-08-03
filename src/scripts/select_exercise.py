@@ -14,7 +14,7 @@ from typing import Any
 from practice_scheduler import (
     PracticeStore,
     SchedulerError,
-    canonical_collection,
+    collection_keys,
     database_path,
     ensure_utc,
 )
@@ -90,8 +90,8 @@ def exercise_order(
 def select_exercise(
     request: dict[str, Any], current_datetime: datetime | None = None
 ) -> dict[str, Any]:
-    collection_key = canonical_collection(required_string(request, "exercise_directory"))
-    collection = Path(collection_key)
+    path_key, collection_key, _ = collection_keys(required_string(request, "exercise_directory"))
+    collection = Path(path_key)
     target_environment = load_collection_environment(collection)
     source_extension = required_string(request, "source_extension")
     metadata_extension = required_string(request, "metadata_extension")
@@ -130,7 +130,9 @@ def select_exercise(
     order = exercise_order(collection, exercises)
 
     try:
-        cards = PracticeStore(database_path(request)).cards_for_collection(collection_key)
+        store = PracticeStore(database_path(request))
+        store.adopt_collection_key(path_key, collection_key)
+        cards = store.cards_for_collection(collection_key)
         now = ensure_utc(current_datetime)
     except SchedulerError as error:
         raise RequestError(str(error)) from error

@@ -13,7 +13,7 @@ from practice_scheduler import (
     PracticeStore,
     RATING_NAMES,
     SchedulerError,
-    canonical_collection,
+    collection_keys,
     database_path,
 )
 
@@ -38,7 +38,7 @@ def read_request() -> dict[str, Any]:
 def record_rating(
     request: dict[str, Any], review_datetime: datetime | None = None
 ) -> dict[str, str | bool]:
-    collection_key = canonical_collection(request.get("exercise_directory"))
+    path_key, collection_key, _ = collection_keys(request.get("exercise_directory"))
     exercise_id = request.get("exercise_id")
     compiled = request.get("compiled")
     proposed_rating = request.get("proposed_rating")
@@ -49,7 +49,7 @@ def record_rating(
     solve_duration_ms = request.get("solve_duration_ms")
     feedback_duration_ms = request.get("feedback_duration_ms")
 
-    if not isinstance(exercise_id, str) or not exercise_id:
+    if not isinstance(exercise_id, str) or not exercise_id or len(exercise_id) > 512:
         raise RequestError("exercise_id must be a non-empty string")
     if not isinstance(compiled, bool):
         raise RequestError("compiled must be a boolean")
@@ -57,6 +57,18 @@ def record_rating(
         raise RequestError("proposed_rating must be a valid rating or null")
     if final_rating not in RATINGS:
         raise RequestError("final_rating must be a valid rating")
+    review_status = request.get("review_status", "available")
+    review_attempts = request.get("review_attempts", 0)
+    if not isinstance(review_status, str) or not review_status or len(review_status) > 512:
+        raise RequestError("review_status must be a non-empty string")
+    if type(review_attempts) is not int or review_attempts < 0:
+        raise RequestError("review_attempts must be a non-negative integer")
+    for name in ("reviewer_name", "reviewer_model", "reviewer_reasoning_effort"):
+        value = request.get(name)
+        if value is not None and (
+            not isinstance(value, str) or not value or len(value) > 512
+        ):
+            raise RequestError(f"{name} must be a non-empty string or null")
     if type(review_archive_ttl_days) is not int or not 0 <= review_archive_ttl_days <= 3650:
         raise RequestError("review_archive_ttl_days must be an integer between 0 and 3650")
     if submitted_source is not None and not isinstance(submitted_source, str):
@@ -74,18 +86,20 @@ def record_rating(
     if (solve_duration_ms is None) != (feedback_duration_ms is None):
         raise RequestError("solve_duration_ms and feedback_duration_ms must be provided together")
     try:
-        return PracticeStore(database_path(request)).record_review(
+        store = PracticeStore(database_path(request))
+        store.adopt_collection_key(path_key, collection_key)
+        return store.record_review(
             collection_key=collection_key,
             exercise_id=exercise_id,
             compiled=compiled,
             proposed_rating=proposed_rating,
             final_rating=final_rating,
             review_datetime=review_datetime,
-            review_status=request.get("review_status", "available"),
+            review_status=review_status,
             reviewer_name=request.get("reviewer_name"),
             reviewer_model=request.get("reviewer_model"),
             reviewer_reasoning_effort=request.get("reviewer_reasoning_effort"),
-            review_attempts=request.get("review_attempts", 0),
+            review_attempts=review_attempts,
             solve_duration_ms=solve_duration_ms,
             feedback_duration_ms=feedback_duration_ms,
             submitted_source=submitted_source,

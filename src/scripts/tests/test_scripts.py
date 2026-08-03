@@ -64,6 +64,9 @@ which_key_delay_ms = 150
 
 [evaluation]
 compiler = "g++"
+
+[sync]
+supabase_url = "https://example.supabase.co"
 """.strip()
             )
 
@@ -77,6 +80,7 @@ compiler = "g++"
             self.assertEqual(config["reviewer"]["follow_up_reasoning_effort"], "medium")
             self.assertEqual(config["editor"]["indent_width"], 2)
             self.assertEqual(config["evaluation"]["compiler"], "g++")
+            self.assertEqual(config["sync"]["supabase_url"], "https://example.supabase.co")
 
     def test_rejects_unknown_or_invalid_settings(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -915,7 +919,7 @@ class PracticeStatsTests(unittest.TestCase):
                 connection.close()
             self.assertIn("solve_duration_ms", columns)
             self.assertIn("feedback_duration_ms", columns)
-            self.assertEqual(version, "5")
+            self.assertEqual(version, "6")
 
 
 class SchedulerIntegrationTests(unittest.TestCase):

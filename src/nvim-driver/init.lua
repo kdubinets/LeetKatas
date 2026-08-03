@@ -47,6 +47,7 @@ local practice_config = user_config.practice or {}
 local reviewer_config = user_config.reviewer or {}
 local editor_config = user_config.editor or {}
 local evaluation_config = user_config.evaluation or {}
+local sync_config = user_config.sync or {}
 
 local function environment(name)
   local value = vim.env[name]
@@ -146,6 +147,7 @@ practice.setup({
     or (vim.fn.stdpath("state") .. "/leetkatas/practice.log"),
   scripts_dir = repository_dir .. "/src/scripts",
   database_path = environment("PRACTICE_DATABASE") or practice_config.database_path,
+  supabase_url = environment("PRACTICE_SUPABASE_URL") or sync_config.supabase_url,
   review_archive_ttl_days = review_archive_ttl_days,
   notes_directory = environment("PRACTICE_NOTES_DIRECTORY") or practice_config.notes_directory
     or ((environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share"))
