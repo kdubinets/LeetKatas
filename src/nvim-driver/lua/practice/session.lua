@@ -208,7 +208,8 @@ local function open_selected_exercise(exercise)
   state.source_buffer, state.source_window = ui.open_source(
     working_path,
     state.source_window,
-    config.practice_marker
+    config.practice_marker,
+    config.enhanced_syntax_highlighting
   )
   vim.keymap.set("n", "ZZ", M.submit, {
     buffer = state.source_buffer,

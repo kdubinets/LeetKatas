@@ -61,6 +61,7 @@ follow_up_reasoning_effort = "medium"
 [editor]
 indent_width = 2
 which_key_delay_ms = 150
+enhanced_syntax_highlighting = false
 
 [evaluation]
 compiler = "g++"
@@ -79,6 +80,7 @@ supabase_url = "https://example.supabase.co"
             self.assertEqual(config["reviewer"]["follow_up_model"], "gpt-5.6-terra")
             self.assertEqual(config["reviewer"]["follow_up_reasoning_effort"], "medium")
             self.assertEqual(config["editor"]["indent_width"], 2)
+            self.assertFalse(config["editor"]["enhanced_syntax_highlighting"])
             self.assertEqual(config["evaluation"]["compiler"], "g++")
             self.assertEqual(config["sync"]["supabase_url"], "https://example.supabase.co")
 

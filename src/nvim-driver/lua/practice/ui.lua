@@ -6,6 +6,7 @@ local feedback_buffer = nil
 local feedback_window = nil
 local feedback_namespace = vim.api.nvim_create_namespace("practice_feedback")
 local instruction_namespace = vim.api.nvim_create_namespace("practice_instruction")
+local source_syntax_namespace = vim.api.nvim_create_namespace("practice_source_syntax")
 local feedback_contexts = {}
 local feedback_result = nil
 local feedback_callbacks = nil
@@ -30,6 +31,12 @@ local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeAnswer", { default = true, link = "Normal" })
   vim.api.nvim_set_hl(0, "PracticeQuestionLabel", { default = true, bold = true })
   vim.api.nvim_set_hl(0, "PracticeAnswerLabel", { default = true, bold = true })
+  -- These deliberately use visible colours rather than linking to the active
+  -- theme: several otherwise-good dark themes render all C++ identifiers white.
+  vim.api.nvim_set_hl(0, "PracticeSyntaxKeyword", { default = true, fg = "#c678dd", bold = true })
+  vim.api.nvim_set_hl(0, "PracticeSyntaxType", { default = true, fg = "#56b6c2" })
+  vim.api.nvim_set_hl(0, "PracticeSyntaxFunction", { default = true, fg = "#61afef" })
+  vim.api.nvim_set_hl(0, "PracticeSyntaxNamespace", { default = true, fg = "#e5c07b" })
 end
 
 define_highlights()
@@ -40,6 +47,50 @@ end
 
 local function valid_window(window)
   return window ~= nil and vim.api.nvim_win_is_valid(window)
+end
+
+local cpp_keywords = {
+  ["auto"] = true, ["break"] = true, ["case"] = true, ["class"] = true, ["const"] = true,
+  ["constexpr"] = true, ["continue"] = true, ["else"] = true, ["for"] = true,
+  ["if"] = true, ["inline"] = true, ["namespace"] = true, ["noexcept"] = true,
+  ["private"] = true, ["protected"] = true, ["public"] = true, ["return"] = true,
+  ["static"] = true, ["struct"] = true, ["switch"] = true, ["template"] = true,
+  ["typename"] = true, ["using"] = true, ["virtual"] = true, ["while"] = true,
+}
+
+local cpp_types = {
+  ["bool"] = true, ["char"] = true, ["double"] = true, ["float"] = true, ["int"] = true,
+  ["long"] = true, ["short"] = true, ["signed"] = true, ["size_t"] = true, ["unsigned"] = true,
+  ["void"] = true, ["array"] = true, ["deque"] = true, ["map"] = true, ["optional"] = true,
+  ["pair"] = true, ["queue"] = true, ["set"] = true, ["string"] = true, ["tuple"] = true,
+  ["unordered_map"] = true, ["unordered_set"] = true, ["vector"] = true,
+}
+
+local function add_source_highlight(buffer, line, first, last, group)
+  vim.api.nvim_buf_add_highlight(buffer, source_syntax_namespace, group, line, first - 1, last - 1)
+end
+
+local function highlight_cpp_source(buffer)
+  vim.api.nvim_buf_clear_namespace(buffer, source_syntax_namespace, 0, -1)
+  for line_number, text in ipairs(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)) do
+    local code = text:match("^(.-)//") or text
+    for first, word, last in code:gmatch("()([%a_][%w_]*)()") do
+      if cpp_keywords[word] then
+        add_source_highlight(buffer, line_number - 1, first, last, "PracticeSyntaxKeyword")
+      elseif cpp_types[word] then
+        add_source_highlight(buffer, line_number - 1, first, last, "PracticeSyntaxType")
+      end
+    end
+    for first, namespace, last in code:gmatch("()(std)::()") do
+      add_source_highlight(buffer, line_number - 1, first, last, "PracticeSyntaxNamespace")
+    end
+    for first, name in code:gmatch("()([%a_][%w_]*)%s*%(") do
+      if not cpp_keywords[name] then
+        add_source_highlight(buffer, line_number - 1, first, first + #name,
+          "PracticeSyntaxFunction")
+      end
+    end
+  end
 end
 
 local function title_case(value)
@@ -588,7 +639,7 @@ function M.open_stats(stats, refresh)
   return stats_buffer, stats_window
 end
 
-function M.open_source(path, preferred_window, practice_marker)
+function M.open_source(path, preferred_window, practice_marker, enhanced_syntax_highlighting)
   M.close_feedback()
   if valid_window(preferred_window) then vim.api.nvim_set_current_win(preferred_window) end
   vim.cmd("edit! " .. vim.fn.fnameescape(path))
@@ -596,6 +647,18 @@ function M.open_source(path, preferred_window, practice_marker)
   vim.bo[buffer].bufhidden = "wipe"
   vim.bo[buffer].swapfile = false
   vim.bo[buffer].completefunc, vim.bo[buffer].omnifunc, vim.bo[buffer].tagfunc = "", "", ""
+  if enhanced_syntax_highlighting then
+    local started = vim.treesitter and type(vim.treesitter.start) == "function"
+      and pcall(vim.treesitter.start, buffer)
+    if not started and vim.bo[buffer].filetype == "cpp" then
+      highlight_cpp_source(buffer)
+      vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+        buffer = buffer,
+        callback = function() highlight_cpp_source(buffer) end,
+        desc = "Keep fallback C++ practice syntax highlighting current",
+      })
+    end
+  end
   import_folds.close(buffer, window)
   for index, line in ipairs(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)) do
     local marker_start = line:find(practice_marker, 1, true)

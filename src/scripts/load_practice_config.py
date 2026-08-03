@@ -35,6 +35,7 @@ SCHEMA: dict[str, dict[str, type]] = {
     "editor": {
         "indent_width": int,
         "which_key_delay_ms": int,
+        "enhanced_syntax_highlighting": bool,
     },
     "evaluation": {
         "compiler": str,

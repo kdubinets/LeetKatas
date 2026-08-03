@@ -157,6 +157,7 @@ practice.setup({
   source_extension = environment("PRACTICE_SOURCE_EXTENSION") or ".cpp",
   metadata_extension = environment("PRACTICE_METADATA_EXTENSION") or ".md",
   practice_marker = environment("PRACTICE_MARKER") or "// Finish:",
+  enhanced_syntax_highlighting = editor_config.enhanced_syntax_highlighting ~= false,
   evaluation_command = {
     compiler,
     "-std=c++20",

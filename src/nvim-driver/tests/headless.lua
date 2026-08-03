@@ -124,10 +124,24 @@ local original_sources = {
   another_answer = create_exercise("another_answer"),
 }
 
+local original_treesitter_start = vim.treesitter.start
+local enhanced_highlighting_started = false
+vim.treesitter.start = function(...)
+  enhanced_highlighting_started = true
+  return original_treesitter_start(...)
+end
 practice.start(collection)
 wait_for("solving")
+vim.treesitter.start = original_treesitter_start
+assert(enhanced_highlighting_started,
+  "enhanced syntax highlighting was not started for the practice source")
 
 local first_state = practice.get_state()
+local fallback_syntax_marks = vim.api.nvim_buf_get_extmarks(first_state.source_buffer,
+  vim.api.nvim_create_namespace("practice_source_syntax"), 0, -1, { details = true })
+assert(#fallback_syntax_marks > 0 or vim.treesitter.highlighter.active[first_state.source_buffer],
+  "practice source did not receive enhanced syntax highlighting")
+
 assert(first_state.timing.phase == "solve" and first_state.timing.started ~= nil,
   "solve timing did not start with the exercise")
 vim.api.nvim_exec_autocmds("FocusLost", {})

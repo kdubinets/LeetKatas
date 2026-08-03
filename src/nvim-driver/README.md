@@ -83,6 +83,7 @@ reasoning_effort = "low"
 [editor]
 indent_width = 4
 which_key_delay_ms = 300
+enhanced_syntax_highlighting = true
 
 [evaluation]
 compiler = "clang++"
@@ -97,6 +98,11 @@ common import forms for Go, JavaScript/TypeScript, Java, Kotlin, C#, Ruby, and
 Swift. Use Neovim's normal fold commands (for example `zo` or `za`) to reveal
 it. Support for a new exercise language is added in
 `lua/practice/import_folds.lua` without changing the exercise UI.
+
+Exercise source uses Tree-sitter syntax highlighting by default when Neovim has
+the matching language parser installed. C++ practice still receives enhanced
+semantic highlighting when no parser is available. Set
+`editor.enhanced_syntax_highlighting = false` to use only the built-in rules.
 
 Relative paths are resolved from the directory containing the configuration
 file. The default collection is a user preference and belongs here; its
