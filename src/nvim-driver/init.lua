@@ -48,6 +48,7 @@ local reviewer_config = user_config.reviewer or {}
 local editor_config = user_config.editor or {}
 local evaluation_config = user_config.evaluation or {}
 local sync_config = user_config.sync or {}
+local statusline_config = user_config.statusline or {}
 
 local function environment(name)
   local value = vim.env[name]
@@ -158,6 +159,13 @@ practice.setup({
   metadata_extension = environment("PRACTICE_METADATA_EXTENSION") or ".md",
   practice_marker = environment("PRACTICE_MARKER") or "// Finish:",
   enhanced_syntax_highlighting = editor_config.enhanced_syntax_highlighting ~= false,
+  statusline = {
+    enabled = statusline_config.enabled ~= false,
+    left = statusline_config.left or { "exercise_name" },
+    right = statusline_config.right
+      or { "time_today", "reviews_today", "due_now", "new_left" },
+    separator = statusline_config.separator or " · ",
+  },
   evaluation_command = {
     compiler,
     "-std=c++20",

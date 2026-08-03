@@ -1,6 +1,7 @@
 local session = require("practice.session")
 local log = require("practice.log")
 local sync = require("practice.sync")
+local statusline = require("practice.statusline")
 
 local M = {}
 
@@ -15,6 +16,7 @@ function M.setup(options)
   log.setup(options.log_path)
   vim.api.nvim_create_autocmd("VimLeavePre", {
     callback = function()
+      statusline.stop()
       log.event("session_ended", "info", { state = session.get_state().status })
     end,
     desc = "Finish the practice diagnostic session",

@@ -4,6 +4,7 @@ local import_folds = require("practice.import_folds")
 local log = require("practice.log")
 local notes = require("practice.notes")
 local sync = require("practice.sync")
+local statusline = require("practice.statusline")
 
 local M = {}
 
@@ -185,6 +186,7 @@ end
 local function valid_exercise(exercise)
   return type(exercise) == "table"
     and type(exercise.id) == "string"
+    and type(exercise.name) == "string"
     and type(exercise.source_path) == "string"
     and type(exercise.metadata_path) == "string"
 end
@@ -261,6 +263,7 @@ end
 function M.setup(options)
   config = options
   notes.setup(options)
+  statusline.setup(options, function() return state end)
 end
 
 function M.focus_lost()
@@ -410,6 +413,7 @@ function M.start(directory)
   end
   reset_session()
   state.collection = directory and vim.fn.fnamemodify(directory, ":p") or config.default_directory
+  statusline.refresh(state.collection)
   sync.trigger(state.collection)
   select_next()
 end
@@ -654,6 +658,7 @@ function M.rate(rating)
       return
     end
     ui.notify("Rated " .. rating:sub(1, 1):upper() .. rating:sub(2))
+    statusline.invalidate(state.collection)
     sync.trigger(state.collection)
     select_next()
   end)

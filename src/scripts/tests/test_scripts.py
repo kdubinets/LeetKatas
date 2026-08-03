@@ -68,6 +68,11 @@ compiler = "g++"
 
 [sync]
 supabase_url = "https://example.supabase.co"
+
+[statusline]
+left = ["exercise_name"]
+right = ["time_today", "due_now", "new_left"]
+separator = " | "
 """.strip()
             )
 
@@ -83,6 +88,10 @@ supabase_url = "https://example.supabase.co"
             self.assertFalse(config["editor"]["enhanced_syntax_highlighting"])
             self.assertEqual(config["evaluation"]["compiler"], "g++")
             self.assertEqual(config["sync"]["supabase_url"], "https://example.supabase.co")
+            self.assertEqual(config["statusline"]["left"], ["exercise_name"])
+            self.assertEqual(
+                config["statusline"]["right"], ["time_today", "due_now", "new_left"]
+            )
 
     def test_rejects_unknown_or_invalid_settings(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -100,6 +109,10 @@ supabase_url = "https://example.supabase.co"
                 load_config(path)
 
             path.write_text("[practice]\nreview_archive_ttl_days = 3651\n")
+            with self.assertRaises(ConfigError):
+                load_config(path)
+
+            path.write_text('[statusline]\nleft = ["not_a_real_item"]\n')
             with self.assertRaises(ConfigError):
                 load_config(path)
 
@@ -131,6 +144,7 @@ class SelectExerciseTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(response["exercise"]["id"], "complete")
+            self.assertEqual(response["exercise"]["name"], "complete")
             self.assertTrue(Path(response["exercise"]["source_path"]).is_absolute())
             self.assertNotIn("target_environment", response["exercise"])
 

@@ -138,6 +138,15 @@ assert(enhanced_highlighting_started,
   "enhanced syntax highlighting was not started for the practice source")
 
 local first_state = practice.get_state()
+local statusline_ready = vim.wait(10000, function()
+  local line = _G.PracticeStatusline and _G.PracticeStatusline() or ""
+  return line:find("Return Answer", 1, true) and line:find("Today ", 1, true)
+    and line:find("Solved 0", 1, true) and line:find("Due now 0", 1, true)
+    and line:find("New left 2", 1, true)
+end, 10)
+assert(statusline_ready, "practice status line did not show exercise and collection statistics")
+assert(not _G.PracticeStatusline():find(first_state.working_path, 1, true),
+  "practice status line exposed the temporary working filename")
 local fallback_syntax_marks = vim.api.nvim_buf_get_extmarks(first_state.source_buffer,
   vim.api.nvim_create_namespace("practice_source_syntax"), 0, -1, { details = true })
 assert(#fallback_syntax_marks > 0 or vim.treesitter.highlighter.active[first_state.source_buffer],

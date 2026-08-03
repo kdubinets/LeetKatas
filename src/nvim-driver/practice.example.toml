@@ -19,6 +19,11 @@ which_key_delay_ms = 300
 enhanced_syntax_highlighting = true
 # Exercise import/include preambles are folded closed automatically.
 
+[statusline]
+left = ["exercise_name"]
+right = ["time_today", "reviews_today", "due_now", "new_left"]
+separator = " · "
+
 [evaluation]
 compiler = "clang++"
 

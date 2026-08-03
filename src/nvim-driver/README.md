@@ -85,6 +85,11 @@ indent_width = 4
 which_key_delay_ms = 300
 enhanced_syntax_highlighting = true
 
+[statusline]
+left = ["exercise_name"]
+right = ["time_today", "reviews_today", "due_now", "new_left"]
+separator = " · "
+
 [evaluation]
 compiler = "clang++"
 
@@ -103,6 +108,35 @@ Exercise source uses Tree-sitter syntax highlighting by default when Neovim has
 the matching language parser installed. C++ practice still receives enhanced
 semantic highlighting when no parser is available. Set
 `editor.enhanced_syntax_highlighting = false` to use only the built-in rules.
+
+The practice status line replaces the temporary working-copy filename with
+exercise and scheduling context. Items are configured independently on the left
+and right; an item that has no value in the current state is omitted together
+with its separator. Set `statusline.enabled = false` to use Neovim's normal
+status line.
+
+Available items are:
+
+- `exercise_name`, `exercise_id`, `collection`, and `language` for exercise context.
+- `time_today`, `reviews_today`, `new_today`, and `new_left` for today's work and
+  remaining unseen exercises. `time_today` includes the active exercise timer.
+- `due_now`, `due_later_today`, and `tomorrow_due` for the current workload.
+- `collection_progress` for an introduced/total summary such as `Seen 63/108`.
+- `phase`, `phase_elapsed`, `progress`, and `action` for live workflow context.
+- `compile_result` and `proposed_rating` for completed evaluation context.
+- `modified` and `position` for conventional editor context.
+
+For example, a workload-focused configuration can show every daily counter:
+
+```toml
+[statusline]
+left = ["exercise_name", "language"]
+right = [
+  "time_today", "reviews_today", "due_now", "due_later_today",
+  "new_today", "new_left"
+]
+separator = " | "
+```
 
 Relative paths are resolved from the directory containing the configuration
 file. The default collection is a user preference and belongs here; its

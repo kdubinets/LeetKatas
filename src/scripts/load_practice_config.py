@@ -43,6 +43,34 @@ SCHEMA: dict[str, dict[str, type]] = {
     "sync": {
         "supabase_url": str,
     },
+    "statusline": {
+        "enabled": bool,
+        "left": list,
+        "right": list,
+        "separator": str,
+    },
+}
+STATUSLINE_ITEMS = {
+    "exercise_name",
+    "exercise_id",
+    "collection",
+    "phase",
+    "phase_elapsed",
+    "language",
+    "modified",
+    "position",
+    "compile_result",
+    "proposed_rating",
+    "progress",
+    "action",
+    "time_today",
+    "reviews_today",
+    "due_now",
+    "due_later_today",
+    "new_today",
+    "new_left",
+    "collection_progress",
+    "tomorrow_due",
 }
 EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
 PATH_KEYS = {
@@ -95,6 +123,15 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
     practice = value.get("practice", {})
     if "review_archive_ttl_days" in practice and not 0 <= practice["review_archive_ttl_days"] <= 3650:
         raise ConfigError("practice.review_archive_ttl_days must be between 0 and 3650")
+    statusline = value.get("statusline", {})
+    for side in ("left", "right"):
+        if side not in statusline:
+            continue
+        items = statusline[side]
+        if any(type(item) is not str or item not in STATUSLINE_ITEMS for item in items):
+            raise ConfigError(
+                f"statusline.{side} must contain only supported statusline item names"
+            )
 
     for section, name in PATH_KEYS:
         if name in value.get(section, {}):

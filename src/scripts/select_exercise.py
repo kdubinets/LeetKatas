@@ -87,6 +87,22 @@ def exercise_order(
     return ordered_ids
 
 
+def exercise_name(metadata: Path, fallback: str) -> str:
+    """Read the first non-empty line under the metadata's Name heading."""
+    lines = metadata.read_text(encoding="utf-8").splitlines()
+    for index, line in enumerate(lines):
+        if line.strip().casefold() != "# name":
+            continue
+        for candidate in lines[index + 1 :]:
+            candidate = candidate.strip()
+            if candidate.startswith("#"):
+                break
+            if candidate:
+                return candidate
+        break
+    return fallback.replace("_", " ").title()
+
+
 def select_exercise(
     request: dict[str, Any], current_datetime: datetime | None = None
 ) -> dict[str, Any]:
@@ -178,7 +194,13 @@ def select_exercise(
             if ordered_candidates
             else random.SystemRandom().choice(candidate_ids)
         )
-        return {"exercise": exercise_by_id[selected_id]}
+        selected = exercise_by_id[selected_id]
+        return {
+            "exercise": {
+                **selected,
+                "name": exercise_name(Path(selected["metadata_path"]), selected_id),
+            }
+        }
 
     next_due = min(card.due for card in scheduled.values())
     return {"exercise": None, "next_due": next_due.isoformat()}
