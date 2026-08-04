@@ -4,6 +4,7 @@ assert(vim.env.PRACTICE_DATABASE and vim.env.PRACTICE_DATABASE ~= "",
   "PRACTICE_DATABASE must point to a temporary test database")
 assert(vim.env.PRACTICE_NOTES_DIRECTORY and vim.env.PRACTICE_NOTES_DIRECTORY ~= "",
   "PRACTICE_NOTES_DIRECTORY must point to a temporary test directory")
+assert(vim.o.termguicolors, "practice must enable true-color highlighting")
 
 local function wait_for(status)
   local completed = vim.wait(10000, function()

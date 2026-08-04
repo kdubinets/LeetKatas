@@ -7,6 +7,7 @@ vim.g.maplocalleader = " "
 
 vim.opt.loadplugins = false
 vim.opt.swapfile = false
+vim.opt.termguicolors = true
 pcall(function()
   vim.opt.autocomplete = false
 end)
