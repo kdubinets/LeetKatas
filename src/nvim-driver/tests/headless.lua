@@ -472,13 +472,16 @@ assert(stats_loaded, "timed out waiting for practice statistics")
 local stats_buffer = find_stats_buffer()
 local stats_text = buffer_text(stats_buffer)
 assert(stats_text:find("Practice statistics", 1, true), "statistics heading is missing")
-assert(stats_text:find("Today", 1, true) and stats_text:find("Completed", 1, true),
+assert(stats_text:find("TODAY", 1, true) and stats_text:find("reviews completed", 1, true),
   "today statistics are missing")
-assert(stats_text:find("Collection", 1, true) and stats_text:find("Unseen", 1, true),
+assert(stats_text:find("COLLECTION", 1, true) and stats_text:find("unseen", 1, true),
   "collection statistics are missing")
-assert(stats_text:find("Forecast", 1, true) and stats_text:find("Scheduled tomorrow", 1, true),
+assert(stats_text:find("DUE", 1, true) and stats_text:find("Tomorrow", 1, true),
   "forecast statistics are missing")
-assert(stats_text:find("Recent history", 1, true), "statistics history is missing")
+assert(stats_text:find("RECENT ACTIVITY", 1, true), "statistics history is missing")
+assert(not stats_text:find(collection, 1, true),
+  "statistics exposed the raw collection path")
+assert(stats_text:find("Accept.", 1, true), "statistics rating columns are ambiguous")
 assert(practice.get_state().status == "complete", "statistics changed practice state")
 vim.api.nvim_set_current_buf(stats_buffer)
 assert(vim.fn.maparg("r", "n", false, true).buffer == 1,

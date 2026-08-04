@@ -98,7 +98,7 @@ local function title_case(value)
 end
 
 local function format_duration(milliseconds, tracked, total)
-  if total > 0 and tracked == 0 then return "untracked" end
+  if total > 0 and tracked == 0 then return "—" end
   local minutes = math.floor((milliseconds + 30000) / 60000)
   local text
   if minutes >= 60 then
@@ -112,50 +112,151 @@ local function format_duration(milliseconds, tracked, total)
   return text
 end
 
-local function stats_lines(stats)
+local function humanize_collection(collection)
+  local name = collection
+  if name:find("/", 1, true) then name = vim.fs.basename(name) end
+  local parts = vim.split(name, ".", { plain = true })
+  if #parts > 1 and parts[1]:lower() == "leetkatas" then table.remove(parts, 1) end
+  for index, part in ipairs(parts) do
+    local words = vim.split(part:gsub("[_-]", " "), " ", { trimempty = true })
+    for word_index, word in ipairs(words) do
+      if word:lower() == "cpp" then
+        words[word_index] = "C++"
+      else
+        words[word_index] = title_case(word:lower())
+      end
+    end
+    parts[index] = table.concat(words, " ")
+  end
+  return table.concat(parts, " ")
+end
+
+local function parse_date(value)
+  local year, month, day = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
+  if not year then return nil end
+  return os.time({ year = tonumber(year), month = tonumber(month), day = tonumber(day), hour = 12 })
+end
+
+local function format_date(value, include_year)
+  local timestamp = parse_date(value)
+  if not timestamp then return value end
+  if include_year then
+    return string.format("%d %s %s", tonumber(os.date("%d", timestamp)),
+      os.date("%b", timestamp), os.date("%Y", timestamp))
+  end
+  return string.format("%s, %d %s", os.date("%a", timestamp),
+    tonumber(os.date("%d", timestamp)), os.date("%b", timestamp))
+end
+
+local function bar(value, maximum, width)
+  if value == 0 then return "·" end
+  local size = math.min(width,
+    math.max(1, math.floor((value / math.max(1, maximum)) * width + 0.5)))
+  return string.rep("█", size)
+end
+
+local function progress_bar(value, total, width)
+  local filled = total > 0 and math.floor((value / total) * width + 0.5) or 0
+  return string.rep("█", filled) .. string.rep("░", width - filled)
+end
+
+local function pad_display(value, width)
+  return value .. string.rep(" ", math.max(0, width - vim.fn.strdisplaywidth(value)))
+end
+
+local function append_columns(lines, left, right, width)
+  local gap = 3
+  local left_width = math.floor((width - gap) / 2)
+  for index = 1, math.max(#left, #right) do
+    table.insert(lines, pad_display(left[index] or "", left_width)
+      .. string.rep(" ", gap) .. (right[index] or ""))
+  end
+end
+
+local function stats_lines(stats, width)
   local today, collection, forecast = stats.today, stats.collection_state, stats.forecast
+  width = math.max(50, width or 76)
+  local title, date = "Practice statistics", format_date(today.date, true)
   local lines = {
-    "Practice statistics",
-    vim.fs.basename(stats.collection) .. "  " .. stats.collection,
+    pad_display(title, math.max(#title + 2, width - vim.fn.strdisplaywidth(date))) .. date,
+    "Collection: " .. humanize_collection(stats.collection),
     "",
-    "Today  " .. today.date,
-    string.format("  Completed             %d", today.reviews),
-    string.format("  Due now               %d", today.due_now),
-    string.format("  Due later today       %d", today.due_later_today),
-    string.format("  New introduced        %d", today.new_introduced),
-    string.format("  Practice time         %s",
-      format_duration(today.practice_time_ms, today.tracked_reviews, today.reviews)),
-    string.format("  Ratings               Fail %d · Acceptable %d · Good %d · Excellent %d",
-      today.ratings.fail, today.ratings.acceptable, today.ratings.good,
-      today.ratings.excellent),
-    "",
-    "Collection",
-    string.format("  Total                 %d", collection.total),
-    string.format("  Unseen                %d", collection.unseen),
-    string.format("  Introduced            %d", collection.introduced),
-    string.format("  Learning              %d", collection.learning),
-    string.format("  Learned (FSRS Review) %d", collection.learned),
-    string.format("  Relearning            %d", collection.relearning),
-    "",
-    "Forecast",
-    string.format("  Scheduled tomorrow    %d", forecast.tomorrow_due),
   }
-  for _, day in ipairs(forecast.days) do
-    table.insert(lines, string.format("  %s             %d", day.date, day.due))
-  end
-  vim.list_extend(lines, {
+
+  local ratings = today.ratings
+  local rating_max = math.max(ratings.fail, ratings.acceptable, ratings.good, ratings.excellent)
+  local today_lines = {
+    "TODAY",
+    string.rep("─", math.max(12, math.floor((width - 3) / 2))),
+    string.format("%d reviews completed", today.reviews),
+    string.format("%s practiced",
+      format_duration(today.practice_time_ms, today.tracked_reviews, today.reviews)),
+    string.format("%d newly introduced", today.new_introduced),
     "",
-    "Recent history",
-    "  Date         Reviews  New  F  A  G  E  Time",
-  })
-  for _, day in ipairs(stats.history) do
-    table.insert(lines, string.format("  %s  %7d  %3d  %d  %d  %d  %d  %s",
-      day.date, day.reviews, day.new_introduced, day.ratings.fail,
-      day.ratings.acceptable, day.ratings.good, day.ratings.excellent,
-      format_duration(day.practice_time_ms, day.tracked_reviews, day.reviews)))
+    "Ratings",
+    string.format("Excellent %3d  %s", ratings.excellent, bar(ratings.excellent, rating_max, 14)),
+    string.format("Good      %3d  %s", ratings.good, bar(ratings.good, rating_max, 14)),
+    string.format("Acceptable%3d  %s", ratings.acceptable, bar(ratings.acceptable, rating_max, 14)),
+    string.format("Fail      %3d  %s", ratings.fail, bar(ratings.fail, rating_max, 14)),
+  }
+  local percent = collection.total > 0
+      and math.floor((collection.introduced / collection.total) * 100 + 0.5) or 0
+  local collection_lines = {
+    "COLLECTION",
+    string.rep("─", math.max(12, math.floor((width - 3) / 2))),
+    string.format("%d / %d introduced   %d%%", collection.introduced, collection.total, percent),
+    progress_bar(collection.introduced, collection.total, 16),
+    "",
+    string.format("%d learned", collection.learned),
+    string.format("%d learning", collection.learning),
+    string.format("%d relearning", collection.relearning),
+    "",
+    string.format("%d unseen", collection.unseen),
+  }
+  if width >= 70 then
+    append_columns(lines, today_lines, collection_lines, width)
+  else
+    vim.list_extend(lines, today_lines)
+    table.insert(lines, "")
+    vim.list_extend(lines, collection_lines)
   end
+
+  vim.list_extend(lines, { "", "DUE", string.rep("─", width) })
+  table.insert(lines, string.format("  %-18s %3d", "Now", today.due_now))
+  table.insert(lines, string.format("  %-18s %3d", "Later today", today.due_later_today))
+  local forecast_max = 0
+  for _, day in ipairs(forecast.days) do forecast_max = math.max(forecast_max, day.due) end
+  for index, day in ipairs(forecast.days) do
+    local label = index == 1 and "Tomorrow" or format_date(day.date, false)
+    table.insert(lines, string.format("  %-18s %3d  %s", label, day.due,
+      bar(day.due, forecast_max, 16)))
+  end
+
+  vim.list_extend(lines, { "", "RECENT ACTIVITY", string.rep("─", width) })
+  local wide_history = width >= 70
+  table.insert(lines, wide_history
+      and "  Date          Reviews  New  Fail  Accept.  Good  Excl.  Time"
+      or "  Date        Rev New Fail Acc Good Excl Time")
+  local activity_count = 0
+  for _, day in ipairs(stats.history) do
+    if day.reviews > 0 and activity_count < 7 then
+      activity_count = activity_count + 1
+      local label = day.date == today.date and "Today" or format_date(day.date, false)
+      local duration = format_duration(day.practice_time_ms, day.tracked_reviews, day.reviews)
+      if wide_history then
+        table.insert(lines, string.format("  %-13s %7d  %3d  %4d  %7d  %4d  %5d  %s",
+          label, day.reviews, day.new_introduced, day.ratings.fail,
+          day.ratings.acceptable, day.ratings.good, day.ratings.excellent, duration))
+      else
+        table.insert(lines, string.format("  %-11s %3d %3d %4d %3d %4d %4d %s",
+          label, day.reviews, day.new_introduced, day.ratings.fail,
+          day.ratings.acceptable, day.ratings.good, day.ratings.excellent, duration))
+      end
+    end
+  end
+  if activity_count == 0 then table.insert(lines, "  No practice activity yet") end
   table.insert(lines, "")
-  table.insert(lines, "r Refresh   q Close")
+  table.insert(lines, "[r] Refresh    [q] Close")
   return lines
 end
 
@@ -626,10 +727,32 @@ function M.open_stats(stats, refresh)
   end
   vim.bo[stats_buffer].modifiable = true
   vim.bo[stats_buffer].readonly = false
-  vim.api.nvim_buf_set_lines(stats_buffer, 0, -1, false, stats_lines(stats))
+  local width = vim.api.nvim_win_get_width(stats_window) - 2
+  local lines = stats_lines(stats, width)
+  vim.api.nvim_buf_set_lines(stats_buffer, 0, -1, false, lines)
   vim.api.nvim_buf_clear_namespace(stats_buffer, feedback_namespace, 0, -1)
-  for _, line in ipairs({ 0, 3, 11, 19, 29 }) do
-    vim.api.nvim_buf_add_highlight(stats_buffer, feedback_namespace, "PracticeHeading", line, 0, -1)
+  for line_number, line in ipairs(lines) do
+    if line_number == 1 or line:match("^TODAY") or line:find("COLLECTION", 1, true)
+      or line == "DUE" or line == "RECENT ACTIVITY"
+    then
+      vim.api.nvim_buf_add_highlight(stats_buffer, feedback_namespace, "PracticeHeading",
+        line_number - 1, 0, -1)
+    elseif line:find("─", 1, true) then
+      vim.api.nvim_buf_add_highlight(stats_buffer, feedback_namespace, "PracticeHint",
+        line_number - 1, 0, -1)
+    end
+    for label, group in pairs({
+      Excellent = "PracticeSuccess",
+      Good = "PracticeProgress",
+      Acceptable = "PracticeWarning",
+      Fail = "PracticeFailure",
+    }) do
+      local first, last = line:find(label .. "%s*%d+%s+[█·]+")
+      if first then
+        vim.api.nvim_buf_add_highlight(stats_buffer, feedback_namespace, group,
+          line_number - 1, first - 1, last)
+      end
+    end
   end
   vim.api.nvim_buf_add_highlight(stats_buffer, feedback_namespace, "PracticeHint",
     vim.api.nvim_buf_line_count(stats_buffer) - 1, 0, -1)
