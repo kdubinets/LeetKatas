@@ -88,6 +88,27 @@ local function confirm_abandon(action)
   return not is_modified() or ui.confirm_discard(action)
 end
 
+local function confirm_exit_while_waiting()
+  return vim.fn.confirm(
+    "A practice operation is still running. Exit Neovim and stop waiting for it?",
+    "&Exit\n&Cancel", 2
+  ) == 1
+end
+
+local function install_evaluation_exit_mapping(buffer)
+  vim.keymap.set("n", "ZZ", M.zz, {
+    buffer = buffer,
+    silent = true,
+    desc = "Practice: confirm exit while evaluation is running",
+  })
+end
+
+local function remove_evaluation_exit_mapping(buffer)
+  if valid_buffer(buffer) then
+    pcall(vim.keymap.del, "n", "ZZ", { buffer = buffer })
+  end
+end
+
 local function stop_progress()
   if state.progress_timer then
     state.progress_timer:stop()
@@ -123,7 +144,7 @@ local function start_progress()
   state.progress_events = {}
   state.progress_event_count = 0
   state.follow_up_pending = false
-  ui.open_progress(state.source_window)
+  local progress_buffer = ui.open_progress(state.source_window)
   local timer = vim.uv.new_timer()
   state.progress_timer = timer
   timer:start(0, 100, vim.schedule_wrap(function()
@@ -134,6 +155,7 @@ local function start_progress()
     local elapsed = (vim.uv.hrtime() - state.progress_started) / 1000000000
     ui.update_progress(elapsed, state.progress_events)
   end))
+  return progress_buffer
 end
 
 local function delete_working_copy()
@@ -218,7 +240,15 @@ local function open_selected_exercise(exercise)
     config.practice_marker,
     config.enhanced_syntax_highlighting
   )
-  vim.keymap.set("n", "ZZ", M.submit, {
+  vim.keymap.set("n", "ZZ", M.zz, {
+    buffer = state.source_buffer,
+    silent = true,
+    desc = "Practice: submit the current exercise",
+  })
+  vim.keymap.set("i", "<C-CR>", function()
+    vim.cmd("stopinsert")
+    M.submit()
+  end, {
     buffer = state.source_buffer,
     silent = true,
     desc = "Practice: submit the current exercise",
@@ -441,7 +471,8 @@ function M.submit()
   state.previous_result = nil
   set_timing_phase(nil)
   state.status = "evaluating"
-  start_progress()
+  local progress_buffer = start_progress()
+  install_evaluation_exit_mapping(progress_buffer)
   process.run(config.python, script_path("evaluate_exercise.py"), {
     source_path = state.working_path,
     starter_source_path = state.exercise.source_path,
@@ -453,6 +484,7 @@ function M.submit()
   }, function(error_message, response)
     read_progress()
     stop_progress()
+    remove_evaluation_exit_mapping(progress_buffer)
     if error_message then
       state.status = "solving"
       set_timing_phase("solve")
@@ -486,6 +518,20 @@ function M.submit()
       ask = M.ask,
     })
   end)
+end
+
+function M.zz()
+  if state.status == "solving" then
+    M.submit()
+    return
+  end
+  if state.status == "selecting" or state.status == "evaluating" or state.status == "recording" then
+    if confirm_exit_while_waiting() then
+      vim.cmd("qa!")
+    end
+    return
+  end
+  vim.cmd("normal! ZZ")
 end
 
 local function follow_up_messages(turns)

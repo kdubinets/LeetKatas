@@ -188,6 +188,9 @@ assert(instruction_highlighted, "finish instruction was not highlighted")
 local finish_mapping = vim.fn.maparg("ZZ", "n", false, true)
 assert(type(finish_mapping) == "table" and finish_mapping.buffer == 1,
   "ZZ is not intercepted in the practice source buffer")
+local insert_submit_mapping = vim.fn.maparg("<C-CR>", "i", false, true)
+assert(type(insert_submit_mapping) == "table" and insert_submit_mapping.buffer == 1,
+  "Insert-mode submit shortcut is not installed in the practice source buffer")
 
 vim.api.nvim_set_current_win(first_state.source_window)
 vim.api.nvim_set_current_buf(first_state.source_buffer)
@@ -215,6 +218,13 @@ vim.api.nvim_set_current_buf(first_state.source_buffer)
 vim.api.nvim_buf_set_lines(first_state.source_buffer, 1, 2, false, { "    return 42;" })
 practice.submit()
 assert(practice.get_state().status == "evaluating", "submit did not enter evaluating state")
+local progress_buffer = find_feedback_buffer()
+assert(progress_buffer, "evaluation progress buffer was not opened")
+local evaluation_exit_mapping = vim.api.nvim_buf_call(progress_buffer, function()
+  return vim.fn.maparg("ZZ", "n", false, true)
+end)
+assert(type(evaluation_exit_mapping) == "table" and evaluation_exit_mapping.buffer == 1,
+  "ZZ is not intercepted while evaluation is running")
 assert(practice.get_state().timing.phase == nil,
   "evaluation wait was included in learner timing")
 local progress_visible = false

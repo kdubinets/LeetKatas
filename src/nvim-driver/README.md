@@ -435,6 +435,11 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>pt` | `:PracticeStats` | Show current-collection statistics. |
 | `<Space>pq` | `:PracticeQuit` | End the session. |
 
+Within an active exercise buffer, `ZZ` submits the solution. In Insert mode,
+`<C-Enter>` also submits and leaves Insert mode. While an evaluation (or another
+practice operation) is pending, `ZZ` asks for confirmation before exiting
+Neovim.
+
 The numeric rating mappings should be displayed in the feedback UI so they do
 not need to be memorized. The feedback UI should also display `<Space>pa` next
 to the proposed rating as the fastest normal path. `PracticeStart` needs a way
