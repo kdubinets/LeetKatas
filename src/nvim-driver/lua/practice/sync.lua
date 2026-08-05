@@ -11,6 +11,18 @@ local last = {
   last_success = nil,
 }
 
+local function apply_response(response)
+  last = vim.tbl_extend("force", last, response)
+  log.event("sync_finished", response.status == "success" and "info" or "warn", {
+    status = response.status,
+    uploaded = response.uploaded,
+    downloaded = response.downloaded,
+    pending = response.pending,
+    error = response.error,
+  })
+  return last
+end
+
 local function request(action, directory, manual, callback)
   if running then
     if manual then
@@ -45,14 +57,7 @@ local function request(action, directory, manual, callback)
         pending = last.pending or 0,
       }
     end
-    last = vim.tbl_extend("force", last, response)
-    log.event("sync_finished", response.status == "success" and "info" or "warn", {
-      status = response.status,
-      uploaded = response.uploaded,
-      downloaded = response.downloaded,
-      pending = response.pending,
-      error = response.error,
-    })
+    apply_response(response)
     if manual then
       if response.status == "success" then
         vim.notify(string.format("Synchronized: %d uploaded, %d downloaded",
@@ -76,7 +81,64 @@ end
 
 function M.setup(options)
   config = options
-  vim.schedule(function() M.trigger(options.default_directory) end)
+  if not config.sync_first then
+    vim.schedule(function() M.trigger(options.default_directory) end)
+  end
+end
+
+-- Run before first selection when requested by the launcher. This uses the
+-- normal sync JSON protocol, but waits so downloaded cards are ready to select.
+function M.sync_first(directory)
+  if running then return last end
+  if not config.supabase_url then
+    return apply_response({ configured = false, status = "disabled", pending = last.pending or 0 })
+  end
+
+  local request_body = {
+    action = "sync",
+    exercise_directory = directory or config.default_directory,
+    database_path = config.database_path,
+    supabase_url = config.supabase_url,
+  }
+  local encoded, input = pcall(vim.json.encode, request_body)
+  if not encoded then
+    return apply_response({ configured = true, status = "unavailable", pending = last.pending or 0,
+      error = "could not encode sync request" })
+  end
+
+  local script = config.scripts_dir .. "/sync_progress.py"
+  log.event("sync_process_started", "info", {
+    executable = config.python,
+    script = script,
+    synchronous = true,
+  })
+  local started = vim.uv.hrtime()
+  local result = vim.system({ config.python, script }, { stdin = input, text = true }):wait()
+  local duration_ms = math.floor((vim.uv.hrtime() - started) / 1000000)
+  local decoded, response = pcall(vim.json.decode, result.stdout or "")
+  if not decoded or type(response) ~= "table" then
+    local error_message = "script returned invalid JSON"
+    if result.stderr and vim.trim(result.stderr) ~= "" then
+      error_message = error_message .. ": " .. vim.trim(result.stderr)
+    end
+    log.event("sync_process_finished", "error", {
+      exit_code = result.code, signal = result.signal, duration_ms = duration_ms,
+      error = error_message,
+    })
+    return apply_response({ configured = true, status = "unavailable", pending = last.pending or 0,
+      error = error_message })
+  end
+  log.event("sync_process_finished", result.code == 0 and "info" or "error", {
+    exit_code = result.code, signal = result.signal, duration_ms = duration_ms,
+    error = response.error,
+  })
+  if result.code ~= 0 then
+    response = {
+      configured = true, status = "unavailable", pending = last.pending or 0,
+      error = response.error or ("script exited with status " .. result.code),
+    }
+  end
+  return apply_response(response)
 end
 
 function M.trigger(directory)

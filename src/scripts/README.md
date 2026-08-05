@@ -172,6 +172,11 @@ practice fully usable and retry on a later trigger. FSRS fuzzing stays enabled,
 so historical statistics converge after synchronization while randomized due
 dates and forecasts can differ slightly between machines.
 
+When using the `src/nvim-driver/practice` launcher, `-s` (or `--sync-first`)
+waits for one synchronization attempt before the initial exercise selection.
+This is useful after switching machines; if sync is unavailable, practice still
+starts from its local database.
+
 ## Tests
 
 Run the script tests from the repository root:

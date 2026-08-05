@@ -5,12 +5,45 @@ set -euo pipefail
 driver_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repository_dir=$(cd -- "$driver_dir/../.." && pwd)
 
-if (( $# > 1 )); then
-    printf 'Usage: %s [exercise-directory]\n' "$0" >&2
-    exit 2
-fi
+usage() {
+    printf 'Usage: %s [-s|--sync-first] [exercise-directory]\n' "$0" >&2
+}
 
-collection=${1:-}
+sync_first=0
+collection=
+while (( $# > 0 )); do
+    case $1 in
+        -s|--sync-first)
+            sync_first=1
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            if (( $# != 1 )) || [[ -n $collection ]]; then
+                usage
+                exit 2
+            fi
+            collection=$1
+            break
+            ;;
+        -*)
+            usage
+            exit 2
+            ;;
+        *)
+            if [[ -n $collection ]]; then
+                usage
+                exit 2
+            fi
+            collection=$1
+            ;;
+    esac
+    shift
+done
+
 if [[ -n $collection ]]; then
     if [[ ! -d $collection ]]; then
         printf 'Exercise directory does not exist: %s\n' "$collection" >&2
@@ -34,6 +67,7 @@ fi
 exec env \
     PRACTICE_COLLECTION="$collection" \
     PRACTICE_AUTOSTART=1 \
+    PRACTICE_SYNC_FIRST="$sync_first" \
     PRACTICE_INSTALL_PLUGINS=1 \
     PRACTICE_PYTHON="$practice_python" \
     nvim --clean -u "$driver_dir/init.lua"

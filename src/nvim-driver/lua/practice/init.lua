@@ -140,6 +140,10 @@ function M.start(directory)
   session.start(directory)
 end
 
+function M.sync_first(directory)
+  return sync.sync_first(directory)
+end
+
 function M.submit()
   session.submit()
 end

@@ -38,6 +38,17 @@ Pass a different collection directory as the single optional argument:
 src/nvim-driver/practice path/to/exercises
 ```
 
+Use `-s` (or `--sync-first`) when switching machines to finish Supabase
+synchronization before the first exercise is selected:
+
+```bash
+src/nvim-driver/practice -s
+```
+
+The flag waits for one sync attempt, including reconstruction of downloaded
+cards, then opens the first exercise. If synchronization is unavailable,
+practice still opens using its local database.
+
 The launcher starts Neovim with its isolated configuration, without the normal
 user configuration, and starts a practice session automatically. On first use,
 it offers to install the pinned `which-key.nvim` v3.17.0 release into Neovim's

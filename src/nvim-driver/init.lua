@@ -150,6 +150,7 @@ practice.setup({
   scripts_dir = repository_dir .. "/src/scripts",
   database_path = environment("PRACTICE_DATABASE") or practice_config.database_path,
   supabase_url = environment("PRACTICE_SUPABASE_URL") or sync_config.supabase_url,
+  sync_first = vim.env.PRACTICE_SYNC_FIRST == "1",
   review_archive_ttl_days = review_archive_ttl_days,
   notes_directory = environment("PRACTICE_NOTES_DIRECTORY") or practice_config.notes_directory
     or ((environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share"))
@@ -212,6 +213,11 @@ if vim.env.PRACTICE_AUTOSTART ~= "0" then
   vim.api.nvim_create_autocmd("VimEnter", {
     once = true,
     callback = function()
+      if vim.env.PRACTICE_SYNC_FIRST == "1" then
+        practice.sync_first()
+        practice.start()
+        return
+      end
       vim.schedule(function()
         practice.start()
       end)
