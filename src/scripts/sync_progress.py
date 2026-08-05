@@ -31,7 +31,7 @@ PAGE_SIZE = 200
 UPLOAD_BATCH_SIZE = 100
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 REMOTE_FIELDS = (
-    "event_id,collection_id,exercise_id,review_datetime,final_rating,compiled,"
+    "sync_sequence,event_id,collection_id,exercise_id,review_datetime,final_rating,compiled,"
     "proposed_rating,review_status,reviewer_name,reviewer_model,"
     "reviewer_reasoning_effort,review_attempts,solve_duration_ms,feedback_duration_ms"
 )
@@ -86,6 +86,9 @@ def required_text(value: Any, name: str, nullable: bool = False) -> str | None:
 def validate_event(value: Any, collection_id: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise UnavailableError("remote response contains a non-object event")
+    sync_sequence = value.get("sync_sequence")
+    if type(sync_sequence) is not int or sync_sequence <= 0:
+        raise UnavailableError("remote event has invalid sync_sequence")
     event_id = required_text(value.get("event_id"), "event_id")
     try:
         parsed_id = uuid.UUID(event_id)
@@ -123,6 +126,7 @@ def validate_event(value: Any, collection_id: str) -> dict[str, Any]:
     if (durations[0] is None) != (durations[1] is None):
         raise UnavailableError("remote event has incomplete duration fields")
     return {
+        "sync_sequence": sync_sequence,
         "event_id": event_id,
         "collection_id": collection_id,
         "exercise_id": exercise_id,
@@ -161,6 +165,11 @@ def remote_event(row: sqlite3.Row, collection_id: str) -> dict[str, Any]:
     }
 
 
+def event_payload(event: dict[str, Any]) -> dict[str, Any]:
+    """Return the immutable event fields shared by local and remote ledgers."""
+    return {name: value for name, value in event.items() if name != "sync_sequence"}
+
+
 def headers(key: str, prefer: str | None = None) -> dict[str, str]:
     result = {
         "apikey": key,
@@ -181,20 +190,28 @@ def check_status(status: int) -> None:
 
 
 def fetch_remote(
-    adapter: HttpAdapter, base_url: str, key: str, collection_id: str
+    adapter: HttpAdapter,
+    base_url: str,
+    key: str,
+    collection_id: str,
+    after_sequence: int,
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     event_ids: set[str] = set()
-    offset = 0
+    cursor = after_sequence
     encoded_collection = urllib.parse.quote(collection_id, safe="")
     while True:
         query = (
             f"collection_id=eq.{encoded_collection}&select={REMOTE_FIELDS}"
-            f"&order=review_datetime.asc,event_id.asc&limit={PAGE_SIZE}&offset={offset}"
+            f"&sync_sequence=gt.{cursor}&order=sync_sequence.asc&limit={PAGE_SIZE}"
         )
         status, body = adapter.request(
             "GET", f"{base_url}/rest/v1/practice_review_events?{query}", headers(key), None
         )
+        if status == 400:
+            raise UnavailableError(
+                "remote sync schema is outdated; rerun supabase_setup.sql"
+            )
         check_status(status)
         try:
             page = json.loads(body)
@@ -203,15 +220,21 @@ def fetch_remote(
         if not isinstance(page, list):
             raise UnavailableError("remote service returned an invalid event page")
         validated = [validate_event(event, collection_id) for event in page]
+        sequences = [event["sync_sequence"] for event in validated]
+        if sequences != sorted(sequences) or any(sequence <= cursor for sequence in sequences):
+            raise UnavailableError("remote response contains unordered sync sequences")
+        if len(sequences) != len(set(sequences)):
+            raise UnavailableError("remote response contains duplicate sync sequences")
         if any(event["event_id"] in event_ids for event in validated) or len({
             event["event_id"] for event in validated
         }) != len(validated):
             raise UnavailableError("remote response contains duplicate event UUIDs")
         events.extend(validated)
         event_ids.update(event["event_id"] for event in validated)
+        if validated:
+            cursor = validated[-1]["sync_sequence"]
         if len(page) < PAGE_SIZE:
             return events
-        offset += len(page)
 
 
 def upload_events(
@@ -339,9 +362,13 @@ def sync_progress(
         except json.JSONDecodeError:
             legacy_keys = []
         legacy = collection_id in legacy_keys
-        bootstrap = connection.execute(
-            "SELECT bootstrap_state FROM sync_metadata WHERE collection_id = ?", (collection_id,)
-        ).fetchone()[0]
+        sync_row = connection.execute(
+            "SELECT bootstrap_state, last_remote_sequence FROM sync_metadata "
+            "WHERE collection_id = ?",
+            (collection_id,),
+        ).fetchone()
+        bootstrap = sync_row["bootstrap_state"]
+        last_remote_sequence = sync_row["last_remote_sequence"]
     finally:
         connection.close()
 
@@ -366,32 +393,77 @@ def sync_progress(
 
     adapter = adapter or UrllibAdapter()
     try:
-        remote = fetch_remote(adapter, base_url, key, collection_id)
-        remote_ids = {event["event_id"] for event in remote}
         local_ids = {row["event_id"] for row in local_rows}
         local_by_id = {row["event_id"]: remote_event(row, collection_id) for row in local_rows}
+
+        if last_remote_sequence is None:
+            remote = fetch_remote(adapter, base_url, key, collection_id, 0)
+            remote_ids = {event["event_id"] for event in remote}
+            for event in remote:
+                if (
+                    event["event_id"] in local_by_id
+                    and event_payload(event) != local_by_id[event["event_id"]]
+                ):
+                    raise UnavailableError("remote event conflicts with local event UUID")
+            if (
+                bootstrap == "uninitialized"
+                and legacy
+                and local_rows
+                and any(event_id not in local_ids for event_id in remote_ids)
+            ):
+                connection = store.connect()
+                try:
+                    connection.execute(
+                        "UPDATE sync_metadata SET bootstrap_state='conflict', last_error=? "
+                        "WHERE collection_id=?",
+                        ("bootstrap conflict", collection_id),
+                    )
+                    connection.commit()
+                finally:
+                    connection.close()
+                return {
+                    **status_response,
+                    "status": "bootstrap_conflict",
+                    "pending": len(local_rows),
+                }
+            uploads = [
+                remote_event(row, collection_id)
+                for row in local_rows
+                if row["event_id"] not in remote_ids
+            ]
+            upload_events(adapter, base_url, key, uploads)
+            bootstrap_cursor = max(
+                (event["sync_sequence"] for event in remote), default=0
+            )
+            tail = fetch_remote(
+                adapter, base_url, key, collection_id, bootstrap_cursor
+            )
+            if any(event["event_id"] in remote_ids for event in tail):
+                raise UnavailableError("remote response contains duplicate event UUIDs")
+            remote.extend(tail)
+        else:
+            uploads = [
+                remote_event(row, collection_id)
+                for row in local_rows
+                if not row["remote_confirmed"]
+            ]
+            upload_events(adapter, base_url, key, uploads)
+            remote = fetch_remote(
+                adapter, base_url, key, collection_id, last_remote_sequence
+            )
+
+        remote_ids = {event["event_id"] for event in remote}
         for event in remote:
-            if event["event_id"] in local_by_id and event != local_by_id[event["event_id"]]:
+            if (
+                event["event_id"] in local_by_id
+                and event_payload(event) != local_by_id[event["event_id"]]
+            ):
                 raise UnavailableError("remote event conflicts with local event UUID")
-        if (
-            bootstrap == "uninitialized"
-            and legacy
-            and local_rows
-            and any(event_id not in local_ids for event_id in remote_ids)
-        ):
-            connection = store.connect()
-            try:
-                connection.execute(
-                    "UPDATE sync_metadata SET bootstrap_state='conflict', last_error=? WHERE collection_id=?",
-                    ("bootstrap conflict", collection_id),
-                )
-                connection.commit()
-            finally:
-                connection.close()
-            return {**status_response, "status": "bootstrap_conflict", "pending": len(local_rows)}
-        uploads = [remote_event(row, collection_id) for row in local_rows if row["event_id"] not in remote_ids]
         downloads = [event for event in remote if event["event_id"] not in local_ids]
-        upload_events(adapter, base_url, key, uploads)
+        new_cursor = max(
+            (event["sync_sequence"] for event in remote),
+            default=last_remote_sequence or 0,
+        )
 
         connection = store.connect()
         try:
@@ -437,9 +509,15 @@ def sync_progress(
             succeeded_at = utc_timestamp()
             connection.execute(
                 """UPDATE sync_metadata SET bootstrap_state='initialized',
-                   last_success_at=?, last_error=NULL WHERE collection_id=?""",
-                (succeeded_at, collection_id),
+                   last_success_at=?, last_error=NULL, last_remote_sequence=?
+                   WHERE collection_id=?""",
+                (succeeded_at, new_cursor, collection_id),
             )
+            pending = connection.execute(
+                "SELECT count(*) FROM reviews "
+                "WHERE collection_key=? AND remote_confirmed=0",
+                (collection_id,),
+            ).fetchone()[0]
             connection.commit()
         except Exception:
             connection.rollback()
@@ -448,7 +526,7 @@ def sync_progress(
             connection.close()
         return {
             "status": "success", "configured": True, "uploaded": len(uploads),
-            "downloaded": len(downloads), "pending": 0, "last_success": succeeded_at,
+            "downloaded": len(downloads), "pending": pending, "last_success": succeeded_at,
         }
     except (UnavailableError, json.JSONDecodeError, UnicodeError) as error:
         safe_error = str(error)[:160] or "synchronization unavailable"

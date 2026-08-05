@@ -142,7 +142,10 @@ and a stable ID; collections without it continue to work locally. On first
 access, path-keyed history is adopted into that stable identity transactionally.
 
 Create a dedicated Supabase project and run `supabase_setup.sql` in its SQL
-editor. Configure only the project URL in TOML:
+editor. Rerun this idempotent script after upgrading LeetKatas so existing
+projects receive any required sync-schema migrations. The client reports sync
+as unavailable when the remote schema is older than the client. Configure only
+the project URL in TOML:
 
 ```toml
 [sync]
@@ -162,6 +165,12 @@ cards. For machine-loss recovery, configure a fresh database and the same
 collection/project. If both a legacy local database and the remote already have
 history, sync reports `bootstrap_conflict` and changes neither ledger; use a
 fresh database on that secondary machine.
+
+The first sync for a new or upgraded local database records the server-assigned
+sequence of the latest downloaded event. Later syncs upload pending local events
+and download only events after that sequence. Review timestamps still determine
+FSRS replay order; the server sequence is used only as a replication cursor, so
+an offline machine can safely upload older review timestamps later.
 
 Automatic sync runs asynchronously at editor startup, session start, and after
 a rating. It never delays selection or replaces an open exercise. Use

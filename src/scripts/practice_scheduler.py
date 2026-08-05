@@ -20,7 +20,7 @@ else:
     FSRS_IMPORT_ERROR = None
 
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 RATING_NAMES = {"fail", "acceptable", "good", "excellent"}
 COLLECTION_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)+$")
 
@@ -268,9 +268,20 @@ class PracticeStore:
                 bootstrap_state TEXT NOT NULL DEFAULT 'uninitialized',
                 last_attempt_at TEXT,
                 last_success_at TEXT,
-                last_error TEXT
+                last_error TEXT,
+                last_remote_sequence INTEGER CHECK (
+                    last_remote_sequence IS NULL OR last_remote_sequence >= 0
+                )
             )"""
         )
+        sync_columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(sync_metadata)")
+        }
+        if "last_remote_sequence" not in sync_columns:
+            connection.execute(
+                "ALTER TABLE sync_metadata ADD COLUMN last_remote_sequence INTEGER "
+                "CHECK (last_remote_sequence IS NULL OR last_remote_sequence >= 0)"
+            )
         connection.execute(
             """CREATE TABLE IF NOT EXISTS review_artifacts (
                 review_id INTEGER PRIMARY KEY,
@@ -290,7 +301,7 @@ class PracticeStore:
                 "INSERT INTO schema_metadata (key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
-        elif row["value"] in {"1", "2", "3", "4", "5"}:
+        elif row["value"] in {"1", "2", "3", "4", "5", "6"}:
             connection.execute("UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'", (str(SCHEMA_VERSION),))
         elif row["value"] != str(SCHEMA_VERSION):
             raise SchedulerError(

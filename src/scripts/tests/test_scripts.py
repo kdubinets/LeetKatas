@@ -935,7 +935,7 @@ class PracticeStatsTests(unittest.TestCase):
                 connection.close()
             self.assertIn("solve_duration_ms", columns)
             self.assertIn("feedback_duration_ms", columns)
-            self.assertEqual(version, "6")
+            self.assertEqual(version, "7")
 
 
 class SchedulerIntegrationTests(unittest.TestCase):
