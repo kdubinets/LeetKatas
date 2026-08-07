@@ -1,6 +1,14 @@
 # Exercise Collections
 
-Each exercise collection lives in its own descriptively named subdirectory. The completed [core collection](core/collection_spec.md) establishes the baseline layout; create follow-up collections alongside it.
+Each exercise collection lives in its own descriptively named subdirectory. The completed [core collection](core/collection_spec.md) establishes the baseline layout; focused follow-up collections live alongside it.
+
+## Available Collections
+
+- [Core](core/collection_spec.md): 108 general implementation-fluency exercises, up to C++20.
+- [Non-Owning Views and Ranges](non_owning_views_and_ranges/collection_spec.md): 30 focused Level A exercises, up to C++20.
+- [Ownership, Move Semantics, and RAII](ownership_move_semantics_and_raii/collection_spec.md): 36 focused Level A exercises, up to C++20.
+- [Text Processing and Conversion](text_processing_and_conversion/collection_spec.md): 28 focused Level A exercises, up to C++20.
+- [Numeric and Bit Manipulation](numeric_and_bit_manipulation/collection_spec.md): 26 focused Level A exercises, up to C++20.
 
 ## Required Collection Files
 
