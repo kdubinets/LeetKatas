@@ -9,6 +9,11 @@ Each exercise collection lives in its own descriptively named subdirectory. The 
 - [Ownership, Move Semantics, and RAII](ownership_move_semantics_and_raii/collection_spec.md): 36 focused Level A exercises, up to C++20.
 - [Text Processing and Conversion](text_processing_and_conversion/collection_spec.md): 28 focused Level A exercises, up to C++20.
 - [Numeric and Bit Manipulation](numeric_and_bit_manipulation/collection_spec.md): 26 focused Level A exercises, up to C++20.
+- [Variants and Error Modelling](variants_and_error_modelling/collection_spec.md): 21 focused Level A exercises, up to C++20.
+- [Custom Value Types and Comparisons](custom_value_types_and_comparisons/collection_spec.md): 21 focused Level A exercises, up to C++20.
+- [Callable Utilities](callable_utilities/collection_spec.md): 20 focused Level A exercises, up to C++20.
+- [Chrono](chrono/collection_spec.md): 36 focused Level A exercises, up to C++20.
+- [Filesystem](filesystem/collection_spec.md): 37 focused Level A exercises, up to C++20.
 
 ## Required Collection Files
 

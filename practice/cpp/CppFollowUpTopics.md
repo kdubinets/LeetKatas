@@ -57,6 +57,8 @@ Recommended target: 30 exercises (sensible range: 26–34).
 
 Recommended target: 20 exercises (sensible range: 18–24).
 
+Progress: complete with [21 validated exercises](collections/variants_and_error_modelling/collection_spec.md).
+
 - Inspecting and extracting `std::variant` alternatives.
 - `std::visit` and overloaded visitors.
 - More advanced `std::optional` composition.
@@ -66,6 +68,8 @@ Recommended target: 20 exercises (sensible range: 18–24).
 ### 5. Custom Value Types and Comparisons
 
 Recommended target: 22 exercises (sensible range: 18–26).
+
+Progress: complete with [21 validated exercises](collections/custom_value_types_and_comparisons/collection_spec.md).
 
 - Equality and relational operators.
 - C++20 three-way comparison and defaulted comparisons.
@@ -113,6 +117,8 @@ Progress: complete with [26 validated exercises](collections/numeric_and_bit_man
 
 Recommended target: 16 exercises (sensible range: 13–20).
 
+Progress: complete with [20 validated exercises](collections/callable_utilities/collection_spec.md).
+
 - `std::function` and type-erased callbacks.
 - `std::invoke` and member pointers.
 - `std::bind_front`.
@@ -133,6 +139,8 @@ Recommended target: 17 exercises (sensible range: 14–20).
 
 Recommended target: 18 exercises (sensible range: 15–22).
 
+Progress: complete with [36 validated exercises](collections/chrono/collection_spec.md).
+
 - Duration arithmetic and explicit duration conversion.
 - Time-point comparison and elapsed-time calculations.
 - Duration rounding.
@@ -142,6 +150,8 @@ Recommended target: 18 exercises (sensible range: 15–22).
 ### 12. Filesystem
 
 Recommended target: 14 exercises (sensible range: 12–17).
+
+Progress: complete with [37 validated exercises](collections/filesystem/collection_spec.md).
 
 - Constructing and joining paths.
 - Extracting filenames, stems, and extensions.
