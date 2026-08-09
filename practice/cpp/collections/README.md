@@ -16,6 +16,8 @@ Each exercise collection lives in its own descriptively named subdirectory. The 
 - [Chrono](chrono/collection_spec.md): 36 focused Level A exercises, up to C++20.
 - [Filesystem](filesystem/collection_spec.md): 37 focused Level A exercises, up to C++20.
 - [C++20 Language Features](cpp20_language_features/collection_spec.md): 15 focused Level A C++20 language-delta exercises.
+- [Concurrency](concurrency/collection_spec.md): 37 focused Level A exercises, up to C++20.
+- [Compile-Time Programming](compile_time_programming/collection_spec.md): 18 focused Level A exercises, up to C++20.
 
 ## Required Collection Files
 

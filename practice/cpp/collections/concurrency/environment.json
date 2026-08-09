@@ -1,0 +1,17 @@
+{
+  "language": {
+    "name": "C++",
+    "version": "C++20"
+  },
+  "libraries": [
+    {
+      "name": "C++ standard library",
+      "version": "C++20"
+    }
+  ],
+  "restrictions": [
+    "No third-party libraries",
+    "No sleeps, timing races, or probabilistic scheduling",
+    "Synchronization must use deterministic handoff"
+  ]
+}

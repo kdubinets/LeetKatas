@@ -83,13 +83,17 @@ Progress: complete with [21 validated exercises](collections/custom_value_types_
 
 Recommended target: 18 exercises (sensible range: 14–22).
 
+Progress: complete with [37 validated exercises](collections/concurrency/collection_spec.md).
+
 - `std::thread` and `std::jthread`.
 - Stop tokens and cooperative cancellation.
 - `std::mutex`, `std::lock_guard`, `std::unique_lock`, and `std::scoped_lock`.
 - Condition variables and predicate waits.
 - Atomic values and basic memory-order awareness.
+- Atomic shared-ownership publication and consumption.
 - C++20 latches, barriers, and semaphores.
 - Safe task input and result handoff.
+- Non-interleaved output with `std::osyncstream`.
 
 ### 7. Text Processing and Conversion
 
@@ -131,10 +135,12 @@ Progress: complete with [20 validated exercises](collections/callable_utilities/
 
 Recommended target: 17 exercises (sensible range: 14–20).
 
+Progress: complete with [18 validated exercises](collections/compile_time_programming/collection_spec.md).
+
 - `constexpr` functions and standard-library operations.
 - `consteval` and `constinit`.
 - Compile-time validation with `static_assert`.
-- Template lambdas and compile-time branching.
+- Immediate lambdas and evaluation-context-dependent branching.
 - Distinguishing compile-time capability from mandatory compile-time evaluation.
 
 ### 11. Chrono
@@ -420,8 +426,8 @@ at Level A.
 
 #### 8. Concurrency Scope Additions
 
-The planned concurrency collection remains necessary. In addition to its current
-roadmap, future specification work should explicitly assess:
+The completed concurrency collection has been audited against the expanded scope
+below. Its current coverage includes:
 
 - `std::future`, `std::promise`, and propagation of task exceptions.
 - `std::async` with an explicit launch policy.
@@ -430,22 +436,37 @@ roadmap, future specification work should explicitly assess:
 - `std::call_once` for one-time initialization.
 - `std::atomic_ref` for atomic access to supplied non-atomic storage.
 - Atomic compare-and-exchange with correct expected-value handling.
-- C++20 atomic `wait`, `notify_one`, and `notify_all`.
-- C++20 atomic `shared_ptr` and `weak_ptr` only where an atomic, deterministic
-  exercise can isolate the ownership handoff.
-- `std::osyncstream` if synchronized output is not owned by the I/O collection.
+- C++20 atomic waiting and notification without separate exercises for
+  `notify_one` and `notify_all` when only wake cardinality differs.
+- C++20 atomic `shared_ptr` release publication and acquire consumption, with
+  ownership extension observable on the consuming side. Atomic `weak_ptr`
+  remains excluded because it adds API symmetry without a distinct Level A
+  ownership handoff.
+- Relaxed ordering for an independent statistic that does not publish or consume
+  unrelated state.
+- Early release of `std::unique_lock` after copying a protected snapshot, so
+  independent work stays outside the critical section.
+- `std::osyncstream` for emitting one complete record without interleaving.
 
 Tests must remain deterministic and must not rely on sleeps, timing races, or
 probabilistic scheduling. Prefer supplied synchronization and explicit handoff
 over attempts to reproduce data races.
 
+No further concurrency additions are currently recommended at Level A. Shared
+futures, non-blocking lock and semaphore variants, atomic `notify_one`, and
+additional barrier operations remain plausible, but the available exercises are
+primarily API symmetry or require supporting scenarios large enough to weaken
+the one-minute format.
+
 #### 9. Compile-Time Programming Scope Additions
 
-The planned compile-time programming collection should also assess:
+The completed compile-time programming collection has been audited against this
+scope and covers:
 
 - `std::is_constant_evaluated` for a function with distinct constant-evaluation
   and runtime implementation paths.
-- C++20 `constexpr` standard algorithms and utilities.
+- Representative C++20 `constexpr` standard algorithms and utilities without
+  repeating every runtime algorithm in a constant-evaluation wrapper.
 - `constexpr` use of `std::vector` and `std::string` where the target standard
   library supports the required operations.
 - Compile-time construction followed by a focused `static_assert`.
@@ -458,6 +479,13 @@ The planned compile-time programming collection should also assess:
 Avoid recursive template metaprogramming, compiler-limit experiments, and tasks
 that merely ask whether an expression happens to be accepted in constant
 evaluation.
+
+No further compile-time additions are currently recommended at Level A. The
+collection deliberately retains only representative constant-evaluable
+algorithms; additional algorithms, `constinit` storage variations, and immediate
+function variations would repeat an existing primary skill. C++23 expansions
+such as `if consteval`, constexpr smart pointers and bitsets, and constexpr
+character conversion remain part of the separate C++23 delta roadmap.
 
 ### Priority 4: Focused Additions to Existing Areas
 
@@ -500,8 +528,8 @@ future collection:
   collection.
 - Actual heterogeneous unordered lookup after transparent hash and equality
   policies have been supplied.
-- `std::atomic_ref`, atomic smart pointers, and synchronized output in their
-  concurrency or I/O owners.
+- `std::atomic_ref`, two-sided atomic smart-pointer handoff, and synchronized
+  output, now covered by the concurrency collection.
 - `std::endian` only if embedded in a meaningful representation or protocol
   boundary rather than a one-line platform query.
 

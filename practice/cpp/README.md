@@ -39,8 +39,12 @@ cpp/
 │   │   └── 36 exercise pairs plus collection metadata
 │   ├── filesystem/
 │   │   └── 37 exercise pairs plus collection metadata
-│   └── cpp20_language_features/
-│       └── 15 exercise pairs plus collection metadata
+│   ├── cpp20_language_features/
+│   │   └── 15 exercise pairs plus collection metadata
+│   ├── concurrency/
+│   │   └── 37 exercise pairs plus collection metadata
+│   └── compile_time_programming/
+│       └── 18 exercise pairs plus collection metadata
 └── tools/
     └── validate_exercises.sh
 ```
@@ -49,7 +53,7 @@ cpp/
 
 The [core collection](collections/core/collection_spec.md) contains 108 Level A implementation-fluency exercises targeting idiomatic C++ up to and including C++20. It is considered complete and should normally remain frozen.
 
-Eleven focused up-to-C++20 follow-up collections are also complete:
+Thirteen focused up-to-C++20 follow-up collections are also complete:
 
 - [Non-Owning Views and Ranges](collections/non_owning_views_and_ranges/collection_spec.md) contains 30 exercises on spans, string views, lazy composition, iterator/sentinel ranges, borrowing, and materialization.
 - [Ownership, Move Semantics, and RAII](collections/ownership_move_semantics_and_raii/collection_spec.md) contains 36 exercises on smart pointers, ownership transfer, moved-from states, rule-of-zero composition, move-aware handles, and deterministic cleanup.
@@ -62,6 +66,8 @@ Eleven focused up-to-C++20 follow-up collections are also complete:
 - [Chrono](collections/chrono/collection_spec.md) contains 36 exercises on durations, time points, deadlines, civil calendars, calendar differences, weekdays, and time-of-day decomposition.
 - [Filesystem](collections/filesystem/collection_spec.md) contains 37 exercises on lexical paths, status and mutation operations, error-code overloads, symbolic links, recursive copying, and directory traversal.
 - [C++20 Language Features](collections/cpp20_language_features/collection_spec.md) contains 15 language-delta exercises on initialization, scoped names, conditional explicitness, lambda changes, UTF-8 types, attributes, and variadic preprocessing.
+- [Concurrency](collections/concurrency/collection_spec.md) contains 37 exercises on thread lifetime, cooperative cancellation, locking, condition waits, atomics, coordination primitives, asynchronous results, shared locking, one-time initialization, and synchronized output.
+- [Compile-Time Programming](collections/compile_time_programming/collection_spec.md) contains 18 exercises on constant-evaluable functions, representative algorithms, dynamic storage, validation, immediate functions, constant initialization, and C++20 constexpr object-model features.
 
 The core [exercise order](collections/core/exercise_order.md) records the canonical
 1-to-108 progression as one exercise basename per line. The
@@ -90,6 +96,8 @@ tools/validate_exercises.sh collections/callable_utilities c++20
 tools/validate_exercises.sh collections/chrono c++20
 tools/validate_exercises.sh collections/filesystem c++20
 tools/validate_exercises.sh collections/cpp20_language_features c++20
+tools/validate_exercises.sh collections/concurrency c++20
+tools/validate_exercises.sh collections/compile_time_programming c++20
 ```
 
 The validator compiles temporary completed forms through a pipe; it does not modify learner files or leave generated solutions in the repository.
