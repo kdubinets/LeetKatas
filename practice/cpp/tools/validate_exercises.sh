@@ -88,14 +88,16 @@ for source in "${sources[@]}"; do
     fi
 
     marker_count=$(grep -Ec '^[[:space:]]*// Finish: ' "$source" || true)
+    pattern_count=$(grep -Ec '^[[:space:]]*// Pattern: .+' "$source" || true)
     comment_count=$(grep -Ec '// ' "$source" || true)
     heading_count=$(grep -Ec '^# (Name|Description|Solution)$' "$metadata" || true)
     solution_fence_count=$(grep -Ec '^```cpp$' "$metadata" || true)
 
-    if [[ "$marker_count" != 1 || "$comment_count" != 1 ||
+    if [[ "$marker_count" != 1 || "$pattern_count" -gt 1 ||
+          "$comment_count" != $((marker_count + pattern_count)) ||
           "$heading_count" != 3 || "$solution_fence_count" != 1 ]]; then
-        printf 'STRUCTURE FAIL: %s markers=%s comments=%s headings=%s solution_fences=%s\n' \
-            "$base_name" "$marker_count" "$comment_count" \
+        printf 'STRUCTURE FAIL: %s markers=%s patterns=%s comments=%s headings=%s solution_fences=%s\n' \
+            "$base_name" "$marker_count" "$pattern_count" "$comment_count" \
             "$heading_count" "$solution_fence_count" >&2
         status=1
         continue

@@ -11,6 +11,7 @@ Start work from this directory or a descendant so this guidance is loaded.
 - `README.md` describes the directory layout and current collection status.
 - `CppProblemsGenerationPrompt.md` is the canonical base format for implementation-fluency exercises.
 - `CppFollowUpTopics.md` is the roadmap for future collections.
+- `LevelBInterviewIdiomsPlan.md` defines the separate Level B interview-idiom curriculum and workflow.
 - Before changing a collection, read its `collection_spec.md` and `exercise_manifest.md`.
 
 ## Collection Rules
@@ -30,6 +31,7 @@ Start work from this directory or a descendant so this guidance is loaded.
 - `collections/core/` contains the completed 108-exercise implementation-fluency collection.
 - Treat `collections/core/` as frozen unless the user explicitly requests additions, corrections, or restructuring.
 - Preserve existing exercise names and content when working on unrelated collections.
+- Before proposing core additions from the solved interview-problem corpus, use the `audit-cpp-interview-fluency` skill to gather reproducible evidence. The audit itself must not change exercises.
 
 ## Future Collections
 
@@ -37,6 +39,12 @@ Start work from this directory or a descendant so this guidance is loaded.
 - Each new collection must begin with `collection_spec.md` and `exercise_manifest.md`.
 - Record whether the collection is up-to-version or version-delta before generating exercises.
 - Use a nested `AGENTS.md` only when a collection needs durable rules that genuinely differ from this file; keep ordinary collection details in `collection_spec.md`.
+
+## Level B Interview Idioms
+
+- Keep Level B collections separate from the frozen Level A core. They teach implementation of a named, supplied interview idiom rather than atomic library operations or algorithm discovery.
+- Before planning, generating, reviewing, or extending a Level B collection, use the `develop-cpp-level-b-idioms` skill and read `LevelBInterviewIdiomsPlan.md`.
+- Do not use the Level A corpus audit to decide Level B coverage. Add a dedicated Level B audit only after the initial Level B core is present.
 
 ## Validation
 

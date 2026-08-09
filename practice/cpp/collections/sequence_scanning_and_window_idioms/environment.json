@@ -1,0 +1,17 @@
+{
+  "language": {
+    "name": "C++",
+    "version": "C++20"
+  },
+  "libraries": [
+    {
+      "name": "C++ standard library",
+      "version": "C++20"
+    }
+  ],
+  "restrictions": [
+    "No third-party libraries",
+    "Inputs satisfy the preconditions stated in each exercise",
+    "All specified sums, differences, products, and result counts are representable in their declared types"
+  ]
+}
