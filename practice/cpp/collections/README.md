@@ -18,6 +18,8 @@ Each exercise collection lives in its own descriptively named subdirectory. The 
 - [C++20 Language Features](cpp20_language_features/collection_spec.md): 15 focused Level A C++20 language-delta exercises.
 - [Concurrency](concurrency/collection_spec.md): 37 focused Level A exercises, up to C++20.
 - [Compile-Time Programming](compile_time_programming/collection_spec.md): 18 focused Level A exercises, up to C++20.
+- [Stream and File I/O](stream_and_file_io/collection_spec.md): 20 focused Level A exercises, up to C++20.
+- [Container Operations and Iterator Mechanics](container_operations_and_iterator_mechanics/collection_spec.md): 23 focused Level A exercises, up to C++20.
 
 ## Required Collection Files
 

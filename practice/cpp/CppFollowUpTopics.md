@@ -340,10 +340,13 @@ cases, and exercises whose only goal is predicting a diagnostic.
 
 #### 5. Stream and File I/O
 
+Progress: complete with
+[20 validated exercises](collections/stream_and_file_io/collection_spec.md).
+
 The text-processing collection uses string streams for parsing and formatting,
 while the filesystem collection intentionally excludes file contents and stream
-I/O. Practical stream state and file-content operations therefore remain a major
-gap.
+I/O. The dedicated stream and file-I/O collection now covers the practical
+stream-state and file-content operations that fit Level A.
 
 Strong exercise families include:
 
@@ -355,12 +358,15 @@ Strong exercise families include:
 - Write a specified record through a supplied `std::ostream&`.
 - Open file streams with the correct input, output, append, truncation, or binary
   mode and report open failure explicitly.
-- Seek to a supplied stream position and query the resulting position.
+- Seek to a supplied input or output position, query positions, and patch output
+  at a valid position.
 - Read or write an exact bounded byte sequence and validate the transferred count.
-- Copy one stream buffer into another when raw textual transfer is intended.
-- Move a C++20 string-stream buffer in or out where that avoids an unnecessary
-  copy.
-- Use `std::osyncstream` to emit one complete non-interleaved record.
+- Copy through stream-buffer iterators when raw textual transfer is intended,
+  including successful empty input and explicit output-failure detection.
+- Borrow a C++20 string-stream buffer as a view or move it in or out where that
+  avoids an unnecessary copy.
+- Use `std::osyncstream` to emit one complete non-interleaved record, already
+  covered by the concurrency collection rather than duplicated here.
 
 Prefer deterministic tests using `std::istringstream`, `std::ostringstream`, or
 caller-provided temporary paths. Do not depend on console interaction or
@@ -368,14 +374,19 @@ machine-specific files.
 
 #### 6. Container-Specific Operations and Iterator Mechanics
 
+Progress: complete with
+[23 validated exercises](collections/container_operations_and_iterator_mechanics/collection_spec.md).
+
 The core collection covers `std::vector`, associative containers, and container
 adaptors well, and the ranges collection covers iterator/sentinel views. Several
-high-value operations that are unique to other container and iterator categories
-remain absent.
+high-value operations unique to other container and iterator categories are now
+covered by this dedicated collection.
 
 Strong exercise families include:
 
 - Insert and remove values at both ends of a `std::deque`.
+- Sort and merge linked sequences with the container-owned `std::list`
+  operations that relink nodes instead of requiring random-access iterators.
 - Transfer existing nodes with constant-time `std::list::splice`.
 - Use `std::list::remove_if` and `std::list::unique`, including their C++20
   returned removal counts where useful.
@@ -389,14 +400,21 @@ Strong exercise families include:
 - Use `std::front_inserter` or general `std::inserter` when the destination's
   insertion position matters.
 - Use reverse iterators directly when a view would not satisfy the supplied
-  legacy interface.
+  legacy interface, and convert a reverse position correctly for a forward
+  iterator mutation interface.
 - Consume the iterator and output fields of C++20 ranges algorithm result types.
-- Use `std::iter_move` or `std::ranges::iter_swap` in a small generic operation
-  where customization matters.
+- Use `std::ranges::iter_move` or `std::ranges::iter_swap` in a small generic
+  operation where customization matters.
 
 Do not mirror every ordinary vector operation across every container. Include a
 container only when its interface or invalidation behavior teaches a meaningfully
 different implementation pattern.
+
+The completed collection deliberately stops short of separate `next` and `prev`
+drills after covering non-random-access advancement, and does not add standalone
+rehash or load-factor inspection exercises after teaching capacity reservation.
+Those remaining candidates add mostly API symmetry rather than a distinct Level A
+implementation skill.
 
 #### 7. Practical Standard-Library Concepts
 
@@ -425,6 +443,8 @@ at Level A.
 ### Priority 3: Expand Already-Planned Collections
 
 #### 8. Concurrency Scope Additions
+
+Status: Done.
 
 The completed concurrency collection has been audited against the expanded scope
 below. Its current coverage includes:
@@ -459,6 +479,8 @@ primarily API symmetry or require supporting scenarios large enough to weaken
 the one-minute format.
 
 #### 9. Compile-Time Programming Scope Additions
+
+Status: Done.
 
 The completed compile-time programming collection has been audited against this
 scope and covers:

@@ -1,0 +1,17 @@
+{
+  "language": {
+    "name": "C++",
+    "version": "C++20"
+  },
+  "libraries": [
+    {
+      "name": "C++ standard library",
+      "version": "C++20"
+    }
+  ],
+  "restrictions": [
+    "No third-party libraries",
+    "Do not implement custom containers or iterators",
+    "All iterator positions and distances supplied by an exercise satisfy its stated preconditions"
+  ]
+}
