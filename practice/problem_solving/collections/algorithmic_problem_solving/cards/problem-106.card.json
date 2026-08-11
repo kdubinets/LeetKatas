@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-106",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "106",
+    "title": "Construct Binary Tree from Inorder and Postorder Traversal",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/construct-binary-tree-from-inorder-and-postorder-traversal/",
+    "local_path": "problems/medium/106.md",
+    "content_sha256": "2aa9ace87a595787b01f88bb7bf9f4dd08c3916a222f1c364c41cb567153509e"
+  },
+  "teaching": {
+    "hint": "Which traversal tells you a subtree's root, and what does the other traversal tell you once that root is known?",
+    "solution_outline": {
+      "decisive_insight": "A postorder suffix exposes a subtree root, while that root's inorder position divides its values into independent left and right intervals.",
+      "approach": "Map each inorder value to its index. Consume postorder from right to left, recursively constructing an inorder interval; after taking its root, construct the right interval before the left interval.",
+      "state_and_invariant": "For each inorder interval, the next unconsumed reverse-postorder value is that interval's root, and the cursor advances once for every constructed node.",
+      "correctness": "The root partitions an interval into exactly its left and right subtree values. Reverse postorder visits root, then right-subtree roots, then left-subtree roots, so building those intervals in that order consumes precisely their nodes. Induction on interval size yields both requested traversals.",
+      "complexity": "The index map and construction each process n values once, for O(n) time and O(n) space including the map and worst-case recursion.",
+      "pitfall": "Constructing the left subtree first while consuming postorder backward assigns right-subtree values to the wrong interval."
+    },
+    "accepted_alternatives": [],
+    "tags": ["binary-tree", "tree-construction", "interval-recursion"],
+    "prerequisites": ["tree-traversals", "hash-map", "recursion"],
+    "common_wrong_turns": ["Linearly searching inorder for every root", "Building the left interval before the right when walking postorder backward", "Assuming duplicate values can be located unambiguously"],
+    "source_fidelity_notes": ["Examples and image were omitted; equal lengths, unique values, membership, validity guarantees, bounds, and tree-construction output were retained."]
+  }
+}

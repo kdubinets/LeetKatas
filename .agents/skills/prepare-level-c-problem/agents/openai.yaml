@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prepare Level C Problem"
+  short_description: "Convert solved problems into Level C cards"
+  default_prompt: "Use $prepare-level-c-problem to prepare medium problem 42 as a Level C reasoning card."

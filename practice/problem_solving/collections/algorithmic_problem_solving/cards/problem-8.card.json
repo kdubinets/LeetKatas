@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-8",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "8",
+    "title": "String to Integer (atoi)",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/string-to-integer-atoi/",
+    "local_path": "problems/medium/8.md",
+    "content_sha256": "5f5145491fa6f2a77c728c6385577cddcac43c8ebe7cf8afeba8003200492ed0"
+  },
+  "teaching": {
+    "hint": "How can you decide whether appending the next digit would overflow before performing the multiplication?",
+    "solution_outline": {
+      "decisive_insight": "Only a strict prefix can contribute, so a small phased scan is sufficient; overflow must be detected before updating the accumulator.",
+      "approach": "Advance through leading spaces, record at most one sign, and accumulate consecutive digits. Choose the allowed magnitude from the sign, and before appending digit d test whether the current value exceeds (limit - d) / 10. Clamp immediately when it does.",
+      "state_and_invariant": "During digit parsing, the accumulator equals exactly the magnitude of the digits consumed so far and remains within the sign-specific 32-bit limit.",
+      "correctness": "The phase order places the cursor at the only valid digit prefix. A passing overflow check makes the next accumulator exact and preserves its bound. A failing check proves this digit and any extension exceed the endpoint, so clamping is required. Normal termination has consumed exactly the permitted prefix, after which applying the sign gives the specified result.",
+      "complexity": "O(n) time and O(1) auxiliary space.",
+      "pitfall": "Computing value * 10 + digit before checking the bound can overflow the accumulator itself, especially for very long inputs."
+    },
+    "accepted_alternatives": ["Accumulate in a wider integer type and clamp, provided the chosen type cannot overflow for the maximum input length or parsing stops as soon as the 32-bit bound is crossed."],
+    "tags": ["string", "parsing", "overflow"],
+    "prerequisites": ["character-scanning", "integer-bounds"],
+    "common_wrong_turns": ["Skipping whitespace after the sign", "Accepting a second sign", "Continuing after the first nondigit", "Checking overflow after arithmetic has already overflowed"],
+    "source_fidelity_notes": ["The five walkthrough examples were removed; exact phase ordering, accepted characters, empty input, stopping behavior, and clamping bounds were retained."]
+  }
+}

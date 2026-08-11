@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit C++ Interview Fluency"
+  short_description: "Assess Level A coverage from real solutions"
+  default_prompt: "Use $audit-cpp-interview-fluency to audit the core C++ exercises against solved interview solutions."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Solve LeetKatas Problem"
+  short_description: "Create idiomatic problem solutions"
+  default_prompt: "Use $solve-leetkata-problem to solve medium problem 15 in C++."

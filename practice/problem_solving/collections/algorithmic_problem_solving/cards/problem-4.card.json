@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-4",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "4",
+    "title": "Median of Two Sorted Arrays",
+    "difficulty": "hard",
+    "url": "https://leetcode.com/problems/median-of-two-sorted-arrays/",
+    "local_path": "problems/hard/4.md",
+    "content_sha256": "c13220fd37c4e93c7039e0e95c3f9fec736a447d234be0d1d00e363fd48b63c2"
+  },
+  "teaching": {
+    "hint": "Can you describe a cut through both arrays whose left side contains exactly half the combined values?",
+    "solution_outline": {
+      "decisive_insight": "The logarithmic bound rules out merging; the median can instead be characterized by a partition that puts half the values on each side.",
+      "approach": "Binary-search a cut in the shorter array and derive the cut in the other array so the left partition has the required size. Move the first cut until both values immediately left of the cuts are no greater than the opposite right boundary. Use conceptual sentinels at empty partition sides, then read the middle value or values from the boundaries.",
+      "state_and_invariant": "Every candidate uses complementary cuts whose left sides contain exactly (m + n + 1) / 2 values. The search interval retains every cut that could satisfy the two cross-boundary ordering inequalities.",
+      "correctness": "At a valid cut, within-array sorting and the two cross-boundary inequalities imply every left value is no greater than every right value. The fixed partition sizes therefore place the combined middle value or values at the boundary. A violated boundary is monotone in the searched cut, so moving left or right cannot discard a valid partition.",
+      "complexity": "O(log(min(m, n))) time and O(1) auxiliary space.",
+      "pitfall": "Searching the longer array can produce an invalid complementary cut, and boundary handling must also cover an empty input array."
+    },
+    "accepted_alternatives": [],
+    "tags": ["binary-search", "partition", "sorted-array"],
+    "prerequisites": ["binary-search-invariant", "median-definition"],
+    "common_wrong_turns": ["Merging the arrays despite the logarithmic requirement", "Binary-searching an answer value without handling ranks", "Averaging middle integers without a safe numeric conversion"],
+    "source_fidelity_notes": ["Examples were removed; sortedness, empty-array behavior, numeric bounds, total nonemptiness, and the logarithmic target were retained."]
+  }
+}

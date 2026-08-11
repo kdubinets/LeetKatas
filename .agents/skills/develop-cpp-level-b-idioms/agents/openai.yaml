@@ -1,0 +1,4 @@
+interface:
+  display_name: "Develop C++ Level B Idioms"
+  short_description: "Design and grow interview idiom collections"
+  default_prompt: "Use $develop-cpp-level-b-idioms to plan or build a C++ Level B interview-idiom collection."

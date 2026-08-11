@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-15",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "15",
+    "title": "3Sum",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/3sum/",
+    "local_path": "problems/medium/15.md",
+    "content_sha256": "c2c427c4058af7ada1f64795d97764c09fca50deed13ba2d61ce6cd0a3c1faeb"
+  },
+  "teaching": {
+    "hint": "After choosing one value, what ordering would let you find the remaining pair while handling duplicates locally?",
+    "solution_outline": {
+      "decisive_insight": "Sorting reduces each choice of a first value to a monotone two-sum scan and makes equal-value duplicates adjacent.",
+      "approach": "Sort the array. For each distinct first position, scan the suffix with left and right pointers. Increase the left pointer when the sum is too small, decrease the right pointer when it is too large, and record a zero sum before skipping equal values at both sides.",
+      "state_and_invariant": "For a fixed first value, all candidate pairs outside the current pointer interval have either been examined or safely eliminated by sorted monotonicity.",
+      "correctness": "If a sum is too small, pairing the current left value with any smaller right value cannot work, so advancing left is safe; the symmetric argument permits decreasing right for a large sum. Thus every zero-sum value pair is reached. Skipping equal first values and equal values after a match removes only duplicate value triplets, not distinct ones.",
+      "complexity": "O(n^2) time after O(n log n) sorting, with O(1) auxiliary space excluding sort implementation and the returned triplets.",
+      "pitfall": "Moving only one pointer after a match or skipping duplicates at the wrong time can emit duplicates or skip a distinct triplet."
+    },
+    "accepted_alternatives": ["Fix one element and use a hash set for the suffix in O(n^2) expected time, with careful canonicalization and deduplication of triplets."],
+    "tags": ["sorting", "two-pointers", "k-sum"],
+    "prerequisites": ["two-sum", "sorted-two-pointers"],
+    "common_wrong_turns": ["Cubic enumeration at the maximum input size", "Deduplicating only by source indices", "Skipping repeated pointer values before recording a match"],
+    "source_fidelity_notes": ["Examples were omitted; distinct-index semantics, value-triplet deduplication, output-order freedom, and numeric constraints were retained."]
+  }
+}

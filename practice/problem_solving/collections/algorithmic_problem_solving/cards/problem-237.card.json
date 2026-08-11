@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-237",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "237",
+    "title": "Delete Node in a Linked List",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/delete-node-in-a-linked-list/",
+    "local_path": "problems/medium/237.md",
+    "content_sha256": "ad06ba4934ea06b59302824eeb7333c74cca6e8d67cea87534a35ea62be9ca06"
+  },
+  "teaching": {
+    "hint": "If the predecessor is inaccessible but the target has a successor, can the observable list be made to look as though a different node vanished?",
+    "solution_outline": {
+      "decisive_insight": "Although the given node cannot be unlinked without its predecessor, its non-tail successor can be substituted into its position.",
+      "approach": "Copy the successor's value into the given node and redirect the given node's next link past that successor.",
+      "state_and_invariant": "Nodes before the given node are untouched; after the substitution, the reachable suffix begins with the successor's former value followed by its former successors.",
+      "correctness": "The transformed reachable sequence keeps every value before the target in order, replaces the target's value with the next value, and then links to the remainder after that next node. Because values are unique, this sequence is exactly the original list with the given value omitted, and one node is unreachable.",
+      "complexity": "The local substitution takes O(1) time and O(1) auxiliary space.",
+      "pitfall": "This cannot delete a tail node because there is no successor to copy; the stated non-tail guarantee is essential."
+    },
+    "accepted_alternatives": [],
+    "tags": ["linked-list", "in-place-mutation"],
+    "prerequisites": ["singly-linked-list"],
+    "common_wrong_turns": ["Searching from a nonexistent head for the predecessor", "Trying to free the given node without changing its predecessor's link", "Applying successor substitution to a tail node"],
+    "source_fidelity_notes": ["Custom testing instructions and examples were omitted; no-head access, unique values, non-tail and membership guarantees, required observable list semantics, and bounds were retained."]
+  }
+}

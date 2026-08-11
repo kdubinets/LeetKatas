@@ -124,7 +124,7 @@ problem_solving.setup({
   python = python,
   scripts_dir = repository_dir .. "/src/scripts",
   default_directory = environment("PROBLEM_SOLVING_COLLECTION") or configured.collection
-    or repository_dir .. "/practice/problem_solving/collections/initial_seed",
+    or repository_dir .. "/practice/problem_solving/collections/algorithmic_problem_solving",
   database_path = environment("PROBLEM_SOLVING_DATABASE") or configured.database_path,
   log_path = environment("PROBLEM_SOLVING_LOG") or configured.log_path
     or state_root .. "/leetkatas/problem-solving.log",

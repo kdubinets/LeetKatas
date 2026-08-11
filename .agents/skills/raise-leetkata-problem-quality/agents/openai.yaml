@@ -1,0 +1,4 @@
+interface:
+  display_name: "Raise LeetKatas Quality"
+  short_description: "Audit and improve solution quality"
+  default_prompt: "Use $raise-leetkata-problem-quality to audit medium problem 15."

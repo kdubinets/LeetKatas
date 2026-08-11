@@ -15,7 +15,11 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = SCRIPTS.parents[1]
 COLLECTION = (
-    REPOSITORY_ROOT / "practice" / "problem_solving" / "collections" / "initial_seed"
+    REPOSITORY_ROOT
+    / "practice"
+    / "problem_solving"
+    / "collections"
+    / "algorithmic_problem_solving"
 )
 sys.path.insert(0, str(SCRIPTS))
 

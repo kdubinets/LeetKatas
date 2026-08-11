@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-47",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "47",
+    "title": "Permutations II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/permutations-ii/",
+    "local_path": "problems/medium/47.md",
+    "content_sha256": "2eab38bc5e0f1144760be4a508944354f03c1a6b31a76822043bd7c9176e91a9"
+  },
+  "teaching": {
+    "hint": "What changes if equal values are treated as indistinguishable while arrangements are generated in a consistent order?",
+    "solution_outline": {
+      "decisive_insight": "The output is the set of value sequences, so equal values must not create separate branches or repeated arrangements.",
+      "approach": "Sort a working copy, record it, then repeatedly generate the next lexicographically greater value arrangement until none remains.",
+      "state_and_invariant": "The working sequence is always one distinct permutation, and successive recorded sequences are adjacent in lexicographic order among the distinct value arrangements.",
+      "correctness": "The sorted sequence is the first arrangement. Each successor is the smallest greater arrangement, so no distinct arrangement lies between consecutive records. Starting at the first and stopping after the greatest therefore records every value sequence exactly once.",
+      "complexity": "For n values and u distinct permutations, sorting costs O(n log n) and generating and copying all results costs O(u n); the working copy uses O(n) auxiliary space besides the output.",
+      "pitfall": "Treating equal occurrences as distinct choices without depth-level duplicate control emits duplicate permutations."
+    },
+    "accepted_alternatives": ["Sort first, then backtrack over unused positions while skipping an equal value when its preceding equal value has not been used at the same depth; this has the same output-sensitive cost."],
+    "tags": ["backtracking", "permutations", "duplicate-handling"],
+    "prerequisites": ["recursion", "lexicographic-ordering"],
+    "common_wrong_turns": ["Generating all n! index permutations and deduplicating afterward", "Mutating the caller's array when a working copy is sufficient", "Skipping every repeated value regardless of whether its earlier copy is already in the partial arrangement"],
+    "source_fidelity_notes": ["Examples were omitted; value-sequence uniqueness, arbitrary output order, and the small length and value bounds were retained."]
+  }
+}

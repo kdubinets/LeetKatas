@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-375",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "375",
+    "title": "Guess Number Higher or Lower II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/guess-number-higher-or-lower-ii/",
+    "local_path": "problems/medium/375.md",
+    "content_sha256": "1e689cbdd46c28dc6e5558c08a3b4fb28de143fb722be1bafa4bfdce53042d2a"
+  },
+  "teaching": {
+    "hint": "For a chosen first guess, which remaining range determines the money you must have available before learning whether the guess is wrong?",
+    "solution_outline": {
+      "decisive_insight": "A wrong guess splits a contiguous interval, and a guarantee must cover its more expensive remaining side rather than an average case.",
+      "approach": "For every interval [left, right], evaluate each possible first guess. Its guaranteed cost is the guessed value plus the larger optimal cost of the lower and higher subintervals; choose the least such cost, filling intervals from short to long.",
+      "state_and_invariant": "The table entry for an interval is the least money that guarantees a win when the hidden number lies in that interval, while empty and single-value intervals cost zero.",
+      "correctness": "For any first guess, an adversary can force the more expensive surviving side after the required payment. By induction, the table supplies the exact optimal guarantee for both shorter sides, so the recurrence gives that first guess's exact worst-case cost. Minimizing over all first guesses chooses the optimal strategy.",
+      "complexity": "There are O(n^2) intervals and O(n) candidate guesses per interval, for O(n^3) time and O(n^2) space.",
+      "pitfall": "Using ordinary binary-search midpoints assumes balanced ranges minimize cost, but here an incorrect guess costs its numeric value."
+    },
+    "accepted_alternatives": [],
+    "tags": ["dynamic-programming", "interval-dp", "minimax"],
+    "prerequisites": ["dynamic-programming", "intervals", "worst-case-reasoning"],
+    "common_wrong_turns": ["Optimizing expected cost rather than guaranteed cost", "Using a binary-search midpoint without evaluating its price", "Charging for a correct final guess"],
+    "source_fidelity_notes": ["Worked examples and image were omitted; payment-on-wrong-guess semantics, higher-or-lower feedback, worst-case guarantee objective, range, and n bound were retained."]
+  }
+}

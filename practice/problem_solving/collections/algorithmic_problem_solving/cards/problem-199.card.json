@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-199",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "199",
+    "title": "Binary Tree Right Side View",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/binary-tree-right-side-view/",
+    "local_path": "problems/medium/199.md",
+    "content_sha256": "f55bb98b9523b34c4281d681f9f656601108dbca1a25ed8f17b8d8aed2803ab8"
+  },
+  "teaching": {
+    "hint": "At one depth, which position in a left-to-right traversal corresponds to the node that blocks all others from the right?",
+    "solution_outline": {
+      "decisive_insight": "Exactly one node per depth is visible: the rightmost node at that level.",
+      "approach": "Traverse breadth-first one level at a time, enqueueing each left child before its right child, and append the final node processed from each level.",
+      "state_and_invariant": "The queue holds each level in left-to-right order; the final processed node in the current level is therefore its rightmost node.",
+      "correctness": "Left-before-right enqueuing preserves left-to-right order at every subsequent depth. Thus the final node of each processed level is exactly the visible node for that depth, and collecting these levels top-down returns the required view.",
+      "complexity": "Every node is visited once, giving O(n) time and O(w) auxiliary queue space for maximum width w.",
+      "pitfall": "Returning only nodes that have no right child mistakes a structural property for rightmost position; a left child can be visible."
+    },
+    "accepted_alternatives": ["Depth-first traversal that visits right children before left children and records the first node reached at each depth."],
+    "tags": ["binary-tree", "breadth-first-search", "level-order-traversal"],
+    "prerequisites": ["queue", "tree-traversal"],
+    "common_wrong_turns": ["Ignoring visible left children when no right child exists", "Appending every last child encountered without grouping by depth", "Returning node values in bottom-up order"],
+    "source_fidelity_notes": ["Illustrated examples were omitted; view direction, top-down order, empty-tree behavior, and node and value bounds were retained."]
+  }
+}

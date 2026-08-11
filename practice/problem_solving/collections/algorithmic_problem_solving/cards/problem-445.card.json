@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-445",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "445",
+    "title": "Add Two Numbers II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/add-two-numbers-ii/",
+    "local_path": "problems/medium/445.md",
+    "content_sha256": "10f5ef76dafeed51205c74fbf18e1c80fa3d7a308aff4d5d5ddb6a8dba16ccf5"
+  },
+  "teaching": {
+    "hint": "Addition begins at the least significant place; how can each forward-order list expose that place without changing its links?",
+    "solution_outline": {
+      "decisive_insight": "Forward-order lists hide the least significant digits at their ends, so auxiliary last-in-first-out storage can expose the needed addition order without mutating either input.",
+      "approach": "Traverse both lists and store their digits in stacks. Pop available digits with a carry, create the current sum digit, and place that node before the already-built result until both stacks and the carry are empty.",
+      "state_and_invariant": "The stack tops are the next unprocessed digits at the same decimal place; the carry comes exactly from processed less-significant places, and the current result already represents those places in forward order.",
+      "correctness": "Each iteration performs the standard decimal addition for one aligned place and updates the carry correctly. Placing its digit before the accumulated less-significant suffix keeps the result in forward order. When inputs and carry are exhausted, every place, including any new leading carry, has been represented exactly once.",
+      "complexity": "For input lengths m and n, the traversal and pops take O(m + n) time and the stacks use O(m + n) auxiliary space.",
+      "pitfall": "Reversing input links can violate the follow-up's no-reversal intent and may unexpectedly mutate caller-owned lists."
+    },
+    "accepted_alternatives": ["Recursion that descends to aligned least-significant positions and propagates carries while constructing the result on unwinding, with O(m + n) call-stack space."],
+    "tags": ["linked-list", "stack", "arithmetic"],
+    "prerequisites": ["singly-linked-list", "stack", "carry-arithmetic"],
+    "common_wrong_turns": ["Adding forward nodes before reaching the least significant digits", "Dropping a final carry", "Assuming the lists have equal length"],
+    "source_fidelity_notes": ["Examples and image were omitted; forward digit order, nonempty nonnegative inputs, leading-zero rule, digit and length bounds, returned representation, and no-reversal follow-up were retained."]
+  }
+}

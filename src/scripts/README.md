@@ -148,7 +148,7 @@ optional source root used to resolve each card's provenance path:
 
 ```json
 {
-  "collection_directory": "practice/problem_solving/collections/initial_seed",
+  "collection_directory": "practice/problem_solving/collections/algorithmic_problem_solving",
   "source_root": "optional-repository-root"
 }
 ```

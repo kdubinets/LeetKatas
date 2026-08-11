@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-216",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "216",
+    "title": "Combination Sum III",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/combination-sum-iii/",
+    "local_path": "problems/medium/216.md",
+    "content_sha256": "cc24155bb4b80e5c39c16259bd913416d4ad260f7bdd6afdeda036870cc0af60"
+  },
+  "teaching": {
+    "hint": "How can choosing candidates in one direction make both reuse and duplicate combinations impossible by construction?",
+    "solution_outline": {
+      "decisive_insight": "The candidate domain is a tiny ordered set, so a strictly increasing selection path represents each valid combination once.",
+      "approach": "Backtrack through candidates from 1 to 9 in ascending order, carrying the next permitted value, remaining number of picks, and remaining sum. Emit only a path that has exactly k choices and reaches sum n.",
+      "state_and_invariant": "The partial combination is strictly increasing and its remaining target equals n minus its chosen values, so all completed paths use distinct values and have a unique generation route.",
+      "correctness": "Every legal combination has one increasing order, which the candidate loop can choose along one path. Strictly advancing the next candidate prevents reuse and duplicate ordering. Emitting exactly when both the count and sum requirements are satisfied therefore returns all and only valid combinations.",
+      "complexity": "The finite domain yields at most 2^9 explored subsets; recursion uses O(k) auxiliary space besides returned combinations.",
+      "pitfall": "Restarting the candidate range at each recursive call permits reused values and repeated reorderings of the same combination."
+    },
+    "accepted_alternatives": [],
+    "tags": ["backtracking", "combinations", "pruning"],
+    "prerequisites": ["recursion", "combination-generation"],
+    "common_wrong_turns": ["Allowing a number to be picked more than once", "Generating different orders of the same set", "Emitting a partial selection as soon as its sum matches before it has k values"],
+    "source_fidelity_notes": ["Examples were omitted; the fixed 1-through-9 domain, at-most-once rule, exact count and sum, uniqueness, arbitrary output order, and bounds were retained."]
+  }
+}

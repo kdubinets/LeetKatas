@@ -13,7 +13,16 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = SCRIPTS.parents[1]
 COLLECTION = (
-    REPOSITORY_ROOT / "practice" / "problem_solving" / "collections" / "initial_seed"
+    REPOSITORY_ROOT
+    / "practice"
+    / "problem_solving"
+    / "collections"
+    / "algorithmic_problem_solving"
+)
+COLLECTION_ORDER = tuple(
+    problem_id
+    for problem_id in (COLLECTION / "problem_order.md").read_text(encoding="utf-8").splitlines()
+    if problem_id
 )
 sys.path.insert(0, str(SCRIPTS))
 
@@ -309,7 +318,7 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             database = Path(temporary) / "practice.sqlite3"
             reviewed_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
-            for problem_id in ("problem-2", "problem-4", "problem-8", "problem-10", "problem-15", "problem-23"):
+            for problem_id in COLLECTION_ORDER:
                 request = self.request(database, problem_id=problem_id)
                 card_action({**request, "action": "reveal"})
                 record_problem_rating(

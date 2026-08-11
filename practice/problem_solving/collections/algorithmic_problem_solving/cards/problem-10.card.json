@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-10",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "10",
+    "title": "Regular Expression Matching",
+    "difficulty": "hard",
+    "url": "https://leetcode.com/problems/regular-expression-matching/",
+    "local_path": "problems/hard/10.md",
+    "content_sha256": "24fab22c0d27634373ad681acb296cb9eb409e36d700ed6f67eb92e7905136fe"
+  },
+  "teaching": {
+    "hint": "For a starred element, separate the cases of using zero copies and consuming one more matching character.",
+    "solution_outline": {
+      "decisive_insight": "A star creates overlapping repeat-or-skip choices, so prefix dynamic programming captures all possibilities without exponential recomputation.",
+      "approach": "Let dp[i][j] state whether the first i input characters match the first j pattern characters. A literal or dot uses the diagonal predecessor when the current characters match. For x*, combine the zero-copy state that removes x* with the state that consumes one matching input character while retaining x*. Initialize the empty-input row for chains of starred elements.",
+      "state_and_invariant": "Each DP entry is true exactly when its two prefixes fully match; transitions use only smaller input prefixes, smaller pattern prefixes, or both.",
+      "correctness": "A non-star pattern suffix has only the case of matching its final token and reducing both prefixes. Any match ending in x* uses either zero x values or at least one; those exhaustive cases are represented by removing x* or consuming one input character while keeping it. Induction over prefix lengths therefore makes every DP state, including the final one, exact.",
+      "complexity": "O(|s||p|) time and O(|p|) auxiliary space with row compression; O(|s||p|) space is also valid.",
+      "pitfall": "Failing to initialize patterns such as a*b* against an empty input loses valid zero-repetition matches."
+    },
+    "accepted_alternatives": ["Top-down recursion with memoization over input and pattern indices using the same repeat-or-skip cases."],
+    "tags": ["dynamic-programming", "string", "pattern-matching"],
+    "prerequisites": ["prefix-dp", "memoization"],
+    "common_wrong_turns": ["Greedily consuming as many starred characters as possible", "Treating star as an independent token", "Performing substring matching instead of full matching"],
+    "source_fidelity_notes": ["Examples were omitted; full-match semantics, both operator definitions, pattern validity, character domains, and length bounds were retained."]
+  }
+}

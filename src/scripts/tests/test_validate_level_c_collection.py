@@ -73,22 +73,27 @@ class LevelCCollectionValidationTests(unittest.TestCase):
         )
         return collection, brief, card
 
-    def test_repository_seed_collection_is_valid(self) -> None:
+    def test_repository_algorithmic_problem_solving_collection_is_valid(self) -> None:
         collection = (
             REPOSITORY_ROOT
             / "practice"
             / "problem_solving"
             / "collections"
-            / "initial_seed"
+            / "algorithmic_problem_solving"
         )
 
         response = validate_collection(collection)
 
         self.assertEqual(response["status"], "ok")
-        self.assertEqual(response["card_count"], 6)
+        self.assertEqual(response["card_count"], 16)
         self.assertEqual(
             response["problem_ids"],
-            ["problem-2", "problem-4", "problem-8", "problem-10", "problem-15", "problem-23"],
+            [
+                "problem-2", "problem-4", "problem-8", "problem-10", "problem-15",
+                "problem-23", "problem-47", "problem-106", "problem-199", "problem-207",
+                "problem-216", "problem-237", "problem-306", "problem-347", "problem-375",
+                "problem-445",
+            ],
         )
 
     def test_rejects_incomplete_canonical_order(self) -> None:

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-23",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "23",
+    "title": "Merge k Sorted Lists",
+    "difficulty": "hard",
+    "url": "https://leetcode.com/problems/merge-k-sorted-lists/",
+    "local_path": "problems/hard/23.md",
+    "content_sha256": "c66a9a2540e54e89d7e9ecd49c9dcfdf0b44cefbb6b0e333d247dceff0923432"
+  },
+  "teaching": {
+    "hint": "At any moment, which nodes are candidates to be the smallest remaining value across all lists?",
+    "solution_outline": {
+      "decisive_insight": "Each sorted list exposes exactly one smallest remaining candidate, turning the task into a k-way merge over list frontiers.",
+      "approach": "Insert every nonempty list head into a min-heap. Repeatedly remove the smallest frontier node, append that existing node to the result, and insert its successor when present. A dummy head simplifies result construction.",
+      "state_and_invariant": "The heap contains exactly the first unmerged node of every list that still has nodes, and the output contains all removed nodes in nondecreasing order.",
+      "correctness": "Every node behind a list frontier is at least that frontier because its list is sorted. The heap minimum is therefore the globally smallest unmerged node and is the correct next output. Removing it and adding its successor restores the frontier invariant, so induction proves that every node is emitted once in sorted order.",
+      "complexity": "O(N log k) time for N total nodes and O(k) auxiliary heap space.",
+      "pitfall": "Putting every node in the heap works but loses the frontier-space bound; only one candidate per nonempty list is needed."
+    },
+    "accepted_alternatives": ["Repeated pairwise merging in a balanced divide-and-conquer tree, which also takes O(N log k) time and uses the merge-two-lists primitive."],
+    "tags": ["heap", "linked-list", "k-way-merge"],
+    "prerequisites": ["priority-queue", "merge-sorted-lists"],
+    "common_wrong_turns": ["Scanning all k heads for every output node", "Merging lists sequentially into an ever-growing accumulator", "Pushing null heads into the heap"],
+    "source_fidelity_notes": ["Examples were omitted; sortedness, empty-list behavior, k and per-list bounds, total-node bound, and value bounds were retained."]
+  }
+}

@@ -1,5 +1,5 @@
 [problem_solving]
-collection = "~/work/LeetKatas/practice/problem_solving/collections/initial_seed"
+collection = "~/work/LeetKatas/practice/problem_solving/collections/algorithmic_problem_solving"
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/leetkatas/problem-solving.log"
 # notes_directory = "~/.local/share/leetkatas/problem-solving-notes"
