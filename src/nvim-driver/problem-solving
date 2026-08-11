@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+driver_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repository_dir=$(cd -- "$driver_dir/../.." && pwd)
+
+usage() {
+    printf 'Usage: %s [-s|--sync-first] [collection-directory]\n' "$0" >&2
+}
+
+sync_first=0
+collection=
+while (( $# > 0 )); do
+    case $1 in
+        -s|--sync-first)
+            sync_first=1
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            if (( $# != 1 )) || [[ -n $collection ]]; then
+                usage
+                exit 2
+            fi
+            collection=$1
+            break
+            ;;
+        -*)
+            usage
+            exit 2
+            ;;
+        *)
+            if [[ -n $collection ]]; then
+                usage
+                exit 2
+            fi
+            collection=$1
+            ;;
+    esac
+    shift
+done
+
+if [[ -n $collection ]]; then
+    if [[ ! -d $collection ]]; then
+        printf 'Problem-solving collection does not exist: %s\n' "$collection" >&2
+        exit 1
+    fi
+    collection=$(cd -- "$collection" && pwd)
+fi
+
+if [[ -n ${PRACTICE_PYTHON:-} ]]; then
+    practice_python=$PRACTICE_PYTHON
+elif [[ -x $repository_dir/.venv/bin/python ]]; then
+    practice_python=$repository_dir/.venv/bin/python
+else
+    practice_python=python3
+fi
+if ! "$practice_python" -c 'import fsrs' 2>/dev/null; then
+    printf 'FSRS dependency is unavailable for %s. Install with: %s -m pip install -r %s/requirements.txt\n' \
+        "$practice_python" "$practice_python" "$driver_dir" >&2
+    exit 1
+fi
+
+exec env \
+    PROBLEM_SOLVING_COLLECTION="$collection" \
+    PROBLEM_SOLVING_AUTOSTART=1 \
+    PROBLEM_SOLVING_SYNC_FIRST="$sync_first" \
+    PRACTICE_INSTALL_PLUGINS=1 \
+    PRACTICE_PYTHON="$practice_python" \
+    nvim --clean -u "$driver_dir/problem-solving-init.lua"

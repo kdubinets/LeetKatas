@@ -64,6 +64,49 @@ The driver requires Python 3.10 or newer and its pinned dependency:
 python3 -m pip install -r src/nvim-driver/requirements.txt
 ```
 
+### Problem-solving practice
+
+Level C reasoning practice has a separate launcher and workspace:
+
+```bash
+src/nvim-driver/problem-solving
+```
+
+It presents a read-only problem brief, an optional hint, and a solution outline
+that must be revealed before rating. Use `-s` to synchronize before initial
+selection or pass a problem-solving collection as the optional argument. The
+launcher uses the same pinned `which-key.nvim` shortcut assistant as Level A/B
+and labels `<leader>p` as the problem-solving command group.
+
+Its optional configuration lives at
+`${XDG_CONFIG_HOME:-~/.config}/leetkatas/problem-solving.toml`; copy
+`problem-solving.example.toml` as a starting point. The `[problem_solving]`
+section accepts `collection`, `database_path`, `log_path`, `notes_directory`,
+`supabase_url`, `private_content_sync`, and `retain_conversation_history`.
+Environment overrides are
+`PROBLEM_SOLVING_COLLECTION`, `PROBLEM_SOLVING_DATABASE`,
+`PROBLEM_SOLVING_LOG`, `PROBLEM_SOLVING_NOTES_DIRECTORY`,
+`PROBLEM_SOLVING_CONFIG`, `PROBLEM_SOLVING_SUPABASE_URL`, and
+`PROBLEM_SOLVING_PRIVATE_CONTENT_SYNC`. Conversation configuration uses
+`PROBLEM_SOLVING_RETAIN_CONVERSATION_HISTORY`, `PROBLEM_SOLVING_REVIEWER`,
+`PROBLEM_SOLVING_REVIEWER_NAME`, `PROBLEM_SOLVING_REVIEW_MODEL`, and
+`PROBLEM_SOLVING_REVIEW_EFFORT`. `PRACTICE_PYTHON` remains the shared Python
+interpreter override.
+
+The primary mappings are `<leader>ph` for hint, `<leader>pr` for reveal,
+`<leader>pg` for give-up and reveal, `<leader>pb` for bookmark, and
+`<leader>pc` for clarification before reveal or solution discussion afterward.
+`<leader>p1` through `<leader>p4` select Again, Hard, Good, and Easy after reveal.
+Use `:ProblemSolvingBookmarks` to reopen the open-thinking queue and
+`:ProblemSolvingDiagnostics` for local state and synchronization status.
+
+Pre-reveal conversation receives only the public brief and may clarify wording
+without giving strategy. After reveal, it can discuss the canonical outline.
+Conversation history is retained locally by default and can be disabled with
+`retain_conversation_history = false`; private Supabase synchronization remains
+a separate explicit opt-in. Reviewer failures leave hint, reveal, rating, and
+navigation actions available.
+
 `PRACTICE_DATABASE` may override the persistent SQLite database location.
 `PRACTICE_NOTES_DIRECTORY` may override the directory used for personal
 practice notes.

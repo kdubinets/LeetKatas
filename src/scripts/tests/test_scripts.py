@@ -41,6 +41,31 @@ class PracticeConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             self.assertEqual(load_config(Path(temporary) / "missing.toml"), {})
 
+    def test_loads_problem_solving_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "problem-solving.toml"
+            path.write_text(
+                """[problem_solving]
+collection = "collections/seed"
+database_path = "state.sqlite3"
+log_path = "problem-solving.log"
+notes_directory = "notes"
+supabase_url = "https://example.supabase.co"
+private_content_sync = true
+retain_conversation_history = false
+""",
+                encoding="utf-8",
+            )
+
+            config = load_config(path)["problem_solving"]
+
+            self.assertEqual(config["collection"], str((Path(temporary) / "collections/seed").resolve()))
+            self.assertEqual(config["database_path"], str((Path(temporary) / "state.sqlite3").resolve()))
+            self.assertEqual(config["log_path"], str((Path(temporary) / "problem-solving.log").resolve()))
+            self.assertEqual(config["notes_directory"], str((Path(temporary) / "notes").resolve()))
+            self.assertTrue(config["private_content_sync"])
+            self.assertFalse(config["retain_conversation_history"])
+
     def test_loads_settings_and_resolves_relative_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

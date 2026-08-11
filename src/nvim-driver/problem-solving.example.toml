@@ -1,0 +1,16 @@
+[problem_solving]
+collection = "~/work/LeetKatas/practice/problem_solving/collections/initial_seed"
+# database_path = "~/.local/share/leetkatas/practice.sqlite3"
+# log_path = "~/.local/state/leetkatas/problem-solving.log"
+# notes_directory = "~/.local/share/leetkatas/problem-solving-notes"
+# supabase_url = "https://your-project.supabase.co"
+# Private notes, hint/reveal state, and future conversation history are ordinary
+# readable Supabase data when this is enabled.
+private_content_sync = false
+# Conversation history is retained in the local SQLite artifact by default.
+# Set this to false to keep history only for the current Neovim session.
+retain_conversation_history = true
+
+[reviewer]
+model = "gpt-5.6-luna"
+reasoning_effort = "low"

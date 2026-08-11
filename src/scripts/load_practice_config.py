@@ -26,6 +26,15 @@ SCHEMA: dict[str, dict[str, type]] = {
         "notes_directory": str,
         "review_archive_ttl_days": int,
     },
+    "problem_solving": {
+        "collection": str,
+        "database_path": str,
+        "log_path": str,
+        "notes_directory": str,
+        "supabase_url": str,
+        "private_content_sync": bool,
+        "retain_conversation_history": bool,
+    },
     "reviewer": {
         "model": str,
         "reasoning_effort": str,
@@ -78,6 +87,10 @@ PATH_KEYS = {
     ("practice", "database_path"),
     ("practice", "log_path"),
     ("practice", "notes_directory"),
+    ("problem_solving", "collection"),
+    ("problem_solving", "database_path"),
+    ("problem_solving", "log_path"),
+    ("problem_solving", "notes_directory"),
 }
 
 

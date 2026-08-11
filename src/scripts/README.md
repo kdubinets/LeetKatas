@@ -7,6 +7,15 @@ Neovim practice driver:
 - `evaluate_exercise.py` evaluates a submitted working copy.
 - `record_rating.py` records the final rating and updates its FSRS card.
 - `practice_stats.py` reports collection state, workload, forecasts, timing, and history.
+- `validate_level_c_collection.py` validates language-neutral Level C card collections.
+- `select_problem_solving_card.py` selects a due or canonically unseen Level C card.
+- `problem_solving_card.py` applies the Level C hint and reveal visibility boundary.
+- `problem_solving_bookmark.py` manages the open-thinking bookmark queue.
+- `record_problem_solving_rating.py` records a Level C self-rating after reveal.
+- `problem_solving_stats.py` reports Level C scheduling and practice signals.
+- `sync_problem_solving.py` synchronizes Level C review and bookmark events.
+- `level_c_clarify.py` provides non-disclosing pre-reveal clarification.
+- `level_c_discuss.py` provides bounded post-reveal solution discussion.
 - `load_practice_config.py` validates and normalizes the optional user TOML file.
 - `practice_scheduler.py` provides shared FSRS and SQLite behavior.
 - `sync_progress.py` optionally synchronizes the append-only review ledger to Supabase.
@@ -133,6 +142,47 @@ dates use the process's local timezone while stored review timestamps remain UTC
 If `database_path` is omitted, both scheduler commands use
 `PRACTICE_DATABASE`, then `$XDG_DATA_HOME/leetkatas/practice.sqlite3`, and
 finally `~/.local/share/leetkatas/practice.sqlite3`.
+
+`validate_level_c_collection.py` accepts a Level C collection directory and an
+optional source root used to resolve each card's provenance path:
+
+```json
+{
+  "collection_directory": "practice/problem_solving/collections/initial_seed",
+  "source_root": "optional-repository-root"
+}
+```
+
+It checks the versioned collection and card schemas, exact brief/card/order
+coverage, source hashes, nonempty outline fields, string-array metadata, and
+the boundary between learner-visible briefs and private teaching records. A
+successful response includes the stable collection ID, card count, and ordered
+problem IDs.
+
+The Level C commands accept `collection_directory` and the optional shared
+`database_path`. Selection excludes open bookmarks, chooses due cards before
+canonically unseen cards, and returns `next_due` when nothing is available.
+`problem_solving_card.py` exposes a hint only after the `hint` action and an
+outline only after `reveal`. Rating is rejected before reveal and stores the
+learner's rating without compiler or model-assessment fields.
+
+`level_c_clarify.py` and `level_c_discuss.py` use a dedicated strict adapter
+contract. Clarification loads only the public brief and persisted hint-request
+flag; hidden hint and outline content are never sent to that route. Discussion
+is rejected until reveal and then receives the brief, hint, outline, accepted
+alternatives, and at most sixteen alternating history messages. Successful
+turns are retained in the local artifact when `retain_conversation_history` is
+true. Unavailable adapters return categorical failure summaries without
+copying adapter output into command responses or persistent logs.
+
+`sync_problem_solving.py` uses dedicated append-only review and bookmark event
+tables. Private artifacts—including notes, hint/reveal state, and conversation
+history—remain local unless `private_content_sync` is explicitly `true`. When
+enabled, those versioned artifacts are stored as ordinary readable JSON in the
+configured Supabase project; client-side encryption is intentionally out of
+scope. Configuration uses `PROBLEM_SOLVING_SUPABASE_URL` and
+`PROBLEM_SOLVING_SUPABASE_KEY`, with the shared practice key accepted as a
+fallback.
 
 ## Optional Supabase backup and synchronization
 

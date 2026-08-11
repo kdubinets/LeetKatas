@@ -60,3 +60,89 @@ $$;
 
 -- The client uses INSERT ... ON CONFLICT DO NOTHING. Updates and deletes are
 -- intentionally not granted: synchronized history is an append-only ledger.
+
+CREATE TABLE IF NOT EXISTS public.problem_solving_review_events (
+    event_id uuid PRIMARY KEY,
+    sync_sequence bigint GENERATED ALWAYS AS IDENTITY,
+    collection_id text NOT NULL,
+    problem_id text NOT NULL,
+    review_datetime timestamptz NOT NULL,
+    final_rating text NOT NULL CHECK (
+        final_rating IN ('fail', 'acceptable', 'good', 'excellent')
+    ),
+    hint_used boolean NOT NULL,
+    clarification_used boolean NOT NULL,
+    gave_up boolean NOT NULL,
+    solve_duration_ms bigint NOT NULL CHECK (solve_duration_ms >= 0),
+    discussion_duration_ms bigint NOT NULL CHECK (discussion_duration_ms >= 0)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS problem_solving_review_events_sequence_idx
+    ON public.problem_solving_review_events (sync_sequence);
+CREATE INDEX IF NOT EXISTS problem_solving_review_events_collection_idx
+    ON public.problem_solving_review_events (collection_id, sync_sequence);
+
+CREATE TABLE IF NOT EXISTS public.problem_solving_bookmark_events (
+    event_id uuid PRIMARY KEY,
+    sync_sequence bigint GENERATED ALWAYS AS IDENTITY,
+    collection_id text NOT NULL,
+    problem_id text NOT NULL,
+    revision bigint NOT NULL CHECK (revision > 0),
+    action text NOT NULL CHECK (action IN ('create', 'update', 'remove')),
+    event_datetime timestamptz NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS problem_solving_bookmark_events_sequence_idx
+    ON public.problem_solving_bookmark_events (sync_sequence);
+CREATE INDEX IF NOT EXISTS problem_solving_bookmark_events_collection_idx
+    ON public.problem_solving_bookmark_events (collection_id, sync_sequence);
+
+-- Private-content synchronization is explicitly opt-in. These versioned JSON
+-- records are ordinary readable Supabase data; no client-side encryption or
+-- key management is provided by this project.
+CREATE TABLE IF NOT EXISTS public.problem_solving_artifact_events (
+    event_id uuid PRIMARY KEY,
+    sync_sequence bigint GENERATED ALWAYS AS IDENTITY,
+    collection_id text NOT NULL,
+    problem_id text NOT NULL,
+    revision bigint NOT NULL CHECK (revision > 0),
+    updated_at timestamptz NOT NULL,
+    artifact_json jsonb NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS problem_solving_artifact_events_sequence_idx
+    ON public.problem_solving_artifact_events (sync_sequence);
+CREATE INDEX IF NOT EXISTS problem_solving_artifact_events_collection_idx
+    ON public.problem_solving_artifact_events (collection_id, sync_sequence);
+
+ALTER TABLE public.problem_solving_review_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.problem_solving_bookmark_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.problem_solving_artifact_events ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON public.problem_solving_review_events FROM anon, authenticated;
+REVOKE ALL ON public.problem_solving_bookmark_events FROM anon, authenticated;
+REVOKE ALL ON public.problem_solving_artifact_events FROM anon, authenticated;
+GRANT SELECT, INSERT ON public.problem_solving_review_events TO service_role;
+GRANT SELECT, INSERT ON public.problem_solving_bookmark_events TO service_role;
+GRANT SELECT, INSERT ON public.problem_solving_artifact_events TO service_role;
+
+DO $$
+DECLARE
+    table_name text;
+    sequence_name text;
+BEGIN
+    FOREACH table_name IN ARRAY ARRAY[
+        'problem_solving_review_events',
+        'problem_solving_bookmark_events',
+        'problem_solving_artifact_events'
+    ]
+    LOOP
+        sequence_name := pg_get_serial_sequence(
+            'public.' || table_name, 'sync_sequence'
+        );
+        EXECUTE format(
+            'GRANT USAGE, SELECT ON SEQUENCE %s TO service_role', sequence_name
+        );
+    END LOOP;
+END
+$$;
