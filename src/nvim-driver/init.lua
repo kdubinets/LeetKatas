@@ -165,7 +165,7 @@ practice.setup({
     enabled = statusline_config.enabled ~= false,
     left = statusline_config.left or { "exercise_name" },
     right = statusline_config.right
-      or { "time_today", "reviews_today", "due_now", "new_left" },
+      or { "solve_elapsed", "time_today", "reviews_today", "due_now", "new_left" },
     separator = statusline_config.separator or " · ",
   },
   evaluation_command = {

@@ -78,6 +78,14 @@ local function item(name, state)
         math.floor((vim.uv.hrtime() - state.timing.started) / 1000000))
     end
     return format_duration(elapsed)
+  elseif name == "solve_elapsed" then
+    if not state.timing then return nil end
+    local elapsed = state.timing.solve_ms or 0
+    if state.timing.phase == "solve" and state.timing.started then
+      elapsed = elapsed + math.max(0,
+        math.floor((vim.uv.hrtime() - state.timing.started) / 1000000))
+    end
+    return "Solve " .. format_duration(elapsed)
   elseif name == "language" then
     return language(exercise)
   elseif name == "modified" then

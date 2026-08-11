@@ -41,6 +41,7 @@ end
 local configured = (response.config or {}).problem_solving or {}
 local reviewer_config = (response.config or {}).reviewer or {}
 local editor_config = (response.config or {}).editor or {}
+local statusline_config = (response.config or {}).statusline or {}
 local data_root = environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share")
 local state_root = environment("XDG_STATE_HOME") or vim.fn.expand("~/.local/state")
 
@@ -138,6 +139,15 @@ problem_solving.setup({
   clarification_reviewer = conversation_reviewer("clarification"),
   discussion_reviewer = conversation_reviewer("discussion"),
   sync_first = vim.env.PROBLEM_SOLVING_SYNC_FIRST == "1",
+  statusline = {
+    enabled = statusline_config.enabled ~= false,
+    left = statusline_config.left or { "problem_name", "phase", "solve_elapsed" },
+    right = statusline_config.right
+      or { "reviews_today", "new_today", "new_left", "reviews_total", "due_now",
+        "due_later_today", "hint_requested", "outline_revealed", "bookmarked",
+        "open_bookmarks", "action" },
+    separator = statusline_config.separator or " · ",
+  },
 })
 
 vim.api.nvim_create_autocmd("FileType", {

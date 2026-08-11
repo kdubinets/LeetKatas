@@ -1,6 +1,7 @@
 local session = require("problem_solving.session")
 local sync = require("problem_solving.sync")
 local log = require("practice.log")
+local statusline = require("problem_solving.statusline")
 
 local M = {}
 local options = nil
@@ -15,6 +16,7 @@ function M.setup(config)
   log.setup(config.log_path)
   session.setup(config)
   sync.setup(config)
+  statusline.setup(config, session.get_state)
 
   vim.api.nvim_create_autocmd({ "FocusLost", "VimSuspend" }, {
     callback = session.focus_lost, desc = "Pause problem-solving timing",
@@ -24,6 +26,7 @@ function M.setup(config)
   })
   vim.api.nvim_create_autocmd("VimLeavePre", {
     callback = function()
+      statusline.stop()
       log.event("problem_solving_session_ended", "info", { state = session.get_state().status })
     end,
     desc = "Finish the problem-solving diagnostic session",

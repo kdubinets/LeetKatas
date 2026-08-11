@@ -21,7 +21,7 @@ enhanced_syntax_highlighting = true
 
 [statusline]
 left = ["exercise_name"]
-right = ["time_today", "reviews_today", "due_now", "new_left"]
+right = ["solve_elapsed", "time_today", "reviews_today", "due_now", "new_left"]
 separator = " · "
 
 [evaluation]

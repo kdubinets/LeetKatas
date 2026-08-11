@@ -65,6 +65,7 @@ STATUSLINE_ITEMS = {
     "collection",
     "phase",
     "phase_elapsed",
+    "solve_elapsed",
     "language",
     "modified",
     "position",
@@ -74,12 +75,20 @@ STATUSLINE_ITEMS = {
     "action",
     "time_today",
     "reviews_today",
+    "reviews_total",
     "due_now",
     "due_later_today",
     "new_today",
     "new_left",
     "collection_progress",
     "tomorrow_due",
+    "problem_name",
+    "problem_id",
+    "hint_requested",
+    "outline_revealed",
+    "bookmarked",
+    "open_bookmarks",
+    "conversation",
 }
 EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
 PATH_KEYS = {

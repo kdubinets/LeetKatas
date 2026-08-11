@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import sys
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from practice_scheduler import RATING_NAMES, SchedulerError, ensure_utc
@@ -26,6 +26,7 @@ def problem_solving_stats(
 ) -> dict[str, Any]:
     _, collection_key, problem_ids = problem_collection(request.get("collection_directory"))
     now = ensure_utc(current_datetime)
+    today = now.astimezone().date()
     store = ProblemSolvingStore(problem_solving_database_path(request))
     cards = store.cards_for_collection(collection_key)
     bookmarks = store.list_bookmarks(collection_key)
@@ -34,9 +35,9 @@ def problem_solving_stats(
     connection = store.connect()
     try:
         rows = connection.execute(
-            """SELECT final_rating, hint_used, clarification_used, gave_up,
-                      solve_duration_ms, discussion_duration_ms
-               FROM problem_solving_reviews WHERE collection_key=?""",
+            """SELECT problem_id, review_datetime, final_rating, hint_used,
+                      clarification_used, gave_up, solve_duration_ms, discussion_duration_ms
+               FROM problem_solving_reviews WHERE collection_key=? ORDER BY review_datetime""",
             (collection_key,),
         ).fetchall()
         lifecycle = connection.execute(
@@ -65,9 +66,21 @@ def problem_solving_stats(
         for problem_id in introduced - bookmarked_ids
         if cards[problem_id].due <= now
     )
+    due_later_today = sum(
+        1
+        for problem_id in introduced - bookmarked_ids
+        if cards[problem_id].due > now and cards[problem_id].due.astimezone().date() == today
+    )
     ratings = {name: 0 for name in RATING_NAMES}
+    reviews_today = 0
+    first_review_dates: dict[str, date] = {}
     for row in rows:
         ratings[row["final_rating"]] += 1
+        review_date = datetime.fromisoformat(row["review_datetime"]).astimezone().date()
+        first_review_dates.setdefault(row["problem_id"], review_date)
+        if review_date == today:
+            reviews_today += 1
+    new_reviewed_today = sum(1 for date in first_review_dates.values() if date == today)
     return {
         "collection": collection_key,
         "generated_at": now.isoformat(),
@@ -78,8 +91,15 @@ def problem_solving_stats(
             "due_now": due_now,
             "open_bookmarks": len(bookmarks),
         },
+        "today": {
+            "reviews": reviews_today,
+            "new_reviewed": new_reviewed_today,
+            "due_now": due_now,
+            "due_later_today": due_later_today,
+        },
         "reviews": {
             "total": len(rows),
+            "problems_total": len({row["problem_id"] for row in rows}),
             "ratings": ratings,
             "hint_used": sum(row["hint_used"] for row in rows),
             "clarification_used": sum(row["clarification_used"] for row in rows),

@@ -11,6 +11,15 @@ private_content_sync = false
 # Set this to false to keep history only for the current Neovim session.
 retain_conversation_history = true
 
+[statusline]
+left = ["problem_name", "phase", "solve_elapsed"]
+right = [
+  "reviews_today", "new_today", "new_left", "reviews_total", "due_now",
+  "due_later_today", "hint_requested", "outline_revealed", "bookmarked",
+  "open_bookmarks", "action"
+]
+separator = " · "
+
 [reviewer]
 model = "gpt-5.6-luna"
 reasoning_effort = "low"

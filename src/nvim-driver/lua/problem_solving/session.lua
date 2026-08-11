@@ -2,6 +2,7 @@ local process = require("practice.process")
 local log = require("practice.log")
 local ui = require("problem_solving.ui")
 local sync = require("problem_solving.sync")
+local statusline = require("problem_solving.statusline")
 
 local M = {}
 local config, stats_pending = nil, false
@@ -22,6 +23,8 @@ local state = {
   conversation_history = {},
   conversation_pending = false,
   conversation_notice = nil,
+  hint_requested = false,
+  outline_revealed = false,
   operation = 0,
   timing = { phase = nil, started = nil, focused = true, solve_ms = 0, discussion_ms = 0 },
 }
@@ -83,6 +86,8 @@ local function show_problem(problem, response, bookmarked)
     and response.state.conversation_history or {}
   state.conversation_pending = false
   state.conversation_notice = nil
+  state.hint_requested = response.state.hint_requested
+  state.outline_revealed = response.state.revealed
   reset_timing()
   ui.open_brief(problem, response.hint)
   if response.state.revealed then
@@ -107,6 +112,7 @@ local function select_next()
   state.problem, state.bookmarked, state.next_due = nil, false, nil
   state.conversation_history, state.conversation_pending = {}, false
   state.conversation_notice = nil
+  state.hint_requested, state.outline_revealed = false, false
   reset_timing()
   state.status = "selecting"
   local body = base_request()
@@ -198,6 +204,7 @@ function M.hint()
     return
   end
   refresh_card("hint", nil, function(response)
+    state.hint_requested = response.state.hint_requested
     ui.open_brief(state.problem, response.hint)
     ui.notify("Optional hint revealed")
   end)
@@ -215,6 +222,7 @@ function M.reveal(gave_up)
   timing_phase(nil)
   refresh_card("reveal", { gave_up = gave_up == true }, function(response)
     state.status = "revealed"
+    state.outline_revealed = true
     ui.open_brief(state.problem, response.hint)
     ui.open_outline(response)
     timing_phase("discussion")
@@ -258,6 +266,8 @@ function M.bookmark(note)
       state.status = previous_status
       refresh_card("get", nil, function(response)
         state.status = response.state.revealed and "revealed" or "solving"
+        state.hint_requested = response.state.hint_requested
+        state.outline_revealed = response.state.revealed
         timing_phase(response.state.revealed and "discussion" or "solve")
       end)
     else
@@ -367,6 +377,7 @@ function M.rate(rating)
     end
     ui.notify("Rated " .. rating_labels[internal])
     sync.trigger(state.collection)
+    statusline.invalidate(state.collection)
     select_next()
   end)
 end
@@ -494,6 +505,7 @@ function M.quit()
   state.previous_id, state.bookmarked, state.next_due = nil, false, nil
   state.conversation_history, state.conversation_pending = {}, false
   state.conversation_notice = nil
+  state.hint_requested, state.outline_revealed = false, false
   ui.notify("Problem-solving session ended")
 end
 

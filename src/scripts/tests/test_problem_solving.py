@@ -162,6 +162,7 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
                 self.request(database), datetime(2030, 1, 1, tzinfo=timezone.utc)
             )
             self.assertEqual(stats["reviews"]["total"], 1)
+            self.assertEqual(stats["reviews"]["problems_total"], 1)
             self.assertEqual(stats["reviews"]["hint_used"], 1)
             self.assertEqual(stats["reviews"]["clarification_used"], 1)
             self.assertEqual(stats["reviews"]["gave_up"], 1)
@@ -169,6 +170,9 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
             self.assertEqual(stats["reviews"]["revealed_unrated"], 0)
             self.assertEqual(stats["reviews"]["ratings"]["acceptable"], 1)
             self.assertEqual(stats["collection_state"]["due_now"], 1)
+            self.assertEqual(stats["today"]["reviews"], 0)
+            self.assertEqual(stats["today"]["new_reviewed"], 0)
+            self.assertEqual(stats["today"]["due_later_today"], 0)
             self.assertEqual(
                 select_problem(
                     self.request(database), datetime(2030, 1, 1, tzinfo=timezone.utc)

@@ -93,6 +93,28 @@ Environment overrides are
 `PROBLEM_SOLVING_REVIEW_EFFORT`. `PRACTICE_PYTHON` remains the shared Python
 interpreter override.
 
+Level C also uses the optional `[statusline]` table. Its recommended defaults
+keep the information relevant to deliberate problem solving visible:
+
+```toml
+[statusline]
+left = ["problem_name", "phase", "solve_elapsed"]
+right = [
+  "reviews_today", "new_today", "new_left", "reviews_total", "due_now",
+  "due_later_today", "hint_requested", "outline_revealed", "bookmarked",
+  "open_bookmarks", "action"
+]
+```
+
+`solve_elapsed` runs only before the outline is revealed and freezes once the
+discussion phase begins. The daily counters show reviews completed today, newly
+reviewed problems today, due work now/later today, and unseen problems left;
+`reviews_total` is the number of distinct problems reviewed in the collection.
+The other Level C
+items track hint/outline use, an open-thinking bookmark, outstanding bookmarks,
+and the next available action. You can also use `problem_id`, `collection`, and
+`conversation` (message count).
+
 The primary mappings are `<leader>ph` for hint, `<leader>pr` for reveal,
 `<leader>pg` for give-up and reveal, `<leader>pb` for bookmark, and
 `<leader>pc` for clarification before reveal or solution discussion afterward.
@@ -141,7 +163,7 @@ enhanced_syntax_highlighting = true
 
 [statusline]
 left = ["exercise_name"]
-right = ["time_today", "reviews_today", "due_now", "new_left"]
+right = ["solve_elapsed", "time_today", "reviews_today", "due_now", "new_left"]
 separator = " · "
 
 [evaluation]
@@ -176,7 +198,9 @@ Available items are:
   remaining unseen exercises. `time_today` includes the active exercise timer.
 - `due_now`, `due_later_today`, and `tomorrow_due` for the current workload.
 - `collection_progress` for an introduced/total summary such as `Seen 63/108`.
-- `phase`, `phase_elapsed`, `progress`, and `action` for live workflow context.
+- `phase`, `phase_elapsed`, `solve_elapsed`, `progress`, and `action` for live
+  workflow context. `solve_elapsed` runs only while solving, then remains fixed
+  during evaluation and feedback.
 - `compile_result` and `proposed_rating` for completed evaluation context.
 - `modified` and `position` for conventional editor context.
 

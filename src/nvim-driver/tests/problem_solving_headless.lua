@@ -52,6 +52,16 @@ problem_solving.start()
 wait_for("solving")
 local state = problem_solving.get_state()
 assert(state.problem.id == "problem-2", "canonical first problem was not selected")
+assert(_G.ProblemSolvingStatusline and _G.ProblemSolvingStatusline():find("Add Two Numbers", 1, true),
+  "problem-solving status line did not show the active problem")
+assert(_G.ProblemSolvingStatusline():find("Solve 0:00", 1, true),
+  "problem-solving status line did not show the active solve timer")
+assert(vim.wait(10000, function()
+  local line = _G.ProblemSolvingStatusline()
+  return line:find("Today ", 1, true) and line:find("New solved ", 1, true)
+    and line:find("New left ", 1, true) and line:find("Reviewed ", 1, true)
+    and line:find("Due now ", 1, true) and line:find("Due later ", 1, true)
+end, 10), "problem-solving status line did not show scheduling counters")
 local brief = find_buffer("problem_solving_brief")
 assert(brief and vim.bo[brief].readonly and not vim.bo[brief].modifiable,
   "problem brief is not read-only")
@@ -113,6 +123,8 @@ assert(buffer_text(conversation):find("would reveal solving guidance", 1, true),
 
 require("problem_solving.session").reveal(true)
 wait_for("revealed")
+assert(_G.ProblemSolvingStatusline():find("Outline revealed", 1, true),
+  "problem-solving status line did not show the revealed outline")
 local outline = find_buffer("problem_solving_outline")
 assert(outline and vim.bo[outline].readonly and not vim.bo[outline].modifiable,
   "solution outline is not read-only")
