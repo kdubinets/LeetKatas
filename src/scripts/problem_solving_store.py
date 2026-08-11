@@ -22,7 +22,7 @@ from practice_scheduler import (
 from validate_level_c_collection import CollectionValidationError, validate_collection
 
 
-PROBLEM_SOLVING_SCHEMA_VERSION = 2
+PROBLEM_SOLVING_SCHEMA_VERSION = 3
 
 
 def problem_solving_database_path(request: dict[str, Any]) -> Path:
@@ -103,7 +103,6 @@ class ProblemSolvingStore:
                 review_log_json TEXT NOT NULL,
                 hint_used INTEGER NOT NULL CHECK (hint_used IN (0, 1)),
                 clarification_used INTEGER NOT NULL CHECK (clarification_used IN (0, 1)),
-                gave_up INTEGER NOT NULL CHECK (gave_up IN (0, 1)),
                 selected_at TEXT,
                 revealed_at TEXT,
                 solve_duration_ms INTEGER NOT NULL CHECK (solve_duration_ms >= 0),
@@ -142,7 +141,6 @@ class ProblemSolvingStore:
                 hint_requested INTEGER NOT NULL CHECK (hint_requested IN (0, 1)),
                 clarification_used INTEGER NOT NULL CHECK (clarification_used IN (0, 1)),
                 revealed INTEGER NOT NULL CHECK (revealed IN (0, 1)),
-                gave_up INTEGER NOT NULL CHECK (gave_up IN (0, 1)),
                 selected_at TEXT NOT NULL,
                 revealed_at TEXT,
                 note TEXT,
@@ -174,6 +172,10 @@ class ProblemSolvingStore:
             connection.execute(
                 "ALTER TABLE problem_solving_reviews ADD COLUMN revealed_at TEXT"
             )
+        for table in ("problem_solving_reviews", "problem_solving_artifacts"):
+            columns = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+            if "gave_up" in columns:
+                connection.execute(f"ALTER TABLE {table} DROP COLUMN gave_up")
         artifact_columns = {
             row[1]
             for row in connection.execute("PRAGMA table_info(problem_solving_artifacts)")
@@ -198,7 +200,7 @@ class ProblemSolvingStore:
                 "INSERT INTO schema_metadata(key, value) VALUES (?, ?)",
                 ("problem_solving_schema_version", str(PROBLEM_SOLVING_SCHEMA_VERSION)),
             )
-        elif row["value"] == "1":
+        elif row["value"] in {"1", "2"}:
             connection.execute(
                 "UPDATE schema_metadata SET value=? "
                 "WHERE key='problem_solving_schema_version'",
@@ -251,7 +253,6 @@ class ProblemSolvingStore:
             "hint_requested": bool(row["hint_requested"]),
             "clarification_used": bool(row["clarification_used"]),
             "revealed": bool(row["revealed"]),
-            "gave_up": bool(row["gave_up"]),
             "selected_at": row["selected_at"],
             "revealed_at": row["revealed_at"],
             "note": row["note"],
@@ -267,7 +268,6 @@ class ProblemSolvingStore:
         hint_requested: bool | None = None,
         clarification_used: bool | None = None,
         revealed: bool | None = None,
-        gave_up: bool | None = None,
         note: str | None | object = ...,
         conversation_history: list[dict[str, str]] | None = None,
         updated_at: datetime | None = None,
@@ -286,7 +286,6 @@ class ProblemSolvingStore:
                 "hint_requested": 0,
                 "clarification_used": 0,
                 "revealed": 0,
-                "gave_up": 0,
                 "selected_at": current.isoformat(),
                 "revealed_at": None,
                 "note": None,
@@ -297,7 +296,6 @@ class ProblemSolvingStore:
                 "hint_requested": previous["hint_requested"] if hint_requested is None else int(hint_requested),
                 "clarification_used": previous["clarification_used"] if clarification_used is None else int(clarification_used),
                 "revealed": previous["revealed"] if revealed is None else int(revealed),
-                "gave_up": previous["gave_up"] if gave_up is None else int(gave_up),
                 "selected_at": previous["selected_at"],
                 "revealed_at": (
                     previous["revealed_at"]
@@ -309,15 +307,15 @@ class ProblemSolvingStore:
             connection.execute(
                 """INSERT INTO problem_solving_artifacts
                    (collection_key, problem_id, event_id, revision, hint_requested,
-                    clarification_used, revealed, gave_up, selected_at, revealed_at,
+                    clarification_used, revealed, selected_at, revealed_at,
                     note, conversation_json,
                     updated_at, remote_confirmed)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
                    ON CONFLICT(collection_key, problem_id) DO UPDATE SET
                      event_id=excluded.event_id, revision=excluded.revision,
                      hint_requested=excluded.hint_requested,
                      clarification_used=excluded.clarification_used,
-                     revealed=excluded.revealed, gave_up=excluded.gave_up,
+                     revealed=excluded.revealed,
                      selected_at=excluded.selected_at,
                      revealed_at=excluded.revealed_at,
                      note=excluded.note, conversation_json=excluded.conversation_json,
@@ -325,7 +323,7 @@ class ProblemSolvingStore:
                 (
                     collection_key, problem_id, str(uuid.uuid4()), revision,
                     values["hint_requested"], values["clarification_used"],
-                    values["revealed"], values["gave_up"], values["selected_at"],
+                    values["revealed"], values["selected_at"],
                     values["revealed_at"], values["note"],
                     values["conversation_json"], current.isoformat(),
                 ),
@@ -394,15 +392,15 @@ class ProblemSolvingStore:
                 connection.execute(
                     """INSERT INTO problem_solving_artifacts
                        (collection_key, problem_id, event_id, revision,
-                        hint_requested, clarification_used, revealed, gave_up,
+                        hint_requested, clarification_used, revealed,
                         selected_at, revealed_at, note, conversation_json,
                         updated_at, remote_confirmed)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
                        ON CONFLICT(collection_key, problem_id) DO UPDATE SET
                          event_id=excluded.event_id, revision=excluded.revision,
                          hint_requested=excluded.hint_requested,
                          clarification_used=excluded.clarification_used,
-                         revealed=excluded.revealed, gave_up=excluded.gave_up,
+                         revealed=excluded.revealed,
                          selected_at=excluded.selected_at,
                          revealed_at=excluded.revealed_at,
                          note=excluded.note,
@@ -413,7 +411,6 @@ class ProblemSolvingStore:
                         artifact["hint_requested"] if artifact else 0,
                         artifact["clarification_used"] if artifact else 0,
                         artifact["revealed"] if artifact else 0,
-                        artifact["gave_up"] if artifact else 0,
                         artifact["selected_at"] if artifact else current.isoformat(),
                         artifact["revealed_at"] if artifact else None,
                         note, artifact["conversation_json"] if artifact else "[]",
@@ -512,15 +509,14 @@ class ProblemSolvingStore:
                 """INSERT INTO problem_solving_reviews
                    (event_id, collection_key, problem_id, review_datetime,
                     final_rating, review_log_json, hint_used, clarification_used,
-                    gave_up, selected_at, revealed_at, solve_duration_ms,
+                    selected_at, revealed_at, solve_duration_ms,
                     discussion_duration_ms)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     event_id, collection_key, problem_id,
                     review_log.review_datetime.isoformat(), final_rating,
                     review_log.to_json(), artifact["hint_requested"],
-                    artifact["clarification_used"], artifact["gave_up"],
-                    artifact["selected_at"], artifact["revealed_at"],
+                    artifact["clarification_used"], artifact["selected_at"], artifact["revealed_at"],
                     solve_duration_ms, discussion_duration_ms,
                 ),
             )

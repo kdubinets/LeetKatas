@@ -102,7 +102,6 @@ local function setup_which_key(delay)
   local ok, which_key = pcall(require, "which-key")
   if ok then
     which_key.setup({ delay = delay })
-    which_key.add({ { "<leader>p", group = "practice" } })
   else
     vim.schedule(function()
       vim.notify("The cached which-key.nvim plugin could not be loaded.", vim.log.levels.WARN,

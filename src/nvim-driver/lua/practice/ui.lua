@@ -469,7 +469,7 @@ local function build_feedback(result)
 
   add_heading(render, "Actions", "actions")
   if rating then
-    add_line(render, "Primary   a / <Space>pa  Accept " .. rating .. " and continue",
+    add_line(render, "Primary   a / <Space>a  Accept " .. rating .. " and continue",
       { section = "Actions", logical_section = "actions" }, "PracticeAction")
   else
     add_line(render, "Primary   Choose a manual rating to continue",

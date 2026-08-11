@@ -67,7 +67,6 @@ local function valid_state(value)
   return type(value) == "table"
     and type(value.hint_requested) == "boolean"
     and type(value.revealed) == "boolean"
-    and type(value.gave_up) == "boolean"
 end
 
 local function show_problem(problem, response, bookmarked)
@@ -210,7 +209,7 @@ function M.hint()
   end)
 end
 
-function M.reveal(gave_up)
+function M.reveal()
   if state.conversation_pending then
     ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
     return
@@ -220,14 +219,13 @@ function M.reveal(gave_up)
     return
   end
   timing_phase(nil)
-  refresh_card("reveal", { gave_up = gave_up == true }, function(response)
+  refresh_card("reveal", nil, function(response)
     state.status = "revealed"
     state.outline_revealed = true
     ui.open_brief(state.problem, response.hint)
     ui.open_outline(response)
     timing_phase("discussion")
-    ui.notify(gave_up and "Solution outline revealed after giving up"
-      or "Solution outline revealed")
+    ui.notify("Solution outline revealed")
     if state.bookmarked then
       ui.notify("This problem is bookmarked; retain it for more thought or use "
         .. ":ProblemSolvingUnbookmark before rating.")

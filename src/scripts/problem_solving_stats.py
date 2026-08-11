@@ -36,7 +36,7 @@ def problem_solving_stats(
     try:
         rows = connection.execute(
             """SELECT problem_id, review_datetime, final_rating, hint_used,
-                      clarification_used, gave_up, solve_duration_ms, discussion_duration_ms
+                      clarification_used, solve_duration_ms, discussion_duration_ms
                FROM problem_solving_reviews WHERE collection_key=? ORDER BY review_datetime""",
             (collection_key,),
         ).fetchall()
@@ -103,7 +103,6 @@ def problem_solving_stats(
             "ratings": ratings,
             "hint_used": sum(row["hint_used"] for row in rows),
             "clarification_used": sum(row["clarification_used"] for row in rows),
-            "gave_up": sum(row["gave_up"] for row in rows),
             "revealed": len(rows) + unrated_reveals,
             "revealed_unrated": unrated_reveals,
             "solve_time_ms": sum(row["solve_duration_ms"] for row in rows),

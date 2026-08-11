@@ -44,9 +44,12 @@ for _, command in ipairs({
 }) do
   assert(vim.fn.exists(":" .. command) == 2, command .. " was not registered")
 end
-for _, mapping in ipairs({ "ps", "ph", "pr", "pg", "pb", "pl", "pm", "pc", "p1", "p2", "p3", "p4", "pn", "pt", "pq" }) do
+assert(not vim.api.nvim_get_commands({ builtin = false }).ProblemSolvingReveal.bang,
+  "solution reveal should not have a give-up bang form")
+for _, mapping in ipairs({ "s", "h", "r", "b", "l", "m", "c", "1", "2", "3", "4", "n", "t", "q" }) do
   assert(vim.fn.maparg("<Space>" .. mapping, "n") ~= "", mapping .. " mapping is missing")
 end
+assert(vim.fn.maparg("<Space>pg", "n") == "", "retired give-up mapping remains")
 
 problem_solving.start()
 wait_for("solving")
@@ -121,7 +124,7 @@ conversation = find_buffer("problem_solving_conversation")
 assert(buffer_text(conversation):find("would reveal solving guidance", 1, true),
   "clarification redirect was not rendered")
 
-require("problem_solving.session").reveal(true)
+problem_solving.reveal()
 wait_for("revealed")
 assert(_G.ProblemSolvingStatusline():find("Outline revealed", 1, true),
   "problem-solving status line did not show the revealed outline")
@@ -129,7 +132,13 @@ local outline = find_buffer("problem_solving_outline")
 assert(outline and vim.bo[outline].readonly and not vim.bo[outline].modifiable,
   "solution outline is not read-only")
 assert(buffer_text(outline):find("Decisive insight", 1, true), "outline was not rendered")
-assert(buffer_text(outline):find("after giving up", 1, true), "give-up state was not visible")
+for _, window in ipairs(vim.fn.win_findbuf(outline)) do
+  assert(vim.wo[window].wrap, "outline window should wrap")
+  assert(vim.wo[window].linebreak, "outline wrapping should respect word boundaries")
+  assert(vim.wo[window].breakindent, "wrapped outline prose should preserve indentation")
+  assert(vim.wo[window].breakindentopt == "shift:2",
+    "wrapped outline prose should have a visual continuation indent")
+end
 
 problem_solving.ask("Why is the invariant sufficient?")
 assert(vim.wait(10000, function()

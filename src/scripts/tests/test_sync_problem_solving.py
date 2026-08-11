@@ -169,7 +169,6 @@ class ProblemSolvingSyncTests(unittest.TestCase):
             "final_rating": "acceptable",
             "hint_used": False,
             "clarification_used": False,
-            "gave_up": False,
             "solve_duration_ms": 10,
             "discussion_duration_ms": 20,
         }
@@ -226,7 +225,6 @@ class ProblemSolvingSyncTests(unittest.TestCase):
                 "hint_requested": True,
                 "clarification_used": False,
                 "revealed": False,
-                "gave_up": False,
                 "selected_at": "2026-01-01T00:00:00+00:00",
                 "revealed_at": None,
                 "note": "restored note",
@@ -257,7 +255,6 @@ class ProblemSolvingSyncTests(unittest.TestCase):
             "final_rating": "good",
             "hint_used": True,
             "clarification_used": False,
-            "gave_up": False,
             "solve_duration_ms": 10,
             "discussion_duration_ms": 20,
         }
@@ -271,7 +268,6 @@ class ProblemSolvingSyncTests(unittest.TestCase):
                 "hint_requested": True,
                 "clarification_used": False,
                 "revealed": True,
-                "gave_up": False,
                 "selected_at": "2026-01-01T00:00:00+00:00",
                 "revealed_at": "2026-01-02T00:00:00+00:00",
                 "note": None,
@@ -308,7 +304,6 @@ class ProblemSolvingSyncTests(unittest.TestCase):
                 "final_rating": "good",
                 "hint_used": False,
                 "clarification_used": False,
-                "gave_up": False,
                 "solve_duration_ms": 1,
                 "discussion_duration_ms": 1,
             }

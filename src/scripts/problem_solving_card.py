@@ -39,18 +39,12 @@ def card_action(request: dict[str, Any]) -> dict[str, Any]:
     elif action == "clarification":
         state = store.update_artifact(collection_key, problem_id, clarification_used=True)
     elif action == "reveal":
-        gave_up = request.get("gave_up", False)
-        if not isinstance(gave_up, bool):
-            raise RequestError("gave_up must be a boolean")
-        state = store.update_artifact(
-            collection_key, problem_id, revealed=True, gave_up=gave_up
-        )
+        state = store.update_artifact(collection_key, problem_id, revealed=True)
     else:
         state = store.artifact(collection_key, problem_id) or {
             "hint_requested": False,
             "clarification_used": False,
             "revealed": False,
-            "gave_up": False,
             "selected_at": None,
             "revealed_at": None,
             "note": None,

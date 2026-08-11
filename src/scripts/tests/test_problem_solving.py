@@ -141,7 +141,7 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
             self.assertIn("hint", hinted)
             self.assertNotIn("solution_outline", hinted)
             card_action({**request, "action": "clarification"})
-            revealed = card_action({**request, "action": "reveal", "gave_up": True})
+            revealed = card_action({**request, "action": "reveal"})
             self.assertIn("solution_outline", revealed)
             recorded = record_problem_rating(
                 {
@@ -165,7 +165,6 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
             self.assertEqual(stats["reviews"]["problems_total"], 1)
             self.assertEqual(stats["reviews"]["hint_used"], 1)
             self.assertEqual(stats["reviews"]["clarification_used"], 1)
-            self.assertEqual(stats["reviews"]["gave_up"], 1)
             self.assertEqual(stats["reviews"]["revealed"], 1)
             self.assertEqual(stats["reviews"]["revealed_unrated"], 0)
             self.assertEqual(stats["reviews"]["ratings"]["acceptable"], 1)
@@ -300,10 +299,11 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
                 count = connection.execute(
                     "SELECT count(*) FROM problem_solving_reviews"
                 ).fetchone()[0]
-            self.assertEqual(version, "2")
+            self.assertEqual(version, "3")
             self.assertEqual(count, 1)
             self.assertIn("selected_at", columns)
             self.assertIn("revealed_at", columns)
+            self.assertNotIn("gave_up", columns)
 
     def test_no_due_response_after_every_problem_is_introduced(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

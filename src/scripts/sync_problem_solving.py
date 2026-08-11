@@ -37,7 +37,7 @@ STREAMS = {
         "problem_solving_review_events",
         "review_cursor",
         "sync_sequence,event_id,collection_id,problem_id,review_datetime,"
-        "final_rating,hint_used,clarification_used,gave_up,solve_duration_ms,"
+        "final_rating,hint_used,clarification_used,solve_duration_ms,"
         "discussion_duration_ms",
     ),
     "bookmark": (
@@ -113,7 +113,7 @@ def validate_remote_event(
             review_datetime=utc_datetime(value.get("review_datetime"), "review_datetime"),
             final_rating=rating,
         )
-        for name in ("hint_used", "clarification_used", "gave_up"):
+        for name in ("hint_used", "clarification_used"):
             if not isinstance(value.get(name), bool):
                 raise UnavailableError(f"remote review has invalid {name}")
             event[name] = value[name]
@@ -141,13 +141,16 @@ def validate_remote_event(
             raise UnavailableError("remote artifact has invalid revision")
         if not isinstance(artifact, dict):
             raise UnavailableError("remote artifact has invalid artifact_json")
+        # Accept legacy artifact events long enough to synchronize them, but
+        # discard the retired field before storing the current representation.
+        artifact.pop("gave_up", None)
         expected = {
-            "hint_requested", "clarification_used", "revealed", "gave_up",
+            "hint_requested", "clarification_used", "revealed",
             "selected_at", "revealed_at", "note", "conversation_history",
         }
         if set(artifact) != expected:
             raise UnavailableError("remote artifact has invalid artifact_json fields")
-        for name in ("hint_requested", "clarification_used", "revealed", "gave_up"):
+        for name in ("hint_requested", "clarification_used", "revealed"):
             if not isinstance(artifact[name], bool):
                 raise UnavailableError(f"remote artifact has invalid {name}")
         if artifact["note"] is not None and not isinstance(artifact["note"], str):
@@ -248,7 +251,7 @@ def review_payload(row: sqlite3.Row, collection_id: str) -> dict[str, Any]:
         "problem_id": row["problem_id"], "review_datetime": row["review_datetime"],
         "final_rating": row["final_rating"], "hint_used": bool(row["hint_used"]),
         "clarification_used": bool(row["clarification_used"]),
-        "gave_up": bool(row["gave_up"]), "solve_duration_ms": row["solve_duration_ms"],
+        "solve_duration_ms": row["solve_duration_ms"],
         "discussion_duration_ms": row["discussion_duration_ms"],
     }
 
@@ -269,7 +272,7 @@ def artifact_payload(row: sqlite3.Row, collection_id: str) -> dict[str, Any]:
         "artifact_json": {
             "hint_requested": bool(row["hint_requested"]),
             "clarification_used": bool(row["clarification_used"]),
-            "revealed": bool(row["revealed"]), "gave_up": bool(row["gave_up"]),
+            "revealed": bool(row["revealed"]),
             "selected_at": row["selected_at"], "revealed_at": row["revealed_at"],
             "note": row["note"],
             "conversation_history": json.loads(row["conversation_json"]),
@@ -457,10 +460,10 @@ def sync_problem_solving(
                 connection.execute(
                     """INSERT INTO problem_solving_reviews
                        (event_id, collection_key, problem_id, review_datetime, final_rating,
-                        review_log_json, hint_used, clarification_used, gave_up,
+                        review_log_json, hint_used, clarification_used,
                         solve_duration_ms, discussion_duration_ms, remote_confirmed)
-                       VALUES (?, ?, ?, ?, ?, '{}', ?, ?, ?, ?, ?, 1)""",
-                    (event["event_id"], collection_id, event["problem_id"], event["review_datetime"], event["final_rating"], int(event["hint_used"]), int(event["clarification_used"]), int(event["gave_up"]), event["solve_duration_ms"], event["discussion_duration_ms"]),
+                       VALUES (?, ?, ?, ?, ?, '{}', ?, ?, ?, ?, 1)""",
+                    (event["event_id"], collection_id, event["problem_id"], event["review_datetime"], event["final_rating"], int(event["hint_used"]), int(event["clarification_used"]), event["solve_duration_ms"], event["discussion_duration_ms"]),
                 )
                 downloads["review"] += 1
             replay_problem_cards(connection, collection_id, affected_reviews)
@@ -503,19 +506,19 @@ def sync_problem_solving(
                 connection.execute(
                     """INSERT INTO problem_solving_artifacts
                        (collection_key, problem_id, event_id, revision, hint_requested,
-                        clarification_used, revealed, gave_up, selected_at,
+                        clarification_used, revealed, selected_at,
                         revealed_at, note, conversation_json, updated_at,
-                        remote_confirmed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                        remote_confirmed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
                        ON CONFLICT(collection_key, problem_id) DO UPDATE SET
                          event_id=excluded.event_id, revision=excluded.revision,
                          hint_requested=excluded.hint_requested,
                          clarification_used=excluded.clarification_used,
-                         revealed=excluded.revealed, gave_up=excluded.gave_up,
+                         revealed=excluded.revealed,
                          selected_at=excluded.selected_at,
                          revealed_at=excluded.revealed_at,
                          note=excluded.note, conversation_json=excluded.conversation_json,
                          updated_at=excluded.updated_at, remote_confirmed=1""",
-                    (collection_id, event["problem_id"], event["event_id"], event["revision"], int(artifact["hint_requested"]), int(artifact["clarification_used"]), int(artifact["revealed"]), int(artifact["gave_up"]), artifact["selected_at"], artifact["revealed_at"], artifact["note"], json.dumps(artifact["conversation_history"], ensure_ascii=False, separators=(",", ":")), event["updated_at"]),
+                    (collection_id, event["problem_id"], event["event_id"], event["revision"], int(artifact["hint_requested"]), int(artifact["clarification_used"]), int(artifact["revealed"]), artifact["selected_at"], artifact["revealed_at"], artifact["note"], json.dumps(artifact["conversation_history"], ensure_ascii=False, separators=(",", ":")), event["updated_at"]),
                 )
                 downloads["artifact"] += 1
             for stream in active_streams:

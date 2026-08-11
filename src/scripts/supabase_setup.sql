@@ -72,10 +72,10 @@ CREATE TABLE IF NOT EXISTS public.problem_solving_review_events (
     ),
     hint_used boolean NOT NULL,
     clarification_used boolean NOT NULL,
-    gave_up boolean NOT NULL,
     solve_duration_ms bigint NOT NULL CHECK (solve_duration_ms >= 0),
     discussion_duration_ms bigint NOT NULL CHECK (discussion_duration_ms >= 0)
 );
+ALTER TABLE public.problem_solving_review_events DROP COLUMN IF EXISTS gave_up;
 
 CREATE UNIQUE INDEX IF NOT EXISTS problem_solving_review_events_sequence_idx
     ON public.problem_solving_review_events (sync_sequence);

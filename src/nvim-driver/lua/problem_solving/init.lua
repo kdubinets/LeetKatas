@@ -38,8 +38,8 @@ function M.setup(config)
   vim.api.nvim_create_user_command("ProblemSolvingHint", session.hint,
     { desc = "Reveal the optional hint" })
   vim.api.nvim_create_user_command("ProblemSolvingReveal", function(command)
-    session.reveal(command.bang)
-  end, { bang = true, desc = "Reveal the solution outline; use ! when giving up" })
+    session.reveal()
+  end, { desc = "Reveal the solution outline" })
   vim.api.nvim_create_user_command("ProblemSolvingBookmark", function(command)
     session.bookmark(command.args ~= "" and command.args or nil)
   end, { nargs = "?", desc = "Bookmark the active problem" })
@@ -89,26 +89,25 @@ function M.setup(config)
     end)
   end, { desc = "Show problem-solving diagnostics" })
 
-  map("<leader>ps", M.start, "Problem solving: start")
-  map("<leader>ph", M.hint, "Problem solving: hint")
-  map("<leader>pr", M.reveal, "Problem solving: reveal outline")
-  map("<leader>pg", function() session.reveal(true) end, "Problem solving: give up and reveal")
-  map("<leader>pb", M.bookmark, "Problem solving: bookmark")
-  map("<leader>pl", M.bookmarks, "Problem solving: list bookmarks")
-  map("<leader>pm", M.note, "Problem solving: private note")
-  map("<leader>pc", M.ask, "Problem solving: conversation")
-  map("<leader>p1", function() M.rate("again") end, "Problem solving: rate Again")
-  map("<leader>p2", function() M.rate("hard") end, "Problem solving: rate Hard")
-  map("<leader>p3", function() M.rate("good") end, "Problem solving: rate Good")
-  map("<leader>p4", function() M.rate("easy") end, "Problem solving: rate Easy")
-  map("<leader>pn", M.next, "Problem solving: next")
-  map("<leader>pt", M.stats, "Problem solving: statistics")
-  map("<leader>pq", M.quit, "Problem solving: quit")
+  map("<leader>s", M.start, "Problem solving: start")
+  map("<leader>h", M.hint, "Problem solving: hint")
+  map("<leader>r", M.reveal, "Problem solving: reveal outline")
+  map("<leader>b", M.bookmark, "Problem solving: bookmark")
+  map("<leader>l", M.bookmarks, "Problem solving: list bookmarks")
+  map("<leader>m", M.note, "Problem solving: private note")
+  map("<leader>c", M.ask, "Problem solving: conversation")
+  map("<leader>1", function() M.rate("again") end, "Problem solving: rate Again")
+  map("<leader>2", function() M.rate("hard") end, "Problem solving: rate Hard")
+  map("<leader>3", function() M.rate("good") end, "Problem solving: rate Good")
+  map("<leader>4", function() M.rate("easy") end, "Problem solving: rate Easy")
+  map("<leader>n", M.next, "Problem solving: next")
+  map("<leader>t", M.stats, "Problem solving: statistics")
+  map("<leader>q", M.quit, "Problem solving: quit")
 end
 
 function M.start(directory) return session.start(directory) end
 function M.hint() return session.hint() end
-function M.reveal() return session.reveal(false) end
+function M.reveal() return session.reveal() end
 function M.bookmark(note) return session.bookmark(note) end
 function M.bookmarks() return session.bookmarks() end
 function M.reopen(problem_id) return session.reopen(problem_id) end

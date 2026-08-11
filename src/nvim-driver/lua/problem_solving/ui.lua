@@ -3,6 +3,7 @@ local M = {}
 local brief_buffer, brief_window = nil, nil
 local outline_buffer, outline_window = nil, nil
 local auxiliary_buffer, auxiliary_window = nil, nil
+local outline_namespace = vim.api.nvim_create_namespace("problem-solving-outline")
 
 local function valid_buffer(buffer)
   return buffer and vim.api.nvim_buf_is_valid(buffer)
@@ -94,24 +95,32 @@ function M.open_outline(response)
     { "Complexity", "complexity" },
     { "Pitfall", "pitfall" },
   }
-  local lines = { "# Solution outline", "" }
+  local lines = { "Solution outline", "" }
+  local section_lines = {}
   for _, item in ipairs(labels) do
-    vim.list_extend(lines, { "## " .. item[1], "", response.solution_outline[item[2]], "" })
+    table.insert(section_lines, #lines)
+    vim.list_extend(lines, { item[1], "", response.solution_outline[item[2]], "" })
   end
   if type(response.accepted_alternatives) == "table" and #response.accepted_alternatives > 0 then
-    vim.list_extend(lines, { "## Accepted alternatives", "" })
+    table.insert(section_lines, #lines)
+    vim.list_extend(lines, { "Accepted alternatives", "" })
     for _, alternative in ipairs(response.accepted_alternatives) do
       table.insert(lines, "- " .. alternative)
     end
   end
-  if response.state.gave_up then
-    vim.list_extend(lines, { "", "Revealed after giving up; your self-rating remains authoritative." })
-  end
   vim.api.nvim_buf_set_lines(outline_buffer, 0, -1, false, lines)
+  vim.api.nvim_buf_add_highlight(outline_buffer, outline_namespace, "Title", 0, 0, -1)
+  for _, line in ipairs(section_lines) do
+    vim.api.nvim_buf_add_highlight(outline_buffer, outline_namespace, "Keyword", line, 0, -1)
+  end
   vim.api.nvim_buf_set_name(outline_buffer, "Problem-solving outline")
   vim.b[outline_buffer].problem_solving_outline = true
   finish_buffer(outline_buffer)
   vim.wo[outline_window].wrap = true
+  -- Keep prose readable in the narrow outline split without wrap glyphs.
+  vim.wo[outline_window].linebreak = true
+  vim.wo[outline_window].breakindent = true
+  vim.wo[outline_window].breakindentopt = "shift:2"
   vim.wo[outline_window].number = false
   vim.wo[outline_window].relativenumber = false
   return outline_buffer, outline_window
@@ -167,9 +176,9 @@ function M.open_stats(stats)
     string.format("Cards: %d total · %d unseen · %d due now · %d due later · %d bookmarked",
       state.total, state.unseen, stats.today.due_now, stats.today.due_later_today,
       state.open_bookmarks),
-    string.format("Reviews: %d total · %d problems · %d today · %d new today · Reveals: %d · Hints: %d · Give-ups: %d",
+    string.format("Reviews: %d total · %d problems · %d today · %d new today · Reveals: %d · Hints: %d",
       reviews.total, reviews.problems_total, stats.today.reviews, stats.today.new_reviewed,
-      reviews.revealed, reviews.hint_used, reviews.gave_up),
+      reviews.revealed, reviews.hint_used),
     string.format("Ratings: Again %d · Hard %d · Good %d · Easy %d",
       reviews.ratings.fail, reviews.ratings.acceptable,
       reviews.ratings.good, reviews.ratings.excellent),

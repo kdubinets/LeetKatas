@@ -75,8 +75,7 @@ src/nvim-driver/problem-solving
 It presents a read-only problem brief, an optional hint, and a solution outline
 that must be revealed before rating. Use `-s` to synchronize before initial
 selection or pass a problem-solving collection as the optional argument. The
-launcher uses the same pinned `which-key.nvim` shortcut assistant as Level A/B
-and labels `<leader>p` as the problem-solving command group.
+launcher uses the same pinned `which-key.nvim` shortcut assistant as Level A/B.
 
 Its optional configuration lives at
 `${XDG_CONFIG_HOME:-~/.config}/leetkatas/problem-solving.toml`; copy
@@ -115,10 +114,10 @@ items track hint/outline use, an open-thinking bookmark, outstanding bookmarks,
 and the next available action. You can also use `problem_id`, `collection`, and
 `conversation` (message count).
 
-The primary mappings are `<leader>ph` for hint, `<leader>pr` for reveal,
-`<leader>pg` for give-up and reveal, `<leader>pb` for bookmark, and
-`<leader>pc` for clarification before reveal or solution discussion afterward.
-`<leader>p1` through `<leader>p4` select Again, Hard, Good, and Easy after reveal.
+The primary mappings are `<leader>h` for hint, `<leader>r` for reveal,
+`<leader>b` for bookmark, and `<leader>c` for clarification before reveal or
+solution discussion afterward. `<leader>1` through `<leader>4` select Again,
+Hard, Good, and Easy after reveal.
 Use `:ProblemSolvingBookmarks` to reopen the open-thinking queue and
 `:ProblemSolvingDiagnostics` for local state and synchronization status.
 
@@ -403,7 +402,7 @@ freeze the editor.
 
 ### Ask the reviewer
 
-While feedback is open, `?`, `:PracticeAsk [question]`, or `<Space>pf` asks the
+While feedback is open, `?`, `:PracticeAsk [question]`, or `<Space>f` asks the
 reviewer a follow-up question. Omitting the command argument opens an input
 prompt. Questions and answers appear with distinct styling in a Follow-up chat
 section; `t` collapses or expands the conversation. Follow-up requests are
@@ -421,7 +420,7 @@ skips, or quits; they are not written to diagnostic logs or review artifacts.
 
 `:PracticeNote [kind]` opens a Markdown composer for the active exercise while
 solving, evaluating, or reviewing. The optional kind is `follow-up` (the
-default), `research`, or `exercise-fix`. `<Space>pm` captures the current line;
+default), `research`, or `exercise-fix`. `<Space>m` captures the current line;
 using it on a visual selection captures up to ten selected lines. Source notes
 point back to the original exercise rather than its temporary working copy.
 Feedback notes retain the current feedback section and a bounded excerpt.
@@ -434,7 +433,7 @@ be edited, moved, or deleted with ordinary filesystem tools.
 
 The default directory is `${XDG_DATA_HOME:-~/.local/share}/leetkatas/notes`.
 Configure `practice.notes_directory` or `PRACTICE_NOTES_DIRECTORY` to place it
-elsewhere. `:PracticeNotes` or `<Space>po` edits that directory. An installed
+elsewhere. `:PracticeNotes` or `<Space>o` edits that directory. An installed
 directory handler can display it; otherwise the driver reports the absolute
 path for use with another file manager or editor.
 
@@ -468,7 +467,7 @@ rating before submission, with a short explanatory message.
 
 ### Review statistics
 
-`:PracticeStats [directory]` or `<Space>pt` opens a read-only statistics split.
+`:PracticeStats [directory]` or `<Space>t` opens a read-only statistics split.
 It uses the active collection when a session exists, otherwise the configured
 default; an explicit directory overrides both. Press `r` to refresh the snapshot
 or `q` to close it without changing practice state.
@@ -497,21 +496,21 @@ Workflow mappings use the `p` prefix for practice:
 
 | Mapping | Command | Purpose |
 |---|---|---|
-| `<Space>ps` | `:PracticeStart` | Start or restart a practice session. |
-| `<Space>pc` | `:PracticeSubmit` | Check/submit the current solution. |
-| `<Space>pa` | `:PracticeAccept` | Accept the proposed rating and continue. |
-| `<Space>pr` | `:PracticeRetry` | Return to editing without recording. |
-| `<Space>p1` | `:PracticeRate fail` | Record Fail and continue. |
-| `<Space>p2` | `:PracticeRate acceptable` | Record Acceptable and continue. |
-| `<Space>p3` | `:PracticeRate good` | Record Good and continue. |
-| `<Space>p4` | `:PracticeRate excellent` | Record Excellent and continue. |
-| `<Space>pn` | `:PracticeNext` | Skip and select again. |
-| `<Space>pm` | `:PracticeNote` | Capture a note for the active exercise. |
-| `<Space>pf` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
-| `<Space>pi` | — | Toggle the current exercise's import/include preamble. |
-| `<Space>po` | `:PracticeNotes` | Open the personal notes directory. |
-| `<Space>pt` | `:PracticeStats` | Show current-collection statistics. |
-| `<Space>pq` | `:PracticeQuit` | End the session. |
+| `<Space>s` | `:PracticeStart` | Start or restart a practice session. |
+| `<Space>c` | `:PracticeSubmit` | Check/submit the current solution. |
+| `<Space>a` | `:PracticeAccept` | Accept the proposed rating and continue. |
+| `<Space>r` | `:PracticeRetry` | Return to editing without recording. |
+| `<Space>1` | `:PracticeRate fail` | Record Fail and continue. |
+| `<Space>2` | `:PracticeRate acceptable` | Record Acceptable and continue. |
+| `<Space>3` | `:PracticeRate good` | Record Good and continue. |
+| `<Space>4` | `:PracticeRate excellent` | Record Excellent and continue. |
+| `<Space>n` | `:PracticeNext` | Skip and select again. |
+| `<Space>m` | `:PracticeNote` | Capture a note for the active exercise. |
+| `<Space>f` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
+| `<Space>i` | — | Toggle the current exercise's import/include preamble. |
+| `<Space>o` | `:PracticeNotes` | Open the personal notes directory. |
+| `<Space>t` | `:PracticeStats` | Show current-collection statistics. |
+| `<Space>q` | `:PracticeQuit` | End the session. |
 
 Within an active exercise buffer, `ZZ` submits the solution. In Insert mode,
 `<C-Enter>` also submits and leaves Insert mode. While an evaluation (or another
@@ -519,7 +518,7 @@ practice operation) is pending, `ZZ` asks for confirmation before exiting
 Neovim.
 
 The numeric rating mappings should be displayed in the feedback UI so they do
-not need to be memorized. The feedback UI should also display `<Space>pa` next
+not need to be memorized. The feedback UI should also display `<Space>a` next
 to the proposed rating as the fastest normal path. `PracticeStart` needs a way
 to use a configured default directory when invoked from a mapping, since a
 mapping cannot conveniently supply an arbitrary directory interactively. An
