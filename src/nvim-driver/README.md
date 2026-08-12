@@ -512,10 +512,12 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>t` | `:PracticeStats` | Show current-collection statistics. |
 | `<Space>q` | `:PracticeQuit` | End the session. |
 
-Within an active exercise buffer, `ZZ` submits the solution. In Insert mode,
-`<C-Enter>` also submits and leaves Insert mode. While an evaluation (or another
-practice operation) is pending, `ZZ` asks for confirmation before exiting
-Neovim.
+Within an active exercise buffer, press `Z` twice within five seconds (`ZZ`) to
+submit the solution. The first press is consumed immediately, so a slow second
+press cannot fall through to Neovim's built-in write-and-quit command. In Insert
+mode, `<C-Enter>` also submits and leaves Insert mode. While an evaluation (or
+another practice operation) is pending, the same gesture asks for confirmation
+before exiting Neovim.
 
 The numeric rating mappings should be displayed in the feedback UI so they do
 not need to be memorized. The feedback UI should also display `<Space>a` next

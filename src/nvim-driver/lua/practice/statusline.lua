@@ -103,7 +103,7 @@ local function item(name, state)
     local event = state.progress_events and state.progress_events[#state.progress_events]
     return event and (event.message or event.stage or event.status) or nil
   elseif name == "action" then
-    if state.status == "solving" then return "ZZ Submit" end
+    if state.status == "solving" then return "ZZ Submit (5s)" end
     if state.status == "reviewing" then return "Accept or rate" end
     return nil
   elseif name == "time_today" then

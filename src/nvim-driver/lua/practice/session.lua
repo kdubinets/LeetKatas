@@ -8,6 +8,12 @@ local statusline = require("practice.statusline")
 
 local M = {}
 
+-- A direct `ZZ` mapping is subject to Neovim's mapping timeout.  Once that
+-- timeout expires, the second Z reaches the built-in write-and-quit command.
+-- Handle each Z immediately instead, so the practice buffer never exposes the
+-- built-in Z commands.
+local DOUBLE_Z_GRACE_MS = 5000
+
 local RATINGS = {
   fail = true,
   acceptable = true,
@@ -33,6 +39,8 @@ local state = {
   progress_events = {},
   progress_event_count = 0,
   follow_up_pending = false,
+  double_z_buffer = nil,
+  double_z_timer = nil,
   timing = {
     phase = nil,
     started = nil,
@@ -95,17 +103,53 @@ local function confirm_exit_while_waiting()
   ) == 1
 end
 
-local function install_evaluation_exit_mapping(buffer)
-  vim.keymap.set("n", "ZZ", M.zz, {
+local function cancel_double_z()
+  local timer = state.double_z_timer
+  state.double_z_buffer = nil
+  state.double_z_timer = nil
+  if timer then
+    pcall(function()
+      timer:stop()
+      timer:close()
+    end)
+  end
+end
+
+local function arm_double_z(buffer)
+  cancel_double_z()
+  state.double_z_buffer = buffer
+  local timer
+  timer = vim.defer_fn(function()
+    if state.double_z_timer == timer then
+      state.double_z_buffer = nil
+      state.double_z_timer = nil
+    end
+  end, DOUBLE_Z_GRACE_MS)
+  state.double_z_timer = timer
+end
+
+local function install_double_z_mapping(buffer, description)
+  vim.keymap.set("n", "Z", function()
+    if state.double_z_buffer == buffer then
+      cancel_double_z()
+      M.zz()
+      return
+    end
+    arm_double_z(buffer)
+  end, {
     buffer = buffer,
     silent = true,
-    desc = "Practice: confirm exit while evaluation is running",
+    nowait = true,
+    desc = description,
   })
 end
 
-local function remove_evaluation_exit_mapping(buffer)
+local function remove_double_z_mapping(buffer)
+  if state.double_z_buffer == buffer then
+    cancel_double_z()
+  end
   if valid_buffer(buffer) then
-    pcall(vim.keymap.del, "n", "ZZ", { buffer = buffer })
+    pcall(vim.keymap.del, "n", "Z", { buffer = buffer })
   end
 end
 
@@ -159,6 +203,7 @@ local function start_progress()
 end
 
 local function delete_working_copy()
+  cancel_double_z()
   reset_timing()
   stop_progress()
   ui.close_feedback()
@@ -240,11 +285,7 @@ local function open_selected_exercise(exercise)
     config.practice_marker,
     config.enhanced_syntax_highlighting
   )
-  vim.keymap.set("n", "ZZ", M.zz, {
-    buffer = state.source_buffer,
-    silent = true,
-    desc = "Practice: submit the current exercise",
-  })
+  install_double_z_mapping(state.source_buffer, "Practice: press Z again to submit")
   vim.keymap.set("i", "<C-CR>", function()
     vim.cmd("stopinsert")
     M.submit()
@@ -472,7 +513,7 @@ function M.submit()
   set_timing_phase(nil)
   state.status = "evaluating"
   local progress_buffer = start_progress()
-  install_evaluation_exit_mapping(progress_buffer)
+  install_double_z_mapping(progress_buffer, "Practice: press Z again to confirm exit")
   process.run(config.python, script_path("evaluate_exercise.py"), {
     source_path = state.working_path,
     starter_source_path = state.exercise.source_path,
@@ -484,7 +525,7 @@ function M.submit()
   }, function(error_message, response)
     read_progress()
     stop_progress()
-    remove_evaluation_exit_mapping(progress_buffer)
+    remove_double_z_mapping(progress_buffer)
     if error_message then
       state.status = "solving"
       set_timing_phase("solve")
