@@ -160,6 +160,7 @@ practice.setup({
   metadata_extension = environment("PRACTICE_METADATA_EXTENSION") or ".md",
   practice_marker = environment("PRACTICE_MARKER") or "// Finish:",
   enhanced_syntax_highlighting = editor_config.enhanced_syntax_highlighting ~= false,
+  local_completion = editor_config.local_completion == true,
   statusline = {
     enabled = statusline_config.enabled ~= false,
     left = statusline_config.left or { "exercise_name" },

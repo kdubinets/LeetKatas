@@ -159,6 +159,8 @@ reasoning_effort = "low"
 indent_width = 4
 which_key_delay_ms = 300
 enhanced_syntax_highlighting = true
+# Complete from words in the active exercise only. Ctrl+Space opens the menu.
+local_completion = false
 
 [statusline]
 left = ["exercise_name"]
@@ -183,6 +185,13 @@ Exercise source uses Tree-sitter syntax highlighting by default when Neovim has
 the matching language parser installed. C++ practice still receives enhanced
 semantic highlighting when no parser is available. Set
 `editor.enhanced_syntax_highlighting = false` to use only the built-in rules.
+
+Set `editor.local_completion = true` to enable Neovim's built-in, current-buffer
+word completion in exercise source. Press `<C-Space>` to open it; its first
+suggestion is selected automatically. Use Up/Down, `<C-k>`/`<C-j>`, or
+Tab/Shift-Tab to move through suggestions, `<C-[>` to dismiss it, and Enter to
+accept the selected suggestion. This uses no external completion plugin or
+language server.
 
 The practice status line replaces the temporary working-copy filename with
 exercise and scheduling context. Items are configured independently on the left

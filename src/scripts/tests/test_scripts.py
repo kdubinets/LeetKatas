@@ -87,6 +87,7 @@ follow_up_reasoning_effort = "medium"
 indent_width = 2
 which_key_delay_ms = 150
 enhanced_syntax_highlighting = false
+local_completion = true
 
 [evaluation]
 compiler = "g++"
@@ -111,6 +112,7 @@ separator = " | "
             self.assertEqual(config["reviewer"]["follow_up_reasoning_effort"], "medium")
             self.assertEqual(config["editor"]["indent_width"], 2)
             self.assertFalse(config["editor"]["enhanced_syntax_highlighting"])
+            self.assertTrue(config["editor"]["local_completion"])
             self.assertEqual(config["evaluation"]["compiler"], "g++")
             self.assertEqual(config["sync"]["supabase_url"], "https://example.supabase.co")
             self.assertEqual(config["statusline"]["left"], ["exercise_name"])

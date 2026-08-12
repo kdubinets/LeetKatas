@@ -283,7 +283,8 @@ local function open_selected_exercise(exercise)
     working_path,
     state.source_window,
     config.practice_marker,
-    config.enhanced_syntax_highlighting
+    config.enhanced_syntax_highlighting,
+    config.local_completion
   )
   install_double_z_mapping(state.source_buffer, "Practice: press Z again to submit")
   vim.keymap.set("i", "<C-CR>", function()

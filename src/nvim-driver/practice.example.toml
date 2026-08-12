@@ -17,6 +17,8 @@ indent_width = 4
 which_key_delay_ms = 300
 # Use Tree-sitter highlighting for exercise source when its language parser is available.
 enhanced_syntax_highlighting = true
+# Complete from words in the active exercise only. Ctrl+Space opens the menu.
+local_completion = false
 # Exercise import/include preambles are folded closed automatically.
 
 [statusline]

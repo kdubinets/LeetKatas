@@ -1,6 +1,7 @@
 local M = {}
 local log = require("practice.log")
 local import_folds = require("practice.import_folds")
+local completion = require("practice.completion")
 
 local feedback_buffer = nil
 local feedback_window = nil
@@ -762,7 +763,8 @@ function M.open_stats(stats, refresh)
   return stats_buffer, stats_window
 end
 
-function M.open_source(path, preferred_window, practice_marker, enhanced_syntax_highlighting)
+function M.open_source(path, preferred_window, practice_marker, enhanced_syntax_highlighting,
+                       local_completion)
   M.close_feedback()
   if valid_window(preferred_window) then vim.api.nvim_set_current_win(preferred_window) end
   vim.cmd("edit! " .. vim.fn.fnameescape(path))
@@ -770,6 +772,7 @@ function M.open_source(path, preferred_window, practice_marker, enhanced_syntax_
   vim.bo[buffer].bufhidden = "wipe"
   vim.bo[buffer].swapfile = false
   vim.bo[buffer].completefunc, vim.bo[buffer].omnifunc, vim.bo[buffer].tagfunc = "", "", ""
+  if local_completion then completion.enable(buffer) end
   if enhanced_syntax_highlighting then
     local started = vim.treesitter and type(vim.treesitter.start) == "function"
       and pcall(vim.treesitter.start, buffer)
