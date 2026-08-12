@@ -93,6 +93,7 @@ function M.refresh(collection_path)
   process.run(driver_config.python, driver_config.scripts_dir .. "/problem_solving_stats.py", {
     collection_directory = collection_path,
     database_path = driver_config.database_path,
+    history_days = 1,
   }, function(error_message, response)
     stats_pending = false
     if not error_message and type(response.today) == "table"

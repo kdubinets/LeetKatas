@@ -121,6 +121,12 @@ Hard, Good, and Easy after reveal.
 Use `:ProblemSolvingBookmarks` to reopen the open-thinking queue and
 `:ProblemSolvingDiagnostics` for local state and synchronization status.
 
+`:ProblemSolvingStats [directory]` or `<Space>t` opens a read-only dashboard
+for the active (or configured) collection. It shows today's reviews, ratings,
+and tracked solving time; collection progress and FSRS state; due work through
+the next seven local calendar days; and the most recent daily activity. Press
+`r` to refresh the snapshot or `q` to close it without changing the session.
+
 Pre-reveal conversation receives only the public brief and may clarify wording
 without giving strategy. After reveal, it can discuss the canonical outline.
 Conversation history is retained locally by default and can be disabled with

@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, tzinfo
 from typing import Any
 
 from practice_scheduler import RATING_NAMES, SchedulerError, ensure_utc
@@ -21,12 +21,22 @@ class RequestError(ValueError):
     pass
 
 
+def local_date(value: datetime, local_zone: tzinfo | None) -> date:
+    return value.astimezone(local_zone).date() if local_zone else value.astimezone().date()
+
+
 def problem_solving_stats(
-    request: dict[str, Any], current_datetime: datetime | None = None
+    request: dict[str, Any],
+    current_datetime: datetime | None = None,
+    local_zone: tzinfo | None = None,
 ) -> dict[str, Any]:
     _, collection_key, problem_ids = problem_collection(request.get("collection_directory"))
+    history_days = request.get("history_days", 30)
+    if type(history_days) is not int or not 1 <= history_days <= 366:
+        raise RequestError("history_days must be an integer between 1 and 366")
     now = ensure_utc(current_datetime)
-    today = now.astimezone().date()
+    today = local_date(now, local_zone)
+    tomorrow = today + timedelta(days=1)
     store = ProblemSolvingStore(problem_solving_database_path(request))
     cards = store.cards_for_collection(collection_key)
     bookmarks = store.list_bookmarks(collection_key)
@@ -60,40 +70,84 @@ def problem_solving_stats(
         ).fetchone()[0]
     finally:
         connection.close()
-    introduced = active_ids & cards.keys()
+    active_cards = {
+        problem_id: card for problem_id, card in cards.items() if problem_id in active_ids
+    }
+    introduced = set(active_cards)
     due_now = sum(
         1
         for problem_id in introduced - bookmarked_ids
-        if cards[problem_id].due <= now
+        if active_cards[problem_id].due <= now
     )
     due_later_today = sum(
         1
         for problem_id in introduced - bookmarked_ids
-        if cards[problem_id].due > now and cards[problem_id].due.astimezone().date() == today
+        if active_cards[problem_id].due > now
+        and local_date(active_cards[problem_id].due, local_zone) == today
     )
+    state_counts = {"learning": 0, "learned": 0, "relearning": 0}
+    forecast_dates = [tomorrow + timedelta(days=offset) for offset in range(7)]
+    forecast_counts = {day: 0 for day in forecast_dates}
+    for problem_id, card in active_cards.items():
+        state_name = card.state.name.lower()
+        if state_name in {"new", "learning"}:
+            state_counts["learning"] += 1
+        elif state_name == "review":
+            state_counts["learned"] += 1
+        elif state_name == "relearning":
+            state_counts["relearning"] += 1
+        if problem_id in bookmarked_ids or card.due <= now:
+            continue
+        due_date = local_date(card.due, local_zone)
+        if due_date in forecast_counts:
+            forecast_counts[due_date] += 1
+
     ratings = {name: 0 for name in RATING_NAMES}
-    reviews_today = 0
+    history_dates = [
+        today - timedelta(days=offset) for offset in range(history_days - 1, -1, -1)
+    ]
+    history = {
+        day: {
+            "date": day.isoformat(),
+            "reviews": 0,
+            "new_reviewed": 0,
+            "ratings": {name: 0 for name in RATING_NAMES},
+            "practice_time_ms": 0,
+        }
+        for day in history_dates
+    }
     first_review_dates: dict[str, date] = {}
     for row in rows:
-        ratings[row["final_rating"]] += 1
-        review_date = datetime.fromisoformat(row["review_datetime"]).astimezone().date()
+        rating = row["final_rating"]
+        if rating in ratings:
+            ratings[rating] += 1
+        review_date = local_date(
+            datetime.fromisoformat(row["review_datetime"]), local_zone
+        )
         first_review_dates.setdefault(row["problem_id"], review_date)
-        if review_date == today:
-            reviews_today += 1
-    new_reviewed_today = sum(1 for date in first_review_dates.values() if date == today)
+        day = history.get(review_date)
+        if day is not None:
+            day["reviews"] += 1
+            if rating in day["ratings"]:
+                day["ratings"][rating] += 1
+            day["practice_time_ms"] += row["solve_duration_ms"] + row["discussion_duration_ms"]
+    for first_review_date in first_review_dates.values():
+        if first_review_date in history:
+            history[first_review_date]["new_reviewed"] += 1
+    today_stats = history[today]
     return {
         "collection": collection_key,
         "generated_at": now.isoformat(),
         "collection_state": {
             "total": len(active_ids),
-            "unseen": len(active_ids - cards.keys()),
+            "unseen": len(active_ids - active_cards.keys()),
             "introduced": len(introduced),
             "due_now": due_now,
             "open_bookmarks": len(bookmarks),
+            **state_counts,
         },
         "today": {
-            "reviews": reviews_today,
-            "new_reviewed": new_reviewed_today,
+            **today_stats,
             "due_now": due_now,
             "due_later_today": due_later_today,
         },
@@ -112,6 +166,14 @@ def problem_solving_stats(
             "open": len(bookmarks),
             "lifecycle_events": {row["action"]: row["count"] for row in lifecycle},
         },
+        "forecast": {
+            "tomorrow_due": forecast_counts[tomorrow],
+            "days": [
+                {"date": day.isoformat(), "due": forecast_counts[day]}
+                for day in forecast_dates
+            ],
+        },
+        "history": [history[day] for day in reversed(history_dates)],
     }
 
 

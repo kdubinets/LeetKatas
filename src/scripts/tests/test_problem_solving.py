@@ -167,6 +167,16 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
                 "leetkatas.problem_solving.initial_seed", "problem-2"
             ))
 
+            same_day_stats = problem_solving_stats(
+                self.request(database), datetime(2026, 1, 1, tzinfo=timezone.utc)
+            )
+            self.assertEqual(same_day_stats["today"]["reviews"], 1)
+            self.assertEqual(same_day_stats["today"]["new_reviewed"], 1)
+            self.assertEqual(same_day_stats["today"]["ratings"]["acceptable"], 1)
+            self.assertEqual(same_day_stats["today"]["practice_time_ms"], 120)
+            self.assertEqual(len(same_day_stats["forecast"]["days"]), 7)
+            self.assertEqual(same_day_stats["history"][0]["date"], "2026-01-01")
+
             stats = problem_solving_stats(
                 self.request(database), datetime(2030, 1, 1, tzinfo=timezone.utc)
             )

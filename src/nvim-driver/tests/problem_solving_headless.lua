@@ -172,11 +172,25 @@ problem_solving.stats()
 assert(vim.wait(10000, function()
   for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "problem-solving-stats" then
-      return buffer_text(buffer):find("Reviews: 1", 1, true) ~= nil
+      local text = buffer_text(buffer)
+      return text:find("Problem-solving statistics", 1, true)
+        and text:find("TODAY", 1, true) and text:find("COLLECTION", 1, true)
+        and text:find("DUE", 1, true) and text:find("RECENT ACTIVITY", 1, true)
     end
   end
   return false
 end, 10), "problem-solving statistics were not rendered")
+local stats = nil
+for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+  if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "problem-solving-stats" then
+    stats = buffer
+    break
+  end
+end
+assert(stats and vim.fn.maparg("r", "n", false, true).buffer == 1,
+  "problem-solving statistics refresh mapping is missing")
+assert(stats and vim.fn.maparg("q", "n", false, true).buffer == 1,
+  "problem-solving statistics close mapping is missing")
 
 problem_solving.next()
 wait_for("solving")

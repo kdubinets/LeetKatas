@@ -474,7 +474,7 @@ function M.stats(directory)
     or state.collection or config.default_directory
   stats_pending = true
   process.run(config.python, script("problem_solving_stats.py"), {
-    collection_directory = collection, database_path = config.database_path,
+    collection_directory = collection, database_path = config.database_path, history_days = 30,
   }, function(error_message, response)
     stats_pending = false
     if error_message or type(response.collection_state) ~= "table"
@@ -483,7 +483,7 @@ function M.stats(directory)
       ui.notify("Statistics failed: " .. tostring(error_message), vim.log.levels.ERROR)
       return
     end
-    ui.open_stats(response)
+    ui.open_stats(response, function() M.stats(collection) end)
   end)
 end
 
