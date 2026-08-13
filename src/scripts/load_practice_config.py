@@ -34,6 +34,7 @@ SCHEMA: dict[str, dict[str, type]] = {
         "supabase_url": str,
         "private_content_sync": bool,
         "retain_conversation_history": bool,
+        "implementation_language": str,
     },
     "reviewer": {
         "model": str,
@@ -146,6 +147,9 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
     practice = value.get("practice", {})
     if "review_archive_ttl_days" in practice and not 0 <= practice["review_archive_ttl_days"] <= 3650:
         raise ConfigError("practice.review_archive_ttl_days must be between 0 and 3650")
+    problem_solving = value.get("problem_solving", {})
+    if (language := problem_solving.get("implementation_language")) is not None and language != "cpp":
+        raise ConfigError("problem_solving.implementation_language currently supports only cpp")
     statusline = value.get("statusline", {})
     for side in ("left", "right"):
         if side not in statusline:

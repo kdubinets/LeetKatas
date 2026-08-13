@@ -2,6 +2,7 @@ local session = require("problem_solving.session")
 local sync = require("problem_solving.sync")
 local log = require("practice.log")
 local statusline = require("problem_solving.statusline")
+local implementation = require("problem_solving.implementation_session")
 
 local M = {}
 local options = nil
@@ -15,6 +16,7 @@ function M.setup(config)
   options = config
   log.setup(config.log_path)
   session.setup(config)
+  implementation.setup(config, session)
   sync.setup(config)
   statusline.setup(config, session.get_state)
 
@@ -26,6 +28,7 @@ function M.setup(config)
   })
   vim.api.nvim_create_autocmd("VimLeavePre", {
     callback = function()
+      implementation.shutdown()
       statusline.stop()
       log.event("problem_solving_session_ended", "info", { state = session.get_state().status })
     end,
@@ -40,6 +43,19 @@ function M.setup(config)
   vim.api.nvim_create_user_command("ProblemSolvingReveal", function(command)
     session.reveal()
   end, { desc = "Reveal the solution outline" })
+  vim.api.nvim_create_user_command("ProblemSolvingImplement", implementation.open_active,
+    { desc = "Start or resume Level C implementation" })
+  vim.api.nvim_create_user_command("ProblemSolvingDrafts", function(command)
+    implementation.drafts(command.args ~= "" and command.args or session.get_state().collection or config.default_directory)
+  end, { nargs = "?", complete = "dir", desc = "List current implementation drafts" })
+  vim.api.nvim_create_user_command("ProblemSolvingCompile", implementation.compile,
+    { desc = "Compile the current implementation draft" })
+  vim.api.nvim_create_user_command("ProblemSolvingImplementationCheck", implementation.check,
+    { desc = "Request a bounded implementation check" })
+  vim.api.nvim_create_user_command("ProblemSolvingFinishImplementation", implementation.finish,
+    { desc = "Finish with an implementation review" })
+  vim.api.nvim_create_user_command("ProblemSolvingReturn", implementation.return_to_card,
+    { desc = "Return to the Level C card" })
   vim.api.nvim_create_user_command("ProblemSolvingBookmark", function(command)
     session.bookmark(command.args ~= "" and command.args or nil)
   end, { nargs = "?", desc = "Bookmark the active problem" })
@@ -91,6 +107,8 @@ function M.setup(config)
 
   map("<leader>s", M.start, "Problem solving: start")
   map("<leader>h", M.hint, "Problem solving: hint")
+  map("<leader>i", implementation.open_active, "Problem solving: implement")
+  map("<leader>d", function() implementation.drafts(session.get_state().collection or config.default_directory) end, "Problem solving: implementation drafts")
   map("<leader>r", M.reveal, "Problem solving: reveal outline")
   map("<leader>b", M.bookmark, "Problem solving: bookmark")
   map("<leader>l", M.bookmarks, "Problem solving: list bookmarks")

@@ -15,6 +15,8 @@ from pathlib import Path
 PROMPTS = {
     "clarification": Path(__file__).with_name("prompts") / "level_c_clarification.txt",
     "discussion": Path(__file__).with_name("prompts") / "level_c_discussion.txt",
+    "implementation_checkpoint": Path(__file__).with_name("prompts") / "level_c_implementation_checkpoint.txt",
+    "implementation_final": Path(__file__).with_name("prompts") / "level_c_implementation_final.txt",
 }
 SCHEMAS = {
     "clarification": {
@@ -41,6 +43,8 @@ SCHEMAS = {
             },
         },
     },
+    "implementation_checkpoint": {"type":"object", "additionalProperties":False, "required":["status","feedback"], "properties":{"status":{"type":"string","enum":["likely_sound","concern"]},"feedback":{"type":"string"}}},
+    "implementation_final": {"type":"object", "additionalProperties":False, "required":["status","sound","issues","interview_communication"], "properties":{"status":{"type":"string","enum":["reviewed"]},"sound":{"type":"string"},"issues":{"type":"array","items":{"type":"string"}},"interview_communication":{"type":"string"}}},
 }
 
 

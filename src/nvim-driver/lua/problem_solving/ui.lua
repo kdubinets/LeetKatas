@@ -218,6 +218,24 @@ local function open_auxiliary(title, filetype, lines)
   return auxiliary_buffer, auxiliary_window
 end
 
+function M.open_implementation_feedback(title, text)
+  return open_auxiliary(title, "problem-solving-implementation-feedback", vim.split(text, "\n", { plain = true }))
+end
+
+function M.open_implementation_drafts(drafts, resume)
+  local lines = { "# Current implementation drafts", "" }
+  if #drafts == 0 then table.insert(lines, "No current drafts.") end
+  for index, draft in ipairs(drafts) do
+    table.insert(lines, string.format("%d. %s · %s · %s · %s", index, draft.problem_id, draft.language, draft.latest_status, draft.updated_at))
+  end
+  local buffer = open_auxiliary("Problem-solving implementation drafts", "problem-solving-drafts", lines)
+  vim.keymap.set("n", "<CR>", function()
+    local number = tonumber((vim.api.nvim_get_current_line() or ""):match("^(%d+)%."))
+    if number and drafts[number] then resume(drafts[number]) end
+  end, { buffer = buffer, silent = true, desc = "Resume implementation draft" })
+  return buffer
+end
+
 function M.open_bookmarks(bookmarks, reopen)
   local lines = { "# Open-thinking bookmarks", "" }
   if #bookmarks == 0 then

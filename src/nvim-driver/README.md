@@ -81,7 +81,8 @@ Its optional configuration lives at
 `${XDG_CONFIG_HOME:-~/.config}/leetkatas/problem-solving.toml`; copy
 `problem-solving.example.toml` as a starting point. The `[problem_solving]`
 section accepts `collection`, `database_path`, `log_path`, `notes_directory`,
-`supabase_url`, `private_content_sync`, and `retain_conversation_history`.
+`supabase_url`, `private_content_sync`, `retain_conversation_history`, and
+`implementation_language` (currently `cpp` only).
 Environment overrides are
 `PROBLEM_SOLVING_COLLECTION`, `PROBLEM_SOLVING_DATABASE`,
 `PROBLEM_SOLVING_LOG`, `PROBLEM_SOLVING_NOTES_DIRECTORY`,
@@ -91,6 +92,12 @@ Environment overrides are
 `PROBLEM_SOLVING_REVIEWER_NAME`, `PROBLEM_SOLVING_REVIEW_MODEL`, and
 `PROBLEM_SOLVING_REVIEW_EFFORT`. `PRACTICE_PYTHON` remains the shared Python
 interpreter override.
+
+Use `:ProblemSolvingImplement` (or `<Space>i`) to open the local C++
+implementation workspace. It starts or resumes a private draft; `:ProblemSolvingDrafts`
+lists current drafts. In that workspace `<Space>c`, `<Space>k`, `<Space>f`, and
+`<Space>q` compile, request a bounded check, finish with a full review, and return.
+`PROBLEM_SOLVING_IMPLEMENTATION_LANGUAGE` overrides the configured language.
 
 Level C also uses the optional `[statusline]` table. Its recommended defaults
 keep the information relevant to deliberate problem solving visible:

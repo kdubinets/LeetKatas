@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sqlite3
 import uuid
@@ -22,7 +23,7 @@ from practice_scheduler import (
 from validate_level_c_collection import CollectionValidationError, validate_collection
 
 
-PROBLEM_SOLVING_SCHEMA_VERSION = 3
+PROBLEM_SOLVING_SCHEMA_VERSION = 4
 
 
 def problem_solving_database_path(request: dict[str, Any]) -> Path:
@@ -158,6 +159,39 @@ class ProblemSolvingStore:
                 bookmark_cursor INTEGER NOT NULL DEFAULT 0 CHECK (bookmark_cursor >= 0),
                 artifact_cursor INTEGER NOT NULL DEFAULT 0 CHECK (artifact_cursor >= 0)
             );
+            CREATE TABLE IF NOT EXISTS problem_solving_implementation_drafts (
+                draft_id TEXT PRIMARY KEY,
+                collection_key TEXT NOT NULL,
+                problem_id TEXT NOT NULL,
+                language TEXT NOT NULL CHECK (language = 'cpp'),
+                archived_at TEXT,
+                source TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                finished_at TEXT,
+                latest_status TEXT NOT NULL CHECK (latest_status IN ('draft', 'compiled', 'compile_error', 'checked', 'finished'))
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS problem_solving_current_implementation_draft_idx
+              ON problem_solving_implementation_drafts(collection_key, problem_id, language)
+              WHERE archived_at IS NULL;
+            CREATE TABLE IF NOT EXISTS problem_solving_implementation_compiles (
+                compile_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                draft_id TEXT NOT NULL REFERENCES problem_solving_implementation_drafts(draft_id),
+                attempted_at TEXT NOT NULL,
+                status TEXT NOT NULL CHECK (status IN ('success', 'error', 'unavailable')),
+                exit_code INTEGER,
+                source_hash TEXT NOT NULL DEFAULT '',
+                diagnostic_summary TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS problem_solving_implementation_reviews (
+                review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                draft_id TEXT NOT NULL REFERENCES problem_solving_implementation_drafts(draft_id),
+                reviewed_at TEXT NOT NULL,
+                stage TEXT NOT NULL CHECK (stage IN ('checkpoint', 'final')),
+                status TEXT NOT NULL CHECK (status IN ('available', 'unavailable')),
+                feedback_json TEXT,
+                failure TEXT
+            );
             """
         )
         review_columns = {
@@ -192,6 +226,9 @@ class ProblemSolvingStore:
             connection.execute(
                 "ALTER TABLE problem_solving_artifacts ADD COLUMN revealed_at TEXT"
             )
+        compile_columns = {row[1] for row in connection.execute("PRAGMA table_info(problem_solving_implementation_compiles)")}
+        if "source_hash" not in compile_columns:
+            connection.execute("ALTER TABLE problem_solving_implementation_compiles ADD COLUMN source_hash TEXT NOT NULL DEFAULT ''")
         row = connection.execute(
             "SELECT value FROM schema_metadata WHERE key='problem_solving_schema_version'"
         ).fetchone()
@@ -200,7 +237,7 @@ class ProblemSolvingStore:
                 "INSERT INTO schema_metadata(key, value) VALUES (?, ?)",
                 ("problem_solving_schema_version", str(PROBLEM_SOLVING_SCHEMA_VERSION)),
             )
-        elif row["value"] in {"1", "2"}:
+        elif row["value"] in {"1", "2", "3"}:
             connection.execute(
                 "UPDATE schema_metadata SET value=? "
                 "WHERE key='problem_solving_schema_version'",
@@ -212,6 +249,93 @@ class ProblemSolvingStore:
                 f"unsupported problem-solving database schema version: {row['value']}"
             )
         connection.commit()
+
+    @staticmethod
+    def _draft(row: sqlite3.Row) -> dict[str, Any]:
+        return {key: row[key] for key in row.keys()}
+
+    def current_draft(self, collection_key: str, problem_id: str, language: str = "cpp") -> dict[str, Any] | None:
+        connection = self.connect()
+        try:
+            row = connection.execute("SELECT * FROM problem_solving_implementation_drafts WHERE collection_key=? AND problem_id=? AND language=? AND archived_at IS NULL", (collection_key, problem_id, language)).fetchone()
+        finally:
+            connection.close()
+        return self._draft(row) if row else None
+
+    def create_or_resume_draft(self, collection_key: str, problem_id: str, source: str, language: str = "cpp", fresh: bool = False) -> dict[str, Any]:
+        if language != "cpp": raise SchedulerError("unsupported implementation language")
+        if not isinstance(source, str): raise SchedulerError("draft source must be a string")
+        current = ensure_utc(None).isoformat()
+        connection = self.connect()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            existing = connection.execute("SELECT * FROM problem_solving_implementation_drafts WHERE collection_key=? AND problem_id=? AND language=? AND archived_at IS NULL", (collection_key, problem_id, language)).fetchone()
+            if existing and not fresh:
+                connection.commit(); return self._draft(existing)
+            if existing:
+                connection.execute("UPDATE problem_solving_implementation_drafts SET archived_at=?, updated_at=? WHERE draft_id=?", (current, current, existing["draft_id"]))
+            draft_id = str(uuid.uuid4())
+            connection.execute("INSERT INTO problem_solving_implementation_drafts(draft_id, collection_key, problem_id, language, source, created_at, updated_at, latest_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft')", (draft_id, collection_key, problem_id, language, source, current, current))
+            row = connection.execute("SELECT * FROM problem_solving_implementation_drafts WHERE draft_id=?", (draft_id,)).fetchone()
+            connection.commit(); return self._draft(row)
+        except Exception:
+            connection.rollback(); raise
+        finally: connection.close()
+
+    def draft(self, draft_id: str) -> dict[str, Any] | None:
+        connection = self.connect()
+        try: row = connection.execute("SELECT * FROM problem_solving_implementation_drafts WHERE draft_id=?", (draft_id,)).fetchone()
+        finally: connection.close()
+        return self._draft(row) if row else None
+
+    def list_current_drafts(self, collection_key: str) -> list[dict[str, Any]]:
+        connection = self.connect()
+        try: rows = connection.execute("SELECT * FROM problem_solving_implementation_drafts WHERE collection_key=? AND archived_at IS NULL ORDER BY updated_at DESC", (collection_key,)).fetchall()
+        finally: connection.close()
+        return [
+            {key: value for key, value in self._draft(row).items() if key != "source"}
+            for row in rows
+        ]
+
+    def save_draft_source(self, draft_id: str, source: str) -> dict[str, Any]:
+        if not isinstance(source, str): raise SchedulerError("draft source must be a string")
+        connection = self.connect(); now = ensure_utc(None).isoformat()
+        try:
+            connection.execute("UPDATE problem_solving_implementation_drafts SET source=?, updated_at=?, latest_status=CASE WHEN source<>? THEN 'draft' ELSE latest_status END WHERE draft_id=?", (source, now, source, draft_id))
+            row = connection.execute("SELECT * FROM problem_solving_implementation_drafts WHERE draft_id=?", (draft_id,)).fetchone(); connection.commit()
+        finally: connection.close()
+        if not row: raise SchedulerError("draft not found")
+        return self._draft(row)
+
+    def record_implementation_compile(self, draft_id: str, status: str, exit_code: int | None, diagnostic_summary: str) -> None:
+        if status not in {"success", "error", "unavailable"}: raise SchedulerError("invalid compilation status")
+        now = ensure_utc(None).isoformat(); latest = "compiled" if status == "success" else "compile_error"
+        connection = self.connect()
+        try:
+            draft = connection.execute("SELECT source FROM problem_solving_implementation_drafts WHERE draft_id=?", (draft_id,)).fetchone()
+            if not draft: raise SchedulerError("draft not found")
+            source_hash = hashlib.sha256(draft["source"].encode("utf-8")).hexdigest()
+            connection.execute("INSERT INTO problem_solving_implementation_compiles(draft_id, attempted_at, status, exit_code, source_hash, diagnostic_summary) VALUES (?, ?, ?, ?, ?, ?)", (draft_id, now, status, exit_code, source_hash, diagnostic_summary[:4000]))
+            connection.execute("UPDATE problem_solving_implementation_drafts SET latest_status=?, updated_at=? WHERE draft_id=?", (latest, now, draft_id)); connection.commit()
+        finally: connection.close()
+
+    def latest_implementation_compile(self, draft_id: str) -> dict[str, Any] | None:
+        connection = self.connect()
+        try: row = connection.execute("SELECT * FROM problem_solving_implementation_compiles WHERE draft_id=? ORDER BY compile_id DESC LIMIT 1", (draft_id,)).fetchone()
+        finally: connection.close()
+        return dict(row) if row else None
+
+    @staticmethod
+    def implementation_source_hash(source: str) -> str:
+        return hashlib.sha256(source.encode("utf-8")).hexdigest()
+
+    def record_implementation_review(self, draft_id: str, stage: str, status: str, feedback: dict[str, Any] | None, failure: str | None = None) -> None:
+        now = ensure_utc(None).isoformat(); latest = "finished" if stage == "final" and status == "available" else "checked"
+        connection = self.connect()
+        try:
+            connection.execute("INSERT INTO problem_solving_implementation_reviews(draft_id, reviewed_at, stage, status, feedback_json, failure) VALUES (?, ?, ?, ?, ?, ?)", (draft_id, now, stage, status, json.dumps(feedback) if feedback else None, failure))
+            connection.execute("UPDATE problem_solving_implementation_drafts SET latest_status=?, finished_at=CASE WHEN ?='finished' THEN ? ELSE finished_at END, updated_at=? WHERE draft_id=?", (latest, latest, now, now, draft_id)); connection.commit()
+        finally: connection.close()
 
     def cards_for_collection(self, collection_key: str) -> dict[str, Any]:
         connection = self.connect()

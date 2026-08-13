@@ -95,6 +95,11 @@ local retain_history_override = environment("PROBLEM_SOLVING_RETAIN_CONVERSATION
 if retain_history_override and retain_history_override ~= "0" and retain_history_override ~= "1" then
   error("PROBLEM_SOLVING_RETAIN_CONVERSATION_HISTORY must be 0 or 1")
 end
+local implementation_language = environment("PROBLEM_SOLVING_IMPLEMENTATION_LANGUAGE")
+  or configured.implementation_language or "cpp"
+if implementation_language ~= "cpp" then
+  error("PROBLEM_SOLVING_IMPLEMENTATION_LANGUAGE currently supports only cpp")
+end
 local reviewer_model = environment("PROBLEM_SOLVING_REVIEW_MODEL")
   or reviewer_config.model or "gpt-5.6-luna"
 local reviewer_effort = environment("PROBLEM_SOLVING_REVIEW_EFFORT")
@@ -119,6 +124,13 @@ local function conversation_reviewer(mode)
     reasoning_effort = reviewer_effort,
   }
 end
+local function implementation_reviewer()
+  if reviewer_override then return conversation_reviewer("implementation_checkpoint") end
+  return {
+    command = { python, repository_dir .. "/src/scripts/level_c_implementation_codex.py", "--model", reviewer_model, "--effort", reviewer_effort },
+    name = "Codex", model = reviewer_model, reasoning_effort = reviewer_effort,
+  }
+end
 local problem_solving = require("problem_solving")
 problem_solving.setup({
   python = python,
@@ -137,6 +149,9 @@ problem_solving.setup({
     or (retain_history_override == nil and configured.retain_conversation_history ~= false),
   clarification_reviewer = conversation_reviewer("clarification"),
   discussion_reviewer = conversation_reviewer("discussion"),
+  implementation_language = implementation_language,
+  compiler = environment("CXX") or ((response.config or {}).evaluation or {}).compiler or "c++",
+  implementation_reviewer = implementation_reviewer(),
   sync_first = vim.env.PROBLEM_SOLVING_SYNC_FIRST == "1",
   statusline = {
     enabled = statusline_config.enabled ~= false,

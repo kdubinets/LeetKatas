@@ -389,6 +389,14 @@ function M.begin_discussion()
   return true
 end
 
+function M.restore_after_implementation()
+  if not state.problem then return end
+  refresh_card("get", nil, function(response)
+    ui.open_brief(state.problem, response.hint)
+    if response.state.revealed then ui.open_outline(response) end
+  end)
+end
+
 function M.ask(question)
   if state.status ~= "solving" and state.status ~= "revealed" and state.status ~= "discussing" then
     ui.notify("Conversation is available only while a problem is active", vim.log.levels.WARN)

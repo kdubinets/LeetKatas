@@ -1,5 +1,7 @@
 [problem_solving]
 collection = "~/work/LeetKatas/practice/problem_solving/collections/algorithmic_problem_solving"
+# First supported implementation workspace language.
+implementation_language = "cpp"
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/leetkatas/problem-solving.log"
 # notes_directory = "~/.local/share/leetkatas/problem-solving-notes"
