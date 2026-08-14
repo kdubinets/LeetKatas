@@ -21,6 +21,7 @@ end
 local function close()
   if valid(state.source_buffer) then vim.api.nvim_buf_delete(state.source_buffer, { force = true }) end
   state.source_buffer, state.source_window, state.draft = nil, nil, nil
+  if config.on_implementation_state_change then config.on_implementation_state_change() end
 end
 local function open_source(draft)
   state.draft = draft
@@ -30,11 +31,12 @@ local function open_source(draft)
   vim.api.nvim_buf_set_name(state.source_buffer, "Level C implementation: " .. draft.problem_id .. ".cpp")
   vim.api.nvim_buf_set_lines(state.source_buffer, 0, -1, false, vim.split(draft.source, "\n", { plain = true }))
   vim.bo[state.source_buffer].modified = false
-  vim.keymap.set("n", "<leader>c", M.compile, { buffer = state.source_buffer, silent = true, desc = "Problem solving: compile implementation" })
-  vim.keymap.set("n", "<leader>k", M.check, { buffer = state.source_buffer, silent = true, desc = "Problem solving: check implementation" })
-  vim.keymap.set("n", "<leader>f", M.finish, { buffer = state.source_buffer, silent = true, desc = "Problem solving: finish implementation" })
-  vim.keymap.set("n", "<leader>q", M.return_to_card, { buffer = state.source_buffer, silent = true, desc = "Problem solving: return to card" })
+  vim.keymap.set("n", "<leader>c", M.compile, { buffer = state.source_buffer, silent = true, desc = "Compile" })
+  vim.keymap.set("n", "<leader>k", M.check, { buffer = state.source_buffer, silent = true, desc = "Check" })
+  vim.keymap.set("n", "<leader>f", M.finish, { buffer = state.source_buffer, silent = true, desc = "Finish" })
+  vim.keymap.set("n", "<leader>q", M.return_to_card, { buffer = state.source_buffer, silent = true, desc = "Return to card" })
   vim.api.nvim_create_autocmd("BufLeave", { buffer = state.source_buffer, callback = function() if state.draft then save() end end })
+  if config.on_implementation_state_change then config.on_implementation_state_change() end
   ui.notify("Implementation workspace: <Space>c Compile · <Space>k Check · <Space>f Finish · <Space>q Return")
 end
 

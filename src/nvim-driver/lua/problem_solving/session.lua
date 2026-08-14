@@ -29,6 +29,11 @@ local state = {
   timing = { phase = nil, started = nil, focused = true, solve_ms = 0, discussion_ms = 0 },
 }
 
+local function set_status(status)
+  state.status = status
+  if config and config.on_status_change then config.on_status_change() end
+end
+
 local function script(name) return config.scripts_dir .. "/" .. name end
 
 local function flush_timing()
@@ -73,7 +78,7 @@ local function show_problem(problem, response, bookmarked)
   if type(problem) ~= "table" or type(problem.id) ~= "string"
     or type(problem.brief_path) ~= "string" or not valid_state(response.state)
   then
-    state.status = "idle"
+    set_status("idle")
     ui.notify("Problem selection returned an invalid response", vim.log.levels.ERROR)
     return
   end
@@ -90,11 +95,11 @@ local function show_problem(problem, response, bookmarked)
   reset_timing()
   ui.open_brief(problem, response.hint)
   if response.state.revealed then
-    state.status = "revealed"
+    set_status("revealed")
     ui.open_outline(response)
     timing_phase("discussion")
   else
-    state.status = "solving"
+    set_status("solving")
     timing_phase("solve")
   end
   log.event("problem_opened", "info", {
@@ -113,18 +118,18 @@ local function select_next()
   state.conversation_notice = nil
   state.hint_requested, state.outline_revealed = false, false
   reset_timing()
-  state.status = "selecting"
+  set_status("selecting")
   local body = base_request()
   body.previous_problem_id = state.previous_id
   request("select_problem_solving_card.py", body, function(error_message, response)
     if error_message then
-      state.status = "idle"
+      set_status("idle")
       ui.notify("Selection failed: " .. error_message, vim.log.levels.ERROR)
       return
     end
     state.open_bookmarks = response.open_bookmarks or 0
     if response.problem == nil or response.problem == vim.NIL then
-      state.status = "complete"
+      set_status("complete")
       state.next_due = response.next_due ~= vim.NIL and response.next_due or nil
       local message = state.next_due and "No problems are due. Next review: " .. state.next_due
         or "No unbookmarked problems are currently available."
@@ -136,7 +141,7 @@ local function select_next()
       problem_id = problem.id, action = "get",
     }), function(card_error, card_response)
       if card_error then
-        state.status = "idle"
+        set_status("idle")
         ui.notify("Could not restore problem state: " .. card_error, vim.log.levels.ERROR)
         return
       end
@@ -220,7 +225,7 @@ function M.reveal()
   end
   timing_phase(nil)
   refresh_card("reveal", nil, function(response)
-    state.status = "revealed"
+    set_status("revealed")
     state.outline_revealed = true
     ui.open_brief(state.problem, response.hint)
     ui.open_outline(response)
@@ -249,11 +254,11 @@ function M.bookmark(note)
   if note ~= nil then body.note = note end
   local was_bookmarked = state.bookmarked
   local previous_status = state.status
-  state.status = "bookmarked"
+  set_status("bookmarked")
   timing_phase(nil)
   request("problem_solving_bookmark.py", body, function(error_message)
     if error_message then
-      state.status = previous_status
+      set_status(previous_status)
       timing_phase(previous_status ~= "solving" and "discussion" or "solve")
       ui.notify("Bookmark failed: " .. error_message, vim.log.levels.ERROR)
       return
@@ -261,9 +266,9 @@ function M.bookmark(note)
     state.bookmarked = true
     ui.notify(was_bookmarked and "Bookmark updated" or "Problem added to open-thinking queue")
     if was_bookmarked then
-      state.status = previous_status
+      set_status(previous_status)
       refresh_card("get", nil, function(response)
-        state.status = response.state.revealed and "revealed" or "solving"
+        set_status(response.state.revealed and "revealed" or "solving")
         state.hint_requested = response.state.hint_requested
         state.outline_revealed = response.state.revealed
         timing_phase(response.state.revealed and "discussion" or "solve")
@@ -360,7 +365,7 @@ function M.rate(rating)
     return
   end
   timing_phase(nil)
-  state.status = "recording"
+  set_status("recording")
   request("record_problem_solving_rating.py", vim.tbl_extend("force", base_request(), {
     problem_id = state.problem.id,
     final_rating = internal,
@@ -368,7 +373,7 @@ function M.rate(rating)
     discussion_duration_ms = state.timing.discussion_ms,
   }), function(error_message, response)
     if error_message or response.recorded ~= true then
-      state.status = "revealed"
+      set_status("revealed")
       timing_phase("discussion")
       ui.notify("Rating failed: " .. tostring(error_message), vim.log.levels.ERROR)
       return
@@ -385,7 +390,7 @@ function M.begin_discussion()
     ui.notify("Discussion is available only after reveal", vim.log.levels.WARN)
     return false
   end
-  state.status = "discussing"
+  set_status("discussing")
   return true
 end
 
@@ -419,7 +424,7 @@ function M.ask(question)
   local was_solving = state.status == "solving"
   local resume_status = was_solving and "solving" or "discussing"
   local reviewer = was_solving and config.clarification_reviewer or config.discussion_reviewer
-  state.status = resume_status
+  set_status(resume_status)
   state.conversation_pending = true
   state.conversation_notice = nil
   timing_phase(nil)
@@ -434,7 +439,7 @@ function M.ask(question)
   request(was_solving and "level_c_clarify.py" or "level_c_discuss.py", body,
     function(error_message, response)
       state.conversation_pending = false
-      state.status = resume_status
+      set_status(resume_status)
       timing_phase(was_solving and "solve" or "discussion")
       if error_message then
         state.conversation_notice = "The conversation request failed. Practice remains available."
@@ -507,7 +512,8 @@ function M.quit()
   state.operation = state.operation + 1
   timing_phase(nil)
   ui.close_all()
-  state.status, state.collection, state.problem = "idle", nil, nil
+  set_status("idle")
+  state.collection, state.problem = nil, nil
   state.previous_id, state.bookmarked, state.next_due = nil, false, nil
   state.conversation_history, state.conversation_pending = {}, false
   state.conversation_notice = nil

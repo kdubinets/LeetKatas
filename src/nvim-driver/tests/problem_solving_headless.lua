@@ -34,6 +34,10 @@ local function find_buffer(variable)
   end
 end
 
+local function has_normal_mapping(lhs)
+  return vim.fn.maparg(lhs, "n") ~= ""
+end
+
 for _, command in ipairs({
   "ProblemSolvingStart", "ProblemSolvingHint", "ProblemSolvingReveal",
   "ProblemSolvingBookmark", "ProblemSolvingBookmarks", "ProblemSolvingReopen",
@@ -46,14 +50,21 @@ for _, command in ipairs({
 end
 assert(not vim.api.nvim_get_commands({ builtin = false }).ProblemSolvingReveal.bang,
   "solution reveal should not have a give-up bang form")
-for _, mapping in ipairs({ "s", "h", "r", "b", "l", "m", "c", "1", "2", "3", "4", "n", "t", "q" }) do
-  assert(vim.fn.maparg("<Space>" .. mapping, "n") ~= "", mapping .. " mapping is missing")
-end
+assert(has_normal_mapping("<Space>s"), "start mapping is missing while idle")
+assert(not has_normal_mapping("<Space>h"), "hint mapping is shown while idle")
+assert(not has_normal_mapping("<Space>1"), "rating mapping is shown while idle")
+assert(has_normal_mapping("<Space>t"), "statistics mapping is missing while idle")
 assert(vim.fn.maparg("<Space>pg", "n") == "", "retired give-up mapping remains")
 
 problem_solving.start()
 wait_for("solving")
 local state = problem_solving.get_state()
+assert(has_normal_mapping("<Space>h"), "hint mapping is missing while solving")
+assert(has_normal_mapping("<Space>r"), "reveal mapping is missing while solving")
+assert(has_normal_mapping("<Space>i"), "implement mapping is missing while solving")
+assert(not has_normal_mapping("<Space>1"), "rating mapping is shown before reveal")
+assert(vim.fn.maparg("<Space>h", "n", false, true).desc == "Show hint",
+  "problem-solving shortcut descriptions were not shortened")
 assert(state.problem.id == "problem-2", "canonical first problem was not selected")
 assert(_G.ProblemSolvingStatusline and _G.ProblemSolvingStatusline():find("Add Two Numbers", 1, true),
   "problem-solving status line did not show the active problem")
@@ -126,6 +137,9 @@ assert(buffer_text(conversation):find("would reveal solving guidance", 1, true),
 
 problem_solving.reveal()
 wait_for("revealed")
+assert(has_normal_mapping("<Space>1"), "rating mapping is missing after reveal")
+assert(not has_normal_mapping("<Space>h"), "hint mapping is shown after reveal")
+assert(not has_normal_mapping("<Space>r"), "reveal mapping is shown after reveal")
 assert(_G.ProblemSolvingStatusline():find("Outline revealed", 1, true),
   "problem-solving status line did not show the revealed outline")
 local outline = find_buffer("problem_solving_outline")

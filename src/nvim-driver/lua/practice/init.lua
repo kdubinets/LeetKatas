@@ -7,9 +7,62 @@ local M = {}
 
 local RATINGS = { "fail", "acceptable", "good", "excellent" }
 local NOTE_KINDS = { "follow-up", "research", "exercise-fix" }
+local PRACTICE_KEYS = {
+  "<leader>s", "<leader>c", "<leader>a", "<leader>r", "<leader>1",
+  "<leader>2", "<leader>3", "<leader>4", "<leader>n", "<leader>m",
+  "<leader>f", "<leader>i", "<leader>o", "<leader>t", "<leader>q",
+}
 
 local function map(lhs, rhs, description)
   vim.keymap.set("n", lhs, rhs, { silent = true, desc = description })
+end
+
+local function clear_practice_maps(mode)
+  for _, lhs in ipairs(PRACTICE_KEYS) do
+    pcall(vim.keymap.del, mode, lhs)
+  end
+end
+
+function M.refresh_keymaps()
+  clear_practice_maps("n")
+  clear_practice_maps("x")
+
+  local status = session.get_state().status
+  map("<leader>o", M.open_notes, "Notes")
+  map("<leader>t", M.stats, "Statistics")
+
+  if status == "idle" or status == "complete" then
+    map("<leader>s", M.start, "Start practice")
+    return
+  end
+
+  if status == "solving" then
+    map("<leader>c", M.submit, "Check solution")
+    map("<leader>n", M.next, "Skip exercise")
+    map("<leader>m", M.note, "Add note")
+    vim.keymap.set("x", "<leader>m", ":PracticeNote<CR>", {
+      silent = true, desc = "Add note",
+    })
+    map("<leader>i", M.fold_imports, "Toggle imports")
+    map("<leader>q", M.quit, "End practice")
+    return
+  end
+
+  if status == "reviewing" then
+    map("<leader>a", M.accept, "Accept rating")
+    map("<leader>1", function() M.rate("fail") end, "Rate: Fail")
+    map("<leader>2", function() M.rate("acceptable") end, "Rate: Acceptable")
+    map("<leader>3", function() M.rate("good") end, "Rate: Good")
+    map("<leader>4", function() M.rate("excellent") end, "Rate: Excellent")
+    map("<leader>r", M.retry, "Retry exercise")
+    map("<leader>n", M.next, "Skip exercise")
+    map("<leader>m", M.note, "Add note")
+    vim.keymap.set("x", "<leader>m", ":PracticeNote<CR>", {
+      silent = true, desc = "Add note",
+    })
+    map("<leader>f", M.ask, "Ask reviewer")
+    map("<leader>q", M.quit, "End practice")
+  end
 end
 
 function M.setup(options)
@@ -29,6 +82,7 @@ function M.setup(options)
     callback = session.focus_gained,
     desc = "Resume active practice timing",
   })
+  options.on_status_change = M.refresh_keymaps
   session.setup(options)
   sync.setup(options)
 
@@ -116,24 +170,7 @@ function M.setup(options)
     end)
   end, { desc = "Show practice diagnostic location and session state" })
 
-  map("<leader>s", M.start, "Practice: start")
-  map("<leader>c", M.submit, "Practice: check current solution")
-  map("<leader>a", M.accept, "Practice: after review, accept proposed rating")
-  map("<leader>r", M.retry, "Practice: retry current exercise without recording")
-  map("<leader>1", function() M.rate("fail") end, "Practice: after review, rate Fail")
-  map("<leader>2", function() M.rate("acceptable") end, "Practice: after review, rate Acceptable")
-  map("<leader>3", function() M.rate("good") end, "Practice: after review, rate Good")
-  map("<leader>4", function() M.rate("excellent") end, "Practice: after review, rate Excellent")
-  map("<leader>n", M.next, "Practice: next exercise")
-  map("<leader>m", M.note, "Practice: capture a follow-up note")
-  map("<leader>f", M.ask, "Practice: ask reviewer a follow-up question")
-  map("<leader>i", M.fold_imports, "Practice: toggle imports")
-  vim.keymap.set("x", "<leader>m", ":PracticeNote<CR>", {
-    silent = true, desc = "Practice: capture selected context in a follow-up note",
-  })
-  map("<leader>o", M.open_notes, "Practice: open notes directory")
-  map("<leader>t", M.stats, "Practice: show statistics")
-  map("<leader>q", M.quit, "Practice: quit")
+  M.refresh_keymaps()
 end
 
 function M.start(directory)

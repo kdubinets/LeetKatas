@@ -54,6 +54,13 @@ local state = {
 local config = nil
 local stats_pending = false
 
+local function set_status(status)
+  state.status = status
+  if config and config.on_status_change then
+    config.on_status_change()
+  end
+end
+
 local function flush_timing()
   if not state.timing.started or not state.timing.phase then return end
   local elapsed_ms = math.floor((vim.uv.hrtime() - state.timing.started) / 1000000)
@@ -231,7 +238,7 @@ local function reset_session()
   if state.session_directory then
     vim.fn.delete(state.session_directory, "rf")
   end
-  state.status = "idle"
+  set_status("idle")
   state.collection = nil
   state.collections = nil
   state.previous_id = nil
@@ -263,7 +270,7 @@ end
 
 local function open_selected_exercise(exercise)
   if not ensure_session_directory() then
-    state.status = "idle"
+    set_status("idle")
     return
   end
 
@@ -274,7 +281,7 @@ local function open_selected_exercise(exercise)
   end
   local copied, copy_error = vim.uv.fs_copyfile(exercise.source_path, working_path)
   if not copied then
-    state.status = "idle"
+    set_status("idle")
     ui.notify("Could not create working copy: " .. tostring(copy_error), vim.log.levels.ERROR)
     return
   end
@@ -299,14 +306,14 @@ local function open_selected_exercise(exercise)
     silent = true,
     desc = "Practice: submit the current exercise",
   })
-  state.status = "solving"
+  set_status("solving")
   reset_timing()
   set_timing_phase("solve")
 end
 
 local function select_next()
   delete_working_copy()
-  state.status = "selecting"
+  set_status("selecting")
   process.run(config.python, script_path("select_exercise.py"), {
     exercise_directories = state.collections,
     database_path = config.database_path,
@@ -318,20 +325,20 @@ local function select_next()
     } or nil,
   }, function(error_message, response)
     if error_message then
-      state.status = "idle"
+      set_status("idle")
       ui.notify("Selection failed: " .. error_message, vim.log.levels.ERROR)
       return
     end
     if (response.exercise == nil or response.exercise == vim.NIL)
       and type(response.next_due) == "string"
     then
-      state.status = "complete"
+      set_status("complete")
       state.next_due = response.next_due
       ui.notify("No exercises are due. Next review: " .. response.next_due)
       return
     end
     if not valid_exercise(response.exercise) then
-      state.status = "idle"
+      set_status("idle")
       ui.notify("Selection failed: invalid exercise response", vim.log.levels.ERROR)
       return
     end
@@ -520,7 +527,7 @@ function M.submit()
 
   state.previous_result = nil
   set_timing_phase(nil)
-  state.status = "evaluating"
+  set_status("evaluating")
   local progress_buffer = start_progress()
   install_double_z_mapping(progress_buffer, "Practice: press Z again to confirm exit")
   process.run(config.python, script_path("evaluate_exercise.py"), {
@@ -536,7 +543,7 @@ function M.submit()
     stop_progress()
     remove_double_z_mapping(progress_buffer)
     if error_message then
-      state.status = "solving"
+      set_status("solving")
       set_timing_phase("solve")
       ui.show_progress_error(error_message)
       ui.notify("Evaluation failed: " .. error_message, vim.log.levels.ERROR)
@@ -550,14 +557,14 @@ function M.submit()
       or type(response.submitted_source) ~= "string"
       or (response.proposed_rating ~= vim.NIL and response.proposed_rating ~= nil and not RATINGS[response.proposed_rating])
     then
-      state.status = "solving"
+      set_status("solving")
       set_timing_phase("solve")
       ui.notify("Evaluation failed: invalid evaluator response", vim.log.levels.ERROR)
       return
     end
 
     state.result = response
-    state.status = "reviewing"
+    set_status("reviewing")
     set_timing_phase("feedback")
     ui.open_feedback(state.source_window, response, {
       accept = M.accept,
@@ -698,7 +705,7 @@ function M.retry()
       vim.api.nvim_win_set_buf(state.source_window, state.source_buffer)
     end
   end
-  state.status = "solving"
+  set_status("solving")
   set_timing_phase("solve")
   ui.notify("Returned to the unchanged source; no rating was recorded")
 end
@@ -719,7 +726,7 @@ function M.rate(rating)
   end
 
   set_timing_phase(nil)
-  state.status = "recording"
+  set_status("recording")
   process.run(config.python, script_path("record_rating.py"), {
     exercise_directory = state.collection,
     database_path = config.database_path,
@@ -739,7 +746,7 @@ function M.rate(rating)
     review_archive_ttl_days = config.review_archive_ttl_days,
   }, function(error_message, response)
     if error_message then
-      state.status = "reviewing"
+      set_status("reviewing")
       set_timing_phase("feedback")
       ui.notify("Rating failed: " .. error_message, vim.log.levels.ERROR)
       return
@@ -748,7 +755,7 @@ function M.rate(rating)
       or type(response.due) ~= "string"
       or type(response.state) ~= "string"
     then
-      state.status = "reviewing"
+      set_status("reviewing")
       set_timing_phase("feedback")
       ui.notify("Rating failed: invalid recorder response", vim.log.levels.ERROR)
       return

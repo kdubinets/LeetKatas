@@ -7,13 +7,65 @@ local implementation = require("problem_solving.implementation_session")
 local M = {}
 local options = nil
 local ratings = { "again", "hard", "good", "easy" }
+local PROBLEM_SOLVING_KEYS = {
+  "<leader>s", "<leader>h", "<leader>i", "<leader>d", "<leader>r",
+  "<leader>b", "<leader>l", "<leader>m", "<leader>c", "<leader>1",
+  "<leader>2", "<leader>3", "<leader>4", "<leader>n", "<leader>t",
+  "<leader>q",
+}
 
 local function map(lhs, rhs, description)
   vim.keymap.set("n", lhs, rhs, { silent = true, desc = description })
 end
 
+local function clear_maps()
+  for _, lhs in ipairs(PROBLEM_SOLVING_KEYS) do
+    pcall(vim.keymap.del, "n", lhs)
+  end
+end
+
+function M.refresh_keymaps()
+  clear_maps()
+  if implementation.active() then return end
+
+  local status = session.get_state().status
+  map("<leader>t", M.stats, "Statistics")
+  map("<leader>d", function()
+    implementation.drafts(session.get_state().collection or options.default_directory)
+  end, "Implementation drafts")
+
+  if status == "idle" or status == "complete" then
+    map("<leader>s", M.start, "Start practice")
+    return
+  end
+
+  if status == "solving" then
+    map("<leader>h", M.hint, "Show hint")
+    map("<leader>r", M.reveal, "Reveal outline")
+  end
+
+  if status == "solving" or status == "revealed" or status == "discussing" then
+    map("<leader>i", implementation.open_active, "Implement")
+    map("<leader>b", M.bookmark, "Bookmark")
+    map("<leader>l", M.bookmarks, "Bookmarks")
+    map("<leader>m", M.note, "Add note")
+    map("<leader>c", M.ask, "Ask reviewer")
+    map("<leader>n", M.next, "Next problem")
+    map("<leader>q", M.quit, "End practice")
+  end
+
+  if status == "revealed" or status == "discussing" then
+    map("<leader>1", function() M.rate("again") end, "Rate: Again")
+    map("<leader>2", function() M.rate("hard") end, "Rate: Hard")
+    map("<leader>3", function() M.rate("good") end, "Rate: Good")
+    map("<leader>4", function() M.rate("easy") end, "Rate: Easy")
+  end
+end
+
 function M.setup(config)
   options = config
+  config.on_status_change = M.refresh_keymaps
+  config.on_implementation_state_change = M.refresh_keymaps
   log.setup(config.log_path)
   session.setup(config)
   implementation.setup(config, session)
@@ -105,22 +157,7 @@ function M.setup(config)
     end)
   end, { desc = "Show problem-solving diagnostics" })
 
-  map("<leader>s", M.start, "Problem solving: start")
-  map("<leader>h", M.hint, "Problem solving: hint")
-  map("<leader>i", implementation.open_active, "Problem solving: implement")
-  map("<leader>d", function() implementation.drafts(session.get_state().collection or config.default_directory) end, "Problem solving: implementation drafts")
-  map("<leader>r", M.reveal, "Problem solving: reveal outline")
-  map("<leader>b", M.bookmark, "Problem solving: bookmark")
-  map("<leader>l", M.bookmarks, "Problem solving: list bookmarks")
-  map("<leader>m", M.note, "Problem solving: private note")
-  map("<leader>c", M.ask, "Problem solving: conversation")
-  map("<leader>1", function() M.rate("again") end, "Problem solving: rate Again")
-  map("<leader>2", function() M.rate("hard") end, "Problem solving: rate Hard")
-  map("<leader>3", function() M.rate("good") end, "Problem solving: rate Good")
-  map("<leader>4", function() M.rate("easy") end, "Problem solving: rate Easy")
-  map("<leader>n", M.next, "Problem solving: next")
-  map("<leader>t", M.stats, "Problem solving: statistics")
-  map("<leader>q", M.quit, "Problem solving: quit")
+  M.refresh_keymaps()
 end
 
 function M.start(directory) return session.start(directory) end
