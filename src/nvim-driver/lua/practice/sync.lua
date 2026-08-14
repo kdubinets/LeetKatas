@@ -24,6 +24,42 @@ local function apply_response(response)
 end
 
 local function request(action, directory, manual, callback)
+  if type(directory) == "table" then
+    if #directory == 0 then return false end
+    if #directory == 1 then
+      directory = directory[1]
+    else
+      local index, responses = 1, {}
+      local function next_request()
+        if index > #directory then
+          local summary = { configured = config.supabase_url ~= nil, status = "success",
+            uploaded = 0, downloaded = 0, pending = 0, collections = responses }
+          for _, response in ipairs(responses) do
+            summary.uploaded = summary.uploaded + (response.uploaded or 0)
+            summary.downloaded = summary.downloaded + (response.downloaded or 0)
+            summary.pending = summary.pending + (response.pending or 0)
+            if response.status ~= "success" then summary.status = response.status end
+          end
+          last = summary
+          if manual then
+            vim.notify(string.format("Synchronized %d collection(s): %d uploaded, %d downloaded",
+              #responses, summary.uploaded, summary.downloaded), vim.log.levels.INFO,
+              { title = "Practice Sync" })
+          end
+          if callback then callback(last) end
+          return
+        end
+        local current = directory[index]
+        index = index + 1
+        request(action, current, false, function(response)
+          table.insert(responses, response)
+          next_request()
+        end)
+      end
+      next_request()
+      return true
+    end
+  end
   if running then
     if manual then
       vim.notify("Practice synchronization is already running", vim.log.levels.WARN,
@@ -82,7 +118,7 @@ end
 function M.setup(options)
   config = options
   if not config.sync_first then
-    vim.schedule(function() M.trigger(options.default_directory) end)
+    vim.schedule(function() M.trigger(options.default_directories) end)
   end
 end
 
@@ -93,10 +129,24 @@ function M.sync_first(directory)
   if not config.supabase_url then
     return apply_response({ configured = false, status = "disabled", pending = last.pending or 0 })
   end
+  directory = directory or config.default_directories
+  if type(directory) == "table" then
+    local summary = { configured = true, status = "success", uploaded = 0, downloaded = 0,
+      pending = 0, collections = {} }
+    for _, item in ipairs(directory) do
+      local response = M.sync_first(item)
+      table.insert(summary.collections, response)
+      summary.uploaded = summary.uploaded + (response.uploaded or 0)
+      summary.downloaded = summary.downloaded + (response.downloaded or 0)
+      summary.pending = summary.pending + (response.pending or 0)
+      if response.status ~= "success" then summary.status = response.status end
+    end
+    return apply_response(summary)
+  end
 
   local request_body = {
     action = "sync",
-    exercise_directory = directory or config.default_directory,
+    exercise_directory = directory,
     database_path = config.database_path,
     supabase_url = config.supabase_url,
   }

@@ -24,6 +24,7 @@ local RATINGS = {
 local state = {
   status = "idle",
   collection = nil,
+  collections = nil,
   previous_id = nil,
   exercise = nil,
   result = nil,
@@ -232,6 +233,7 @@ local function reset_session()
   end
   state.status = "idle"
   state.collection = nil
+  state.collections = nil
   state.previous_id = nil
   state.session_directory = nil
   state.source_window = nil
@@ -254,6 +256,7 @@ local function valid_exercise(exercise)
   return type(exercise) == "table"
     and type(exercise.id) == "string"
     and type(exercise.name) == "string"
+    and type(exercise.collection_directory) == "string"
     and type(exercise.source_path) == "string"
     and type(exercise.metadata_path) == "string"
 end
@@ -277,6 +280,7 @@ local function open_selected_exercise(exercise)
   end
 
   state.exercise = exercise
+  state.collection = exercise.collection_directory
   state.previous_id = exercise.id
   state.working_path = working_path
   state.source_buffer, state.source_window = ui.open_source(
@@ -304,11 +308,14 @@ local function select_next()
   delete_working_copy()
   state.status = "selecting"
   process.run(config.python, script_path("select_exercise.py"), {
-    exercise_directory = state.collection,
+    exercise_directories = state.collections,
     database_path = config.database_path,
     source_extension = config.source_extension,
     metadata_extension = config.metadata_extension,
-    previous_exercise_id = state.previous_id,
+    previous_exercise = state.collection and state.previous_id and {
+      collection_directory = state.collection,
+      exercise_id = state.previous_id,
+    } or nil,
   }, function(error_message, response)
     if error_message then
       state.status = "idle"
@@ -440,11 +447,11 @@ function M.stats(directory)
     ui.notify("Practice statistics are already loading", vim.log.levels.WARN)
     return
   end
-  local collection = directory and vim.fn.fnamemodify(directory, ":p")
-    or state.collection or config.default_directory
+  local collections = directory and { vim.fn.fnamemodify(directory, ":p") }
+    or state.collections or config.default_directories
   stats_pending = true
   process.run(config.python, script_path("practice_stats.py"), {
-    exercise_directory = collection,
+    exercise_directories = collections,
     database_path = config.database_path,
     source_extension = config.source_extension,
     metadata_extension = config.metadata_extension,
@@ -464,7 +471,7 @@ function M.stats(directory)
       ui.notify("Statistics failed: invalid response", vim.log.levels.ERROR)
       return
     end
-    ui.open_stats(response, function() M.stats(collection) end)
+    ui.open_stats(response, function() M.stats(directory) end)
   end)
 end
 
@@ -484,9 +491,10 @@ function M.start(directory)
     return
   end
   reset_session()
-  state.collection = directory and vim.fn.fnamemodify(directory, ":p") or config.default_directory
-  statusline.refresh(state.collection)
-  sync.trigger(state.collection)
+  state.collections = directory and { vim.fn.fnamemodify(directory, ":p") } or config.default_directories
+  state.collection = nil
+  statusline.refresh(state.collections)
+  sync.trigger(state.collections)
   select_next()
 end
 
@@ -746,8 +754,8 @@ function M.rate(rating)
       return
     end
     ui.notify("Rated " .. rating:sub(1, 1):upper() .. rating:sub(2))
-    statusline.invalidate(state.collection)
-    sync.trigger(state.collection)
+    statusline.invalidate(state.collections)
+    sync.trigger(state.collections)
     select_next()
   end)
 end

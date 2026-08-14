@@ -127,6 +127,10 @@ separator = " | "
             with self.assertRaises(ConfigError):
                 load_config(path)
 
+            path.write_text('[practice]\ncollection = "core"\ncollections = ["chrono"]\n')
+            with self.assertRaises(ConfigError):
+                load_config(path)
+
             path.write_text("[reviewer]\nfollow_up_reasoning_effort = \"extreme\"\n")
             with self.assertRaises(ConfigError):
                 load_config(path)
@@ -142,6 +146,16 @@ separator = " | "
             path.write_text('[statusline]\nleft = ["not_a_real_item"]\n')
             with self.assertRaises(ConfigError):
                 load_config(path)
+
+    def test_loads_multiple_collection_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / "practice.toml"
+            path.write_text('[practice]\ncollections = ["collections/core", "collections/chrono"]\n')
+            config = load_config(path)
+            self.assertEqual(config["practice"]["collections"], [
+                str(root / "collections/core"), str(root / "collections/chrono"),
+            ])
 
 
 class SelectExerciseTests(unittest.TestCase):
@@ -925,6 +939,23 @@ class PracticeStatsTests(unittest.TestCase):
             self.assertEqual(result["today"]["date"], "2026-03-30")
             self.assertEqual(result["today"]["reviews"], 1)
 
+    def test_aggregates_portfolio_statistics(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first, second = root / "first", root / "second"
+            first.mkdir()
+            second.mkdir()
+            self.create_pair(first, "one")
+            self.create_pair(second, "two")
+            request = self.request(first)
+            request.pop("exercise_directory")
+            request["exercise_directories"] = [str(first), str(second)]
+            result = practice_stats(request, self.NOW, self.LOCAL_ZONE)
+            self.assertEqual(result["collection"], "portfolio")
+            self.assertEqual(len(result["collections"]), 2)
+            self.assertEqual(result["collection_state"]["total"], 2)
+            self.assertEqual(result["collection_state"]["unseen"], 2)
+
     def test_migrates_v4_duration_columns_as_untracked(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             database = Path(temporary) / "practice.sqlite3"
@@ -1091,6 +1122,26 @@ class SchedulerIntegrationTests(unittest.TestCase):
             response = select_exercise(self.select_request(second, database), self.NOW)
 
             self.assertEqual(response["exercise"]["id"], "shared")
+
+    def test_portfolio_selects_oldest_due_and_balances_unseen_introductions(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first, second = root / "first", root / "second"
+            first.mkdir()
+            second.mkdir()
+            database = root / "practice.sqlite3"
+            self.create_pair(first, "first")
+            self.create_pair(second, "second")
+            request = {
+                "exercise_directories": [str(first), str(second)],
+                "database_path": str(database),
+                "source_extension": ".cpp", "metadata_extension": ".md",
+            }
+            response = select_exercise(request, self.NOW)
+            self.assertEqual(response["exercise"]["collection_directory"], str(first.resolve()))
+            record_rating(self.record_request(first, database, "first", "fail"), self.NOW)
+            response = select_exercise(request, self.NOW + timedelta(minutes=2))
+            self.assertEqual(response["exercise"]["collection_directory"], str(first.resolve()))
 
     def test_failed_review_transaction_does_not_create_a_card(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

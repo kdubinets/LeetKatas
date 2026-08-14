@@ -42,6 +42,19 @@ def required_string(request: dict[str, Any], name: str) -> str:
     return value
 
 
+def collection_directories(request: dict[str, Any]) -> list[str]:
+    """Return one or more collection directories from either supported request form."""
+    directories = request.get("exercise_directories")
+    if directories is None:
+        return [required_string(request, "exercise_directory")]
+    if "exercise_directory" in request:
+        raise RequestError("exercise_directory and exercise_directories cannot both be set")
+    if (not isinstance(directories, list) or not directories
+            or any(not isinstance(item, str) or not item for item in directories)):
+        raise RequestError("exercise_directories must be a non-empty list of strings")
+    return directories
+
+
 def exercise_order(
     collection: Path, exercises: list[dict[str, Any]]
 ) -> list[str] | None:
@@ -103,106 +116,121 @@ def exercise_name(metadata: Path, fallback: str) -> str:
     return fallback.replace("_", " ").title()
 
 
-def select_exercise(
-    request: dict[str, Any], current_datetime: datetime | None = None
+def collection_candidates(
+    directory: str,
+    source_extension: str,
+    metadata_extension: str,
+    store: PracticeStore,
+    now: datetime,
 ) -> dict[str, Any]:
-    path_key, collection_key, _ = collection_keys(required_string(request, "exercise_directory"))
+    path_key, collection_key, _ = collection_keys(directory)
     collection = Path(path_key)
     target_environment = load_collection_environment(collection)
-    source_extension = required_string(request, "source_extension")
-    metadata_extension = required_string(request, "metadata_extension")
-    previous_id = request.get("previous_exercise_id")
-
-    if previous_id is not None and not isinstance(previous_id, str):
-        raise RequestError("previous_exercise_id must be a string or null")
-    if not source_extension.startswith("."):
-        raise RequestError("source_extension must start with a dot")
-    if not metadata_extension.startswith("."):
-        raise RequestError("metadata_extension must start with a dot")
+    store.adopt_collection_key(path_key, collection_key)
     exercises: list[dict[str, Any]] = []
     for source in sorted(collection.glob(f"*{source_extension}")):
         if not source.is_file():
             continue
         metadata = source.with_suffix(metadata_extension)
         if metadata.is_file():
-            exercises.append(
-                {
-                    "id": source.stem,
-                    "source_path": str(source.resolve()),
-                    "metadata_path": str(metadata.resolve()),
-                    **(
-                        {"target_environment": target_environment}
-                        if target_environment is not None
-                        else {}
-                    ),
-                }
-            )
-
+            exercises.append({
+                "id": source.stem,
+                "source_path": str(source.resolve()),
+                "metadata_path": str(metadata.resolve()),
+                "collection_directory": path_key,
+                **({"target_environment": target_environment} if target_environment is not None else {}),
+            })
     if not exercises:
         raise RequestError(
             f"no {source_extension}/{metadata_extension} exercise pairs found in {collection}"
         )
-
     order = exercise_order(collection, exercises)
+    cards = store.cards_for_collection(collection_key)
+    by_id = {exercise["id"]: exercise for exercise in exercises}
+    scheduled = {exercise_id: card for exercise_id, card in cards.items() if exercise_id in by_id}
+    due = [(exercise_id, card) for exercise_id, card in scheduled.items() if card.due <= now]
+    unseen = ([exercise_id for exercise_id in order if exercise_id not in scheduled]
+              if order is not None else [exercise["id"] for exercise in exercises if exercise["id"] not in scheduled])
+    return {
+        "path": path_key,
+        "exercises": by_id,
+        "scheduled": scheduled,
+        "due": due,
+        "unseen": unseen,
+        "ordered_unseen": order is not None,
+    }
 
+
+def select_exercise(
+    request: dict[str, Any], current_datetime: datetime | None = None
+) -> dict[str, Any]:
+    source_extension = required_string(request, "source_extension")
+    metadata_extension = required_string(request, "metadata_extension")
+    previous_id = request.get("previous_exercise_id")
+    previous = request.get("previous_exercise")
+    if previous_id is not None and not isinstance(previous_id, str):
+        raise RequestError("previous_exercise_id must be a string or null")
+    if previous is not None and (
+        not isinstance(previous, dict)
+        or set(previous) != {"collection_directory", "exercise_id"}
+        or not isinstance(previous["collection_directory"], str)
+        or not isinstance(previous["exercise_id"], str)
+    ):
+        raise RequestError("previous_exercise must contain collection_directory and exercise_id strings")
+    if not source_extension.startswith("."):
+        raise RequestError("source_extension must start with a dot")
+    if not metadata_extension.startswith("."):
+        raise RequestError("metadata_extension must start with a dot")
     try:
         store = PracticeStore(database_path(request))
-        store.adopt_collection_key(path_key, collection_key)
-        cards = store.cards_for_collection(collection_key)
         now = ensure_utc(current_datetime)
+        candidates = [collection_candidates(directory, source_extension, metadata_extension, store, now)
+                      for directory in collection_directories(request)]
     except SchedulerError as error:
         raise RequestError(str(error)) from error
+    if len({candidate["path"] for candidate in candidates}) != len(candidates):
+        raise RequestError("exercise_directories must not contain duplicate paths")
 
-    exercise_by_id = {exercise["id"]: exercise for exercise in exercises}
-    scheduled = {
-        exercise_id: card
-        for exercise_id, card in cards.items()
-        if exercise_id in exercise_by_id
-    }
-    due = [
-        (exercise_id, card)
-        for exercise_id, card in scheduled.items()
-        if card.due <= now
+    due_options = [
+        (candidate, exercise_id, card)
+        for candidate in candidates for exercise_id, card in candidate["due"]
     ]
-    if due:
-        oldest_due = min(card.due for _, card in due)
-        candidate_ids = [
-            exercise_id for exercise_id, card in due if card.due == oldest_due
-        ]
-        ordered_candidates = False
+    selected_candidate: dict[str, Any] | None = None
+    selected_id: str | None = None
+    if due_options:
+        oldest_due = min(card.due for _, _, card in due_options)
+        options = [(candidate, exercise_id) for candidate, exercise_id, card in due_options
+                   if card.due == oldest_due]
+        if previous is not None and len(options) > 1:
+            options = [(candidate, exercise_id) for candidate, exercise_id in options if not (
+                candidate["path"] == previous["collection_directory"]
+                and exercise_id == previous["exercise_id"])] or options
+        elif previous_id is not None and len(options) > 1:
+            options = [(candidate, exercise_id) for candidate, exercise_id in options
+                       if exercise_id != previous_id] or options
+        selected_candidate, selected_id = random.SystemRandom().choice(options)
     else:
-        if order is None:
-            candidate_ids = [
-                exercise["id"]
-                for exercise in exercises
-                if exercise["id"] not in scheduled
-            ]
-            ordered_candidates = False
-        else:
-            candidate_ids = [
-                exercise_id for exercise_id in order if exercise_id not in scheduled
-            ]
-            ordered_candidates = True
+        available = [(index, candidate) for index, candidate in enumerate(candidates)
+                     if candidate["unseen"]]
+        if available:
+            _, selected_candidate = min(
+                available, key=lambda item: (len(item[1]["scheduled"]), item[0])
+            )
+            unseen = selected_candidate["unseen"]
+            if len(unseen) > 1:
+                if previous is not None and selected_candidate["path"] == previous["collection_directory"]:
+                    unseen = [exercise_id for exercise_id in unseen
+                              if exercise_id != previous["exercise_id"]] or unseen
+                elif previous_id is not None:
+                    unseen = [exercise_id for exercise_id in unseen
+                              if exercise_id != previous_id] or unseen
+            selected_id = (unseen[0] if selected_candidate["ordered_unseen"]
+                           else random.SystemRandom().choice(unseen))
+    if selected_candidate is not None and selected_id is not None:
+        selected = selected_candidate["exercises"][selected_id]
+        return {"exercise": {**selected, "name": exercise_name(Path(selected["metadata_path"]), selected_id)}}
 
-    if candidate_ids:
-        if len(candidate_ids) > 1 and previous_id in candidate_ids:
-            candidate_ids = [
-                exercise_id for exercise_id in candidate_ids if exercise_id != previous_id
-            ]
-        selected_id = (
-            candidate_ids[0]
-            if ordered_candidates
-            else random.SystemRandom().choice(candidate_ids)
-        )
-        selected = exercise_by_id[selected_id]
-        return {
-            "exercise": {
-                **selected,
-                "name": exercise_name(Path(selected["metadata_path"]), selected_id),
-            }
-        }
-
-    next_due = min(card.due for card in scheduled.values())
+    next_due = min(card.due for candidate in candidates for card in candidate["scheduled"].values())
     return {"exercise": None, "next_due": next_due.isoformat()}
 
 

@@ -42,6 +42,21 @@ def required_extension(request: dict[str, Any], name: str) -> str:
     return value
 
 
+def collection_directories(request: dict[str, Any]) -> list[str]:
+    directories = request.get("exercise_directories")
+    if directories is None:
+        value = request.get("exercise_directory")
+        if not isinstance(value, str) or not value:
+            raise RequestError("exercise_directory must be a non-empty string")
+        return [value]
+    if "exercise_directory" in request:
+        raise RequestError("exercise_directory and exercise_directories cannot both be set")
+    if (not isinstance(directories, list) or not directories
+            or any(not isinstance(item, str) or not item for item in directories)):
+        raise RequestError("exercise_directories must be a non-empty list of strings")
+    return directories
+
+
 def local_date(value: datetime, local_zone: tzinfo | None) -> date:
     return value.astimezone(local_zone).date() if local_zone else value.astimezone().date()
 
@@ -58,7 +73,7 @@ def discover_ids(collection: Path, source_extension: str, metadata_extension: st
     }
 
 
-def practice_stats(
+def single_practice_stats(
     request: dict[str, Any],
     current_datetime: datetime | None = None,
     local_zone: tzinfo | None = None,
@@ -177,6 +192,68 @@ def practice_stats(
             ],
         },
         "history": [history[day] for day in reversed(history_dates)],
+    }
+
+
+def practice_stats(
+    request: dict[str, Any],
+    current_datetime: datetime | None = None,
+    local_zone: tzinfo | None = None,
+) -> dict[str, Any]:
+    directories = collection_directories(request)
+    responses = []
+    for directory in directories:
+        child_request = {**request, "exercise_directory": directory}
+        child_request.pop("exercise_directories", None)
+        responses.append(single_practice_stats(child_request, current_datetime, local_zone))
+    if len(responses) == 1:
+        return responses[0]
+    keys = [response["collection"] for response in responses]
+    if len(set(keys)) != len(keys):
+        raise RequestError("exercise_directories must not contain duplicate paths")
+
+    def sum_ratings(items: list[dict[str, int]]) -> dict[str, int]:
+        return {name: sum(item[name] for item in items) for name in empty_ratings()}
+
+    today = {
+        "date": responses[0]["today"]["date"],
+        "reviews": sum(response["today"]["reviews"] for response in responses),
+        "new_introduced": sum(response["today"]["new_introduced"] for response in responses),
+        "ratings": sum_ratings([response["today"]["ratings"] for response in responses]),
+        "practice_time_ms": sum(response["today"]["practice_time_ms"] for response in responses),
+        "tracked_reviews": sum(response["today"]["tracked_reviews"] for response in responses),
+        "due_now": sum(response["today"]["due_now"] for response in responses),
+        "due_later_today": sum(response["today"]["due_later_today"] for response in responses),
+    }
+    collection_state = {
+        name: sum(response["collection_state"][name] for response in responses)
+        for name in ("total", "unseen", "introduced", "learning", "learned", "relearning")
+    }
+    forecast_days = []
+    for index, day in enumerate(responses[0]["forecast"]["days"]):
+        forecast_days.append({
+            "date": day["date"],
+            "due": sum(response["forecast"]["days"][index]["due"] for response in responses),
+        })
+    history = []
+    for index, day in enumerate(responses[0]["history"]):
+        entries = [response["history"][index] for response in responses]
+        history.append({
+            "date": day["date"],
+            "reviews": sum(entry["reviews"] for entry in entries),
+            "new_introduced": sum(entry["new_introduced"] for entry in entries),
+            "ratings": sum_ratings([entry["ratings"] for entry in entries]),
+            "practice_time_ms": sum(entry["practice_time_ms"] for entry in entries),
+            "tracked_reviews": sum(entry["tracked_reviews"] for entry in entries),
+        })
+    return {
+        "collection": "portfolio",
+        "collections": responses,
+        "generated_at": responses[0]["generated_at"],
+        "today": today,
+        "collection_state": collection_state,
+        "forecast": {"tomorrow_due": forecast_days[0]["due"], "days": forecast_days},
+        "history": history,
     }
 
 

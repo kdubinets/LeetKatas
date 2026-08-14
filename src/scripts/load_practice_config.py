@@ -21,6 +21,7 @@ class ConfigError(ValueError):
 SCHEMA: dict[str, dict[str, type]] = {
     "practice": {
         "collection": str,
+        "collections": list,
         "database_path": str,
         "log_path": str,
         "notes_directory": str,
@@ -145,6 +146,21 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
             "reviewer.follow_up_reasoning_effort must be minimal, low, medium, high, or xhigh"
         )
     practice = value.get("practice", {})
+    if "collection" in practice and "collections" in practice:
+        raise ConfigError("practice.collection and practice.collections cannot both be set")
+    if "collections" in practice:
+        collections = practice["collections"]
+        if not collections or any(type(item) is not str or not item for item in collections):
+            raise ConfigError("practice.collections must be a non-empty list of non-empty strings")
+        resolved_collections = []
+        for item in collections:
+            configured = Path(item).expanduser()
+            if not configured.is_absolute():
+                configured = path.parent / configured
+            resolved_collections.append(str(configured.resolve()))
+        if len(set(resolved_collections)) != len(resolved_collections):
+            raise ConfigError("practice.collections must not contain duplicate paths")
+        practice["collections"] = resolved_collections
     if "review_archive_ttl_days" in practice and not 0 <= practice["review_archive_ttl_days"] <= 3650:
         raise ConfigError("practice.review_archive_ttl_days must be between 0 and 3650")
     problem_solving = value.get("problem_solving", {})

@@ -26,7 +26,7 @@ multi-user isolation, or adversarial input handling.
 
 ## Running the Proof of Concept
 
-From the repository root, launch the default C++ collection with:
+From the repository root, launch the configured C++ portfolio with:
 
 ```bash
 src/nvim-driver/practice
@@ -156,7 +156,10 @@ starting point.
 
 ```toml
 [practice]
-collection = "~/work/LeetKatas/practice/cpp/collections/core"
+collections = [
+  "~/work/LeetKatas/practice/cpp/collections/core",
+  "~/work/LeetKatas/practice/cpp/collections/chrono",
+]
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
 # notes_directory = "~/.local/share/leetkatas/notes"
@@ -238,9 +241,9 @@ separator = " | "
 ```
 
 Relative paths are resolved from the directory containing the configuration
-file. The default collection is a user preference and belongs here; its
-`environment.json` remains separate because it describes the language and
-libraries against which submissions are evaluated.
+file. The default portfolio is a user preference and belongs here; each
+collection's `environment.json` remains separate because it describes the
+language and libraries against which submissions are evaluated.
 
 Supported environment overrides include `PRACTICE_COLLECTION`,
 `PRACTICE_DATABASE`, `PRACTICE_LOG`, `PRACTICE_NOTES_DIRECTORY`,
@@ -490,6 +493,12 @@ rating before submission, with a short explanatory message.
 ### Review statistics
 
 `:PracticeStats [directory]` or `<Space>t` opens a read-only statistics split.
+Without a directory it reports the configured portfolio; pass a directory for one
+collection. Configure `[practice].collections` as an ordered list of collection
+paths to mix their due reviews and introductions in normal practice. The legacy
+singular `collection` setting remains available for one collection, but it cannot
+be combined with `collections`. Passing a collection to the launcher or setting
+`PRACTICE_COLLECTION` runs that collection alone.
 It uses the active collection when a session exists, otherwise the configured
 default; an explicit directory overrides both. Press `r` to refresh the snapshot
 or `q` to close it without changing practice state.
@@ -531,7 +540,7 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>f` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
 | `<Space>i` | — | Toggle the current exercise's import/include preamble. |
 | `<Space>o` | `:PracticeNotes` | Open the personal notes directory. |
-| `<Space>t` | `:PracticeStats` | Show current-collection statistics. |
+| `<Space>t` | `:PracticeStats` | Show portfolio statistics. |
 | `<Space>q` | `:PracticeQuit` | End the session. |
 
 Within an active exercise buffer, press `Z` twice within five seconds (`ZZ`) to

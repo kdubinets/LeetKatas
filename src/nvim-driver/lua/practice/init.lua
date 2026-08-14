@@ -94,7 +94,7 @@ function M.setup(options)
   })
   vim.api.nvim_create_user_command("PracticeSync", function()
     local state = session.get_state()
-    sync.manual(state.collection or options.default_directory)
+    sync.manual(state.collections or options.default_directories)
   end, { desc = "Synchronize practice review history" })
   vim.api.nvim_create_user_command("PracticeLog", log.open, {
     desc = "Open the persistent practice diagnostic log",
@@ -105,7 +105,7 @@ function M.setup(options)
       state = state.status,
       exercise_id = state.exercise and state.exercise.id or nil,
     })
-    sync.diagnostics(state.collection or options.default_directory, function(sync_state)
+    sync.diagnostics(state.collections or options.default_directories, function(sync_state)
       local successful = sync_state.last_success or "never"
       vim.notify("Practice log: " .. log.path() .. "\nSession: " .. log.session_id()
         .. "\nState: " .. state.status

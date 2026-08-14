@@ -147,12 +147,12 @@ function M.render()
   return ""
 end
 
-function M.refresh(collection_path)
-  if not config or config.enabled == false or not collection_path or stats_pending then return end
+function M.refresh(collections)
+  if not config or config.enabled == false or type(collections) ~= "table" or stats_pending then return end
   stats_pending = true
   stats_requested_at = vim.uv.now()
   process.run(driver_config.python, driver_config.scripts_dir .. "/practice_stats.py", {
-    exercise_directory = collection_path,
+    exercise_directories = collections,
     database_path = driver_config.database_path,
     source_extension = driver_config.source_extension,
     metadata_extension = driver_config.metadata_extension,
@@ -163,23 +163,23 @@ function M.refresh(collection_path)
       and type(response.collection_state) == "table" and type(response.forecast) == "table"
     then
       stats = response
-      stats_collection = collection_path
+      stats_collection = vim.json.encode(collections)
       vim.cmd("redrawstatus")
     end
     if refresh_again then
       refresh_again = false
       stats_collection = nil
-      M.refresh(collection_path)
+      M.refresh(collections)
     end
   end)
 end
 
-function M.invalidate(collection_path)
+function M.invalidate(collections)
   stats_collection = nil
   if stats_pending then
     refresh_again = true
   else
-    M.refresh(collection_path)
+    M.refresh(collections)
   end
 end
 
@@ -195,10 +195,10 @@ function M.setup(options, provider)
   timer:start(1000, 1000, vim.schedule_wrap(function()
     if not state_provider then return end
     local state = state_provider()
-    if state.collection and (stats_collection ~= state.collection
+    if state.collections and (stats_collection ~= vim.json.encode(state.collections)
       or vim.uv.now() - stats_requested_at >= 60000)
     then
-      M.refresh(state.collection)
+      M.refresh(state.collections)
     end
     vim.cmd("redrawstatus")
   end))

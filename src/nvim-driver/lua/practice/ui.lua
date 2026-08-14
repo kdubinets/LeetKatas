@@ -180,7 +180,7 @@ local function stats_lines(stats, width)
   local title, date = "Practice statistics", format_date(today.date, true)
   local lines = {
     pad_display(title, math.max(#title + 2, width - vim.fn.strdisplaywidth(date))) .. date,
-    "Collection: " .. humanize_collection(stats.collection),
+    (stats.collection == "portfolio" and "Portfolio" or "Collection: " .. humanize_collection(stats.collection)),
     "",
   }
 
@@ -220,6 +220,16 @@ local function stats_lines(stats, width)
     vim.list_extend(lines, today_lines)
     table.insert(lines, "")
     vim.list_extend(lines, collection_lines)
+  end
+
+  if type(stats.collections) == "table" then
+    vim.list_extend(lines, { "", "COLLECTION BREAKDOWN", string.rep("─", width) })
+    for _, entry in ipairs(stats.collections) do
+      local state = entry.collection_state
+      table.insert(lines, string.format("  %-30s %3d/%-3d introduced  %3d due  %3d unseen",
+        humanize_collection(entry.collection), state.introduced, state.total,
+        entry.today.due_now, state.unseen))
+    end
   end
 
   vim.list_extend(lines, { "", "DUE", string.rep("─", width) })

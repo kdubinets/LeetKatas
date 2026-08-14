@@ -155,7 +155,11 @@ practice.setup({
     or ((environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share"))
       .. "/leetkatas/notes"),
   default_directory = environment("PRACTICE_COLLECTION") or practice_config.collection
+    or (practice_config.collections and practice_config.collections[1])
     or repository_dir .. "/practice/cpp/collections/core",
+  default_directories = environment("PRACTICE_COLLECTION") and { environment("PRACTICE_COLLECTION") }
+    or practice_config.collections
+    or { practice_config.collection or repository_dir .. "/practice/cpp/collections/core" },
   source_extension = environment("PRACTICE_SOURCE_EXTENSION") or ".cpp",
   metadata_extension = environment("PRACTICE_METADATA_EXTENSION") or ".md",
   practice_marker = environment("PRACTICE_MARKER") or "// Finish:",

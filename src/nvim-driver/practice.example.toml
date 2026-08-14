@@ -1,5 +1,8 @@
 [practice]
-collection = "~/work/LeetKatas/practice/cpp/collections/core"
+collections = [
+  "~/work/LeetKatas/practice/cpp/collections/core",
+  "~/work/LeetKatas/practice/cpp/collections/chrono",
+]
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
 # notes_directory = "~/.local/share/leetkatas/notes"
