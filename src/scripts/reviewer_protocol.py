@@ -46,6 +46,15 @@ def validate_review(value: Any) -> dict[str, Any]:
         if key in value and value[key] is not None and not isinstance(value[key], str): raise ReviewerError(f"review.{key} must be a string or null")
     return value
 
+
+def review_with_telemetry(value: Any) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    if not isinstance(value, dict):
+        return validate_review(value), None
+    telemetry = value.pop("_practice_telemetry", None)
+    if telemetry is not None and not isinstance(telemetry, dict):
+        raise ReviewerError("review telemetry must be an object")
+    return validate_review(value), telemetry
+
 def validate_follow_up(value: Any) -> dict[str, str]:
     if not isinstance(value, dict):
         raise ReviewerError("follow-up response must be an object")
@@ -69,14 +78,16 @@ def review_request(
             if result.returncode != 0: raise ReviewerError((result.stderr or result.stdout or "reviewer exited unsuccessfully").strip())
             try: value = json.loads(result.stdout)
             except json.JSONDecodeError as error: raise ReviewerError(f"malformed reviewer JSON: {error.msg}") from error
-            review = validate_review(value)
+            review, telemetry = review_with_telemetry(value)
             if progress:
                 progress("review_finished", status="available", attempts=attempt)
-            return {"status": "available", "attempts": attempt, "feedback": review, "failure": None}
+            return {"status": "available", "attempts": attempt, "feedback": review,
+                    "telemetry": telemetry, "failure": None}
         except FileNotFoundError:
             if progress:
                 progress("review_finished", status="unavailable", attempts=attempt)
-            return {"status": "unavailable", "attempts": attempt, "feedback": None, "failure": f"reviewer executable is not available: {command[0]}"}
+            return {"status": "unavailable", "attempts": attempt, "feedback": None,
+                    "telemetry": None, "failure": f"reviewer executable is not available: {command[0]}"}
         except ReviewerError as error:
             last = str(error)
         except subprocess.TimeoutExpired:
@@ -90,7 +101,8 @@ def review_request(
             time.sleep(delay)
     if progress:
         progress("review_finished", status="unavailable", attempts=3)
-    return {"status": "unavailable", "attempts": 3, "feedback": None, "failure": last}
+    return {"status": "unavailable", "attempts": 3, "feedback": None,
+            "telemetry": None, "failure": last}
 
 def follow_up_request(
     request: dict[str, Any],

@@ -266,6 +266,19 @@ local function stats_lines(stats, width)
     end
   end
   if activity_count == 0 then table.insert(lines, "  No practice activity yet") end
+  if type(stats.reviewer_usage) == "table" and #stats.reviewer_usage > 0 then
+    vim.list_extend(lines, { "", "REVIEWER LATENCY", string.rep("─", width) })
+    table.insert(lines, "  Provider / model / effort / tier                         Calls  Avg     Cost")
+    for _, item in ipairs(stats.reviewer_usage) do
+      local label = string.format("%s / %s / %s / %s", item.provider, item.model,
+        item.reasoning_effort, item.service_tier)
+      local average = item.reviews > 0 and math.floor(item.feedback_duration_ms / item.reviews + 0.5) or 0
+      local cost = type(item.estimated_cost_microusd) == "number"
+        and string.format("$%.4f", item.estimated_cost_microusd / 1000000) or "—"
+      table.insert(lines, string.format("  %-58s %5d  %.1fs  %s", label, item.reviews,
+        average / 1000, cost))
+    end
+  end
   table.insert(lines, "")
   table.insert(lines, "[r] Refresh    [q] Close")
   return lines

@@ -13,10 +13,13 @@ review_archive_ttl_days = 30
 # provider = "openai"
 model = "gpt-5.6-luna"
 reasoning_effort = "low"
+# Direct-API only: "default", "fast", or "flex". The actual serving tier is recorded.
+# service_tier = "default"
 # Follow-up chat defaults to the standard review settings when omitted.
 # follow_up_model = "gpt-5.6-luna"
 # follow_up_reasoning_effort = "low"
 # follow_up_provider = "openai"
+# follow_up_service_tier = "default"
 
 [editor]
 indent_width = 4

@@ -46,6 +46,7 @@ def record_rating(
     submitted_source = request.get("submitted_source")
     review_response = request.get("review_response")
     review_archive_ttl_days = request.get("review_archive_ttl_days", 30)
+    reviewer_usage = request.get("reviewer_usage")
     solve_duration_ms = request.get("solve_duration_ms")
     feedback_duration_ms = request.get("feedback_duration_ms")
 
@@ -63,7 +64,7 @@ def record_rating(
         raise RequestError("review_status must be a non-empty string")
     if type(review_attempts) is not int or review_attempts < 0:
         raise RequestError("review_attempts must be a non-negative integer")
-    for name in ("reviewer_name", "reviewer_model", "reviewer_reasoning_effort"):
+    for name in ("reviewer_name", "reviewer_model", "reviewer_reasoning_effort", "reviewer_service_tier"):
         value = request.get(name)
         if value is not None and (
             not isinstance(value, str) or not value or len(value) > 512
@@ -75,6 +76,8 @@ def record_rating(
         raise RequestError("submitted_source must be a string or null")
     if review_response is not None and not isinstance(review_response, dict):
         raise RequestError("review_response must be an object or null")
+    if reviewer_usage is not None and not isinstance(reviewer_usage, dict):
+        raise RequestError("reviewer_usage must be an object or null")
     if (submitted_source is None) != (review_response is None):
         raise RequestError("submitted_source and review_response must be provided together")
     for name, value in (
@@ -99,6 +102,8 @@ def record_rating(
             reviewer_name=request.get("reviewer_name"),
             reviewer_model=request.get("reviewer_model"),
             reviewer_reasoning_effort=request.get("reviewer_reasoning_effort"),
+            reviewer_service_tier=request.get("reviewer_service_tier"),
+            reviewer_usage=reviewer_usage,
             review_attempts=review_attempts,
             solve_duration_ms=solve_duration_ms,
             feedback_duration_ms=feedback_duration_ms,

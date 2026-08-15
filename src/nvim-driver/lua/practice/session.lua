@@ -738,6 +738,8 @@ function M.rate(rating)
     reviewer_name = state.result.review.reviewer,
     reviewer_model = state.result.review.model,
     reviewer_reasoning_effort = state.result.review.reasoning_effort,
+    reviewer_service_tier = state.result.review.service_tier,
+    reviewer_usage = state.result.review.usage,
     review_attempts = state.result.review.attempts,
     solve_duration_ms = state.timing.solve_ms,
     feedback_duration_ms = state.timing.feedback_ms,

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 from practice_environment import TargetEnvironmentError, validate_target_environment
 from reviewer_protocol import ReviewerError, configured_reviewer, review_request
+from openai_pricing import priced_usage
 
 class RequestError(ValueError): pass
 
@@ -127,6 +128,7 @@ def evaluate(request: dict[str,Any]):
     reviewer_config = request.get("reviewer")
     reviewer_model = reviewer_config.get("model") if isinstance(reviewer_config, dict) and isinstance(reviewer_config.get("model"), str) else None
     reviewer_reasoning_effort = reviewer_config.get("reasoning_effort") if isinstance(reviewer_config, dict) and isinstance(reviewer_config.get("reasoning_effort"), str) else None
+    reviewer_service_tier = reviewer_config.get("service_tier") if isinstance(reviewer_config, dict) and isinstance(reviewer_config.get("service_tier"), str) else None
     if reviewer_command:
         evidence={"starter_source":starter.read_text(encoding="utf-8"),"submitted_source":submitted_source,"exercise_metadata":metadata_text,"target_environment":target_environment,"validation":{"command":command,"succeeded":compiled,"diagnostics":diagnostics}}
         review=review_request(evidence,reviewer_command,progress=progress)
@@ -135,7 +137,10 @@ def evaluate(request: dict[str,Any]):
         review={"status":"unavailable","attempts":0,"feedback":None,"failure":"no reviewer configured"}
     feedback=review["feedback"]
     progress("evaluation_finished")
-    return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"metadata_sections":parse_metadata_sections(metadata_text),"submitted_source":submitted_source,"review":{**review,"reviewer":name,"model":reviewer_model,"reasoning_effort":reviewer_reasoning_effort},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
+    actual_tier = review.get("telemetry", {}).get("actual_service_tier") if isinstance(review.get("telemetry"), dict) else None
+    service_tier = actual_tier or reviewer_service_tier
+    usage = priced_usage(reviewer_model, service_tier, review.get("telemetry"))
+    return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"metadata_sections":parse_metadata_sections(metadata_text),"submitted_source":submitted_source,"review":{**review,"reviewer":name,"model":reviewer_model,"reasoning_effort":reviewer_reasoning_effort,"service_tier":service_tier,"usage":usage},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
 def main():
     try: response=evaluate(read_request())
     except (OSError,UnicodeError,RequestError,ReviewerError,TargetEnvironmentError) as e: json.dump({"error":str(e)},sys.stdout); sys.stdout.write("\n"); return 1

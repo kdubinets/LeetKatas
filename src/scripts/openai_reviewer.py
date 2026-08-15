@@ -26,6 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--follow-up", action="store_true")
     parser.add_argument("--model", required=False)
     parser.add_argument("--effort", choices=("minimal", "low", "medium", "high", "xhigh"))
+    parser.add_argument("--service-tier", choices=("default", "fast", "flex"))
     return parser.parse_args()
 
 
@@ -39,7 +40,8 @@ def response_format(schema: dict[str, Any], follow_up: bool) -> dict[str, Any]:
 
 
 def build_request(
-    evidence: dict[str, Any], model: str, effort: str | None, follow_up: bool
+    evidence: dict[str, Any], model: str, effort: str | None, follow_up: bool,
+    service_tier: str | None = None,
 ) -> dict[str, Any]:
     label = "Follow-up context" if follow_up else "Review evidence"
     body: dict[str, Any] = {
@@ -51,6 +53,8 @@ def build_request(
     }
     if effort:
         body["reasoning"] = {"effort": effort}
+    if service_tier:
+        body["service_tier"] = service_tier
     return body
 
 
@@ -71,7 +75,7 @@ def output_text(response: dict[str, Any]) -> str:
     raise OpenAIReviewerError("OpenAI returned no structured reviewer output")
 
 
-def request_review(body: dict[str, Any], api_key: str) -> dict[str, Any]:
+def request_response(body: dict[str, Any], api_key: str) -> dict[str, Any]:
     encoded = json.dumps(body).encode("utf-8")
     request = Request(
         API_URL,
@@ -93,9 +97,14 @@ def request_review(body: dict[str, Any], api_key: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise OpenAIReviewerError("OpenAI API returned an invalid response")
     try:
-        return json.loads(output_text(value))
+        json.loads(output_text(value))
     except json.JSONDecodeError as error:
         raise OpenAIReviewerError("OpenAI returned malformed structured output") from error
+    return value
+
+
+def request_review(body: dict[str, Any], api_key: str) -> dict[str, Any]:
+    return json.loads(output_text(request_response(body, api_key)))
 
 
 def main() -> int:
@@ -116,11 +125,22 @@ def main() -> int:
         evidence = json.load(sys.stdin)
         if not isinstance(evidence, dict):
             raise OpenAIReviewerError("reviewer input must be a JSON object")
-        review = request_review(build_request(evidence, args.model, args.effort, args.follow_up), api_key)
+        response = request_response(build_request(
+            evidence, args.model, args.effort, args.follow_up, args.service_tier), api_key)
+        review = json.loads(output_text(response))
     except (OpenAIReviewerError, json.JSONDecodeError) as error:
         sys.stderr.write(f"{error}\n")
         return 1
-    json.dump(review, sys.stdout)
+    usage = response.get("usage") if isinstance(response.get("usage"), dict) else {}
+    telemetry = {
+        "requested_service_tier": args.service_tier,
+        "actual_service_tier": response.get("service_tier"),
+        "input_tokens": usage.get("input_tokens"),
+        "cached_input_tokens": (usage.get("input_tokens_details") or {}).get("cached_tokens"),
+        "output_tokens": usage.get("output_tokens"),
+        "reasoning_tokens": (usage.get("output_tokens_details") or {}).get("reasoning_tokens"),
+    }
+    json.dump({**review, "_practice_telemetry": telemetry}, sys.stdout)
     sys.stdout.write("\n")
     return 0
 

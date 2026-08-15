@@ -129,10 +129,14 @@ local follow_up_provider_name = reviewer_provider(
 local reviewer_model = environment("PRACTICE_REVIEW_MODEL") or reviewer_config.model or "gpt-5.6-luna"
 local reviewer_reasoning_effort = environment("PRACTICE_REVIEW_EFFORT")
   or reviewer_config.reasoning_effort or "low"
+local reviewer_service_tier = environment("PRACTICE_REVIEW_SERVICE_TIER")
+  or reviewer_config.service_tier or "default"
 local follow_up_model = environment("PRACTICE_FOLLOW_UP_MODEL")
   or reviewer_config.follow_up_model or reviewer_model
 local follow_up_reasoning_effort = environment("PRACTICE_FOLLOW_UP_EFFORT")
   or reviewer_config.follow_up_reasoning_effort or reviewer_reasoning_effort
+local follow_up_service_tier = environment("PRACTICE_FOLLOW_UP_SERVICE_TIER")
+  or reviewer_config.follow_up_service_tier or reviewer_service_tier
 local default_reviewer_command = {
   selected_python,
   repository_dir .. "/src/scripts/"
@@ -142,6 +146,10 @@ local default_reviewer_command = {
   "--effort",
   reviewer_reasoning_effort,
 }
+if reviewer_provider_name == "openai" then
+  table.insert(default_reviewer_command, "--service-tier")
+  table.insert(default_reviewer_command, reviewer_service_tier)
+end
 local default_follow_up_command = {
   selected_python,
   repository_dir .. "/src/scripts/"
@@ -152,6 +160,10 @@ local default_follow_up_command = {
   "--effort",
   follow_up_reasoning_effort,
 }
+if follow_up_provider_name == "openai" then
+  table.insert(default_follow_up_command, "--service-tier")
+  table.insert(default_follow_up_command, follow_up_service_tier)
+end
 local compiler = environment("CXX") or evaluation_config.compiler
 if not compiler then
   compiler = environment("PRACTICE_COMPILER") == "gcc" and "g++" or "clang++"
@@ -202,6 +214,7 @@ practice.setup({
     name = reviewer_provider_name == "openai" and "OpenAI API" or "Codex",
     model = reviewer_model,
     reasoning_effort = reviewer_reasoning_effort,
+    service_tier = reviewer_provider_name == "openai" and reviewer_service_tier or nil,
   },
   follow_up_reviewer = (environment("PRACTICE_FOLLOW_UP_REVIEWER")
       or environment("PRACTICE_REVIEWER")) and {
@@ -211,6 +224,7 @@ practice.setup({
       or environment("PRACTICE_REVIEWER_NAME"),
     model = follow_up_model,
     reasoning_effort = follow_up_reasoning_effort,
+    service_tier = follow_up_provider_name == "openai" and follow_up_service_tier or nil,
   } or {
     command = default_follow_up_command,
     name = follow_up_provider_name == "openai" and "OpenAI API" or "Codex",

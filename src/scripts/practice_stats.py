@@ -100,7 +100,8 @@ def single_practice_stats(
         ).fetchall()
         review_rows = connection.execute(
             """SELECT exercise_id, review_datetime, final_rating,
-                      solve_duration_ms, feedback_duration_ms
+                      solve_duration_ms, feedback_duration_ms, reviewer_name, reviewer_model,
+                      reviewer_reasoning_effort, reviewer_service_tier, reviewer_usage_json
                FROM reviews WHERE collection_key = ? ORDER BY review_datetime""",
             (collection_key,),
         ).fetchall()
@@ -170,6 +171,24 @@ def single_practice_stats(
             history[introduced_date]["new_introduced"] += 1
 
     today_stats = history[today]
+    reviewer_groups: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+    for row in review_rows:
+        if row["feedback_duration_ms"] is None:
+            continue
+        key = tuple(str(row[name] or "unknown") for name in (
+            "reviewer_name", "reviewer_model", "reviewer_reasoning_effort", "reviewer_service_tier"))
+        group = reviewer_groups.setdefault(key, {
+            "provider": key[0], "model": key[1], "reasoning_effort": key[2],
+            "service_tier": key[3], "reviews": 0, "feedback_duration_ms": 0,
+        })
+        group["reviews"] += 1
+        group["feedback_duration_ms"] += row["feedback_duration_ms"]
+        try:
+            usage = json.loads(row["reviewer_usage_json"]) if row["reviewer_usage_json"] else None
+        except json.JSONDecodeError:
+            usage = None
+        if isinstance(usage, dict) and type(usage.get("estimated_cost_microusd")) is int:
+            group["estimated_cost_microusd"] = group.get("estimated_cost_microusd", 0) + usage["estimated_cost_microusd"]
     return {
         "collection": collection_key,
         "generated_at": now.isoformat(),
@@ -192,6 +211,8 @@ def single_practice_stats(
             ],
         },
         "history": [history[day] for day in reversed(history_dates)],
+        "reviewer_usage": sorted(reviewer_groups.values(), key=lambda group: (
+            group["provider"], group["model"], group["reasoning_effort"], group["service_tier"])),
     }
 
 
@@ -246,6 +267,15 @@ def practice_stats(
             "practice_time_ms": sum(entry["practice_time_ms"] for entry in entries),
             "tracked_reviews": sum(entry["tracked_reviews"] for entry in entries),
         })
+    usage_groups: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+    for response in responses:
+        for item in response["reviewer_usage"]:
+            key = tuple(item[name] for name in ("provider", "model", "reasoning_effort", "service_tier"))
+            group = usage_groups.setdefault(key, {**item, "reviews": 0, "feedback_duration_ms": 0})
+            group["reviews"] += item["reviews"]
+            group["feedback_duration_ms"] += item["feedback_duration_ms"]
+            if type(item.get("estimated_cost_microusd")) is int:
+                group["estimated_cost_microusd"] = group.get("estimated_cost_microusd", 0) + item["estimated_cost_microusd"]
     return {
         "collection": "portfolio",
         "collections": responses,
@@ -254,6 +284,8 @@ def practice_stats(
         "collection_state": collection_state,
         "forecast": {"tomorrow_due": forecast_days[0]["due"], "days": forecast_days},
         "history": history,
+        "reviewer_usage": sorted(usage_groups.values(), key=lambda group: (
+            group["provider"], group["model"], group["reasoning_effort"], group["service_tier"])),
     }
 
 

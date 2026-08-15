@@ -41,9 +41,11 @@ SCHEMA: dict[str, dict[str, type]] = {
         "provider": str,
         "model": str,
         "reasoning_effort": str,
+        "service_tier": str,
         "follow_up_provider": str,
         "follow_up_model": str,
         "follow_up_reasoning_effort": str,
+        "follow_up_service_tier": str,
     },
     "editor": {
         "indent_width": int,
@@ -97,6 +99,7 @@ STATUSLINE_ITEMS = {
 }
 EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
 REVIEWER_PROVIDERS = {"codex", "openai"}
+SERVICE_TIERS = {"default", "fast", "flex"}
 PATH_KEYS = {
     ("practice", "collection"),
     ("practice", "database_path"),
@@ -151,6 +154,9 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
         raise ConfigError(
             "reviewer.follow_up_reasoning_effort must be minimal, low, medium, high, or xhigh"
         )
+    for name in ("service_tier", "follow_up_service_tier"):
+        if name in reviewer and reviewer[name] not in SERVICE_TIERS:
+            raise ConfigError(f"reviewer.{name} must be default, fast, or flex")
     practice = value.get("practice", {})
     if "collection" in practice and "collections" in practice:
         raise ConfigError("practice.collection and practice.collections cannot both be set")

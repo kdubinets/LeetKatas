@@ -193,6 +193,8 @@ class PracticeStore:
                 reviewer_name TEXT,
                 reviewer_model TEXT,
                 reviewer_reasoning_effort TEXT,
+                reviewer_service_tier TEXT,
+                reviewer_usage_json TEXT,
                 review_attempts INTEGER NOT NULL DEFAULT 0,
                 solve_duration_ms INTEGER CHECK (solve_duration_ms >= 0),
                 feedback_duration_ms INTEGER CHECK (feedback_duration_ms >= 0),
@@ -225,7 +227,7 @@ class PracticeStore:
                 SELECT review_id,collection_key,exercise_id,review_datetime,final_rating,compiled,proposed_rating,review_log_json FROM reviews_legacy_v1""")
             connection.execute("DROP TABLE reviews_legacy_v1")
             columns = {"review_status", "reviewer_name", "reviewer_model", "reviewer_reasoning_effort", "review_attempts"}
-        for name, definition in (("review_status", "TEXT NOT NULL DEFAULT 'legacy'"), ("reviewer_name", "TEXT"), ("reviewer_model", "TEXT"), ("reviewer_reasoning_effort", "TEXT"), ("review_attempts", "INTEGER NOT NULL DEFAULT 0")):
+        for name, definition in (("review_status", "TEXT NOT NULL DEFAULT 'legacy'"), ("reviewer_name", "TEXT"), ("reviewer_model", "TEXT"), ("reviewer_reasoning_effort", "TEXT"), ("reviewer_service_tier", "TEXT"), ("reviewer_usage_json", "TEXT"), ("review_attempts", "INTEGER NOT NULL DEFAULT 0")):
             if name not in columns:
                 connection.execute(f"ALTER TABLE reviews ADD COLUMN {name} {definition}")
         columns = {row[1] for row in connection.execute("PRAGMA table_info(reviews)")}
@@ -391,6 +393,8 @@ class PracticeStore:
         reviewer_name: str | None = None,
         reviewer_model: str | None = None,
         reviewer_reasoning_effort: str | None = None,
+        reviewer_service_tier: str | None = None,
+        reviewer_usage: dict[str, Any] | None = None,
         review_attempts: int = 0,
         solve_duration_ms: int | None = None,
         feedback_duration_ms: int | None = None,
@@ -453,9 +457,9 @@ class PracticeStore:
                 INSERT INTO reviews (
                     event_id, collection_key, exercise_id, review_datetime, final_rating,
                     compiled, proposed_rating, review_log_json, review_status,
-                    reviewer_name, reviewer_model, reviewer_reasoning_effort,
+                    reviewer_name, reviewer_model, reviewer_reasoning_effort, reviewer_service_tier, reviewer_usage_json,
                     review_attempts, solve_duration_ms, feedback_duration_ms
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     str(uuid.uuid4()),
@@ -470,6 +474,8 @@ class PracticeStore:
                     reviewer_name,
                     reviewer_model,
                     reviewer_reasoning_effort,
+                    reviewer_service_tier,
+                    json.dumps(reviewer_usage, separators=(",", ":")) if reviewer_usage else None,
                     review_attempts,
                     solve_duration_ms,
                     feedback_duration_ms,
