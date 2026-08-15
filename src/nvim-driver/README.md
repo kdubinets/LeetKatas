@@ -300,6 +300,12 @@ unless set separately. The direct provider reads `OPENAI_API_KEY` only from its
 process environment. Do not put that key in `practice.toml`, exercise metadata,
 or source files.
 
+Codex reviews ignore `$CODEX_HOME/config.toml` while retaining the existing
+Codex authentication. This isolates the fixed practice-review command from
+personal plugins and settings. It also means custom model-provider settings in
+that file do not apply; use the supported practice model and effort settings or
+`PRACTICE_CODEX` when intentionally replacing the executable.
+
 The direct provider sends the exercise evidence, including submitted source and
 metadata, to the OpenAI API and requests strict schema-constrained JSON. It sets
 `store=false`; the local review-artifact retention setting is independent of API

@@ -36,7 +36,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="practice-review-") as directory:
         schema_path = Path(directory) / "review-schema.json"
         schema_path.write_text(json.dumps(FOLLOW_UP_SCHEMA if args.follow_up else SCHEMA), encoding="utf-8")
-        command=[executable,"exec","--ephemeral","--sandbox","read-only","--skip-git-repo-check","--output-schema",str(schema_path),"--output-last-message",str(Path(directory)/"review.json")]
+        command=[executable,"exec","--ephemeral","--ignore-user-config","--sandbox","read-only","--skip-git-repo-check","--output-schema",str(schema_path),"--output-last-message",str(Path(directory)/"review.json")]
         model_environment = "PRACTICE_FOLLOW_UP_MODEL" if args.follow_up else "PRACTICE_REVIEW_MODEL"
         effort_environment = "PRACTICE_FOLLOW_UP_EFFORT" if args.follow_up else "PRACTICE_REVIEW_EFFORT"
         model=os.environ.get(model_environment) or args.model

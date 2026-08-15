@@ -98,6 +98,11 @@ its JSON request or TOML configuration. It uses `store=false`. Other reviewer
 adapters can use independent prompt files without changing the generic reviewer
 request or response contract.
 
+The Codex adapter always passes `--ignore-user-config` while retaining Codex
+authentication. This keeps practice reviews independent of personal Codex
+plugins and settings; the adapter supplies its required model, effort, schema,
+and sandbox options explicitly.
+
 `review_follow_up.py` provides a separate conversational contract. It accepts
 the original evidence, initial review, up to sixteen alternating history
 messages, the latest `question`, and a separately configured reviewer command.

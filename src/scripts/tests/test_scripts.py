@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import sqlite3
 import subprocess
@@ -15,6 +16,7 @@ from zoneinfo import ZoneInfo
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 
+import codex_reviewer  # noqa: E402
 from codex_reviewer import SCHEMA, build_prompt  # noqa: E402
 from evaluate_exercise import evaluate, parse_metadata_sections  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
@@ -555,6 +557,29 @@ class CodexReviewerTests(unittest.TestCase):
             json.loads(prompt.split("Follow-up context:\n", 1)[1]),
             {"question": "Why?"},
         )
+
+    def test_always_ignores_user_config(self) -> None:
+        commands: list[list[str]] = []
+
+        def run(command, **unused):
+            commands.append(command)
+            output = Path(command[command.index("--output-last-message") + 1])
+            output.write_text("{}", encoding="utf-8")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        stdout = io.StringIO()
+        with (
+            patch.object(sys, "argv", ["codex_reviewer.py"]),
+            patch.object(sys, "stdin", io.StringIO("{}")),
+            patch.object(sys, "stdout", stdout),
+            patch("codex_reviewer.subprocess.run", side_effect=run),
+        ):
+            returncode = codex_reviewer.main()
+
+        self.assertEqual(returncode, 0)
+        self.assertIn("--ignore-user-config", commands[0])
+        self.assertNotIn("--json", commands[0])
+        self.assertEqual(json.loads(stdout.getvalue()), {})
 
 
 class OpenAIReviewerTests(unittest.TestCase):
