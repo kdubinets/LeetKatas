@@ -18,10 +18,12 @@ sys.path.insert(0, str(SCRIPTS))
 from codex_reviewer import SCHEMA, build_prompt  # noqa: E402
 from evaluate_exercise import evaluate, parse_metadata_sections  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
+from openai_reviewer import build_request, output_text, request_review  # noqa: E402
 from record_rating import record_rating  # noqa: E402
 from practice_scheduler import PracticeStore, deserialize_card  # noqa: E402
 from practice_stats import practice_stats  # noqa: E402
 from review_follow_up import ask  # noqa: E402
+from reviewer_protocol import review_request  # noqa: E402
 from select_exercise import select_exercise  # noqa: E402
 
 
@@ -78,8 +80,10 @@ notes_directory = "notes"
 review_archive_ttl_days = 45
 
 [reviewer]
+provider = "openai"
 model = "gpt-5.6-luna"
 reasoning_effort = "low"
+follow_up_provider = "codex"
 follow_up_model = "gpt-5.6-terra"
 follow_up_reasoning_effort = "medium"
 
@@ -108,6 +112,8 @@ separator = " | "
             self.assertEqual(config["practice"]["notes_directory"], str(directory / "notes"))
             self.assertEqual(config["practice"]["review_archive_ttl_days"], 45)
             self.assertEqual(config["reviewer"]["model"], "gpt-5.6-luna")
+            self.assertEqual(config["reviewer"]["provider"], "openai")
+            self.assertEqual(config["reviewer"]["follow_up_provider"], "codex")
             self.assertEqual(config["reviewer"]["follow_up_model"], "gpt-5.6-terra")
             self.assertEqual(config["reviewer"]["follow_up_reasoning_effort"], "medium")
             self.assertEqual(config["editor"]["indent_width"], 2)
@@ -133,6 +139,10 @@ separator = " | "
 
             path.write_text("[reviewer]\nfollow_up_reasoning_effort = \"extreme\"\n")
             with self.assertRaises(ConfigError):
+                load_config(path)
+
+            path.write_text("[reviewer]\nprovider = \"unknown\"\n")
+            with self.assertRaisesRegex(ConfigError, "provider must be codex or openai"):
                 load_config(path)
 
             path.write_text("[editor]\nunknown = 1\n")
@@ -545,6 +555,61 @@ class CodexReviewerTests(unittest.TestCase):
             json.loads(prompt.split("Follow-up context:\n", 1)[1]),
             {"question": "Why?"},
         )
+
+
+class OpenAIReviewerTests(unittest.TestCase):
+    def test_builds_a_stateless_strict_structured_response_request(self) -> None:
+        evidence = {"submitted_source": "return 42;"}
+
+        request = build_request(evidence, "gpt-5.6-luna", "low", follow_up=False)
+
+        self.assertFalse(request["store"])
+        self.assertEqual(request["model"], "gpt-5.6-luna")
+        self.assertEqual(request["reasoning"], {"effort": "low"})
+        self.assertEqual(json.loads(request["input"].split("Review evidence:\n", 1)[1]), evidence)
+        self.assertIn("failed validation", request["instructions"])
+        self.assertEqual(request["text"]["format"]["type"], "json_schema")
+        self.assertTrue(request["text"]["format"]["strict"])
+        self.assertEqual(request["text"]["format"]["schema"], SCHEMA)
+
+    def test_extracts_text_from_a_responses_api_output_item(self) -> None:
+        response = {"output": [{"content": [{"type": "output_text", "text": "{\"answer\": \"Yes\"}"}]}]}
+
+        self.assertEqual(output_text(response), '{"answer": "Yes"}')
+
+    def test_posts_the_request_and_parses_the_structured_output(self) -> None:
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *unused):
+                return False
+
+            def read(self):
+                return b'{"output_text":"{\\"answer\\":\\"Yes\\"}"}'
+
+        body = build_request({"question": "Why?"}, "gpt-5.6-luna", None, follow_up=True)
+        with patch("openai_reviewer.urlopen", return_value=FakeResponse()) as send:
+            review = request_review(body, "test-api-key")
+
+        outgoing = send.call_args.args[0]
+        self.assertEqual(outgoing.full_url, "https://api.openai.com/v1/responses")
+        self.assertEqual(outgoing.get_header("Authorization"), "Bearer test-api-key")
+        self.assertEqual(json.loads(outgoing.data.decode("utf-8")), body)
+        self.assertEqual(review, {"answer": "Yes"})
+
+
+class ReviewerProtocolTests(unittest.TestCase):
+    def test_reports_safe_http_category_for_each_failed_attempt(self) -> None:
+        progress: list[dict] = []
+        failed = subprocess.CompletedProcess(["reviewer"], 1, stdout="", stderr="OpenAI API request failed with HTTP 403")
+
+        with patch("reviewer_protocol.subprocess.run", return_value=failed), patch("reviewer_protocol.time.sleep"):
+            result = review_request({}, ["reviewer"], progress=lambda event, **details: progress.append({"event": event, **details}))
+
+        self.assertEqual(result["status"], "unavailable")
+        failed_events = [event for event in progress if event["event"] == "review_attempt_failed"]
+        self.assertEqual([event["failure_category"] for event in failed_events], ["http_403"] * 3)
 
 
 class FollowUpReviewTests(unittest.TestCase):

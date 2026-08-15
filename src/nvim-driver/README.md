@@ -166,10 +166,14 @@ collections = [
 review_archive_ttl_days = 30
 
 [reviewer]
+# "codex" (the default) uses the local Codex CLI. "openai" calls the
+# Responses API directly with OPENAI_API_KEY.
+# provider = "openai"
 model = "gpt-5.6-luna"
 reasoning_effort = "low"
 # follow_up_model = "gpt-5.6-terra"
 # follow_up_reasoning_effort = "medium"
+# follow_up_provider = "openai" # inherits provider when omitted
 
 [editor]
 indent_width = 4
@@ -249,7 +253,8 @@ Supported environment overrides include `PRACTICE_COLLECTION`,
 `PRACTICE_DATABASE`, `PRACTICE_LOG`, `PRACTICE_NOTES_DIRECTORY`,
 `PRACTICE_REVIEW_ARCHIVE_TTL_DAYS`, `PRACTICE_REVIEW_MODEL`,
 `PRACTICE_REVIEW_EFFORT`, `PRACTICE_FOLLOW_UP_MODEL`,
-`PRACTICE_FOLLOW_UP_EFFORT`, `PRACTICE_FOLLOW_UP_REVIEWER`,
+`PRACTICE_FOLLOW_UP_EFFORT`, `PRACTICE_REVIEWER_PROVIDER`,
+`PRACTICE_FOLLOW_UP_REVIEWER_PROVIDER`, `PRACTICE_FOLLOW_UP_REVIEWER`,
 `PRACTICE_FOLLOW_UP_REVIEWER_NAME`, `PRACTICE_SUPABASE_URL`,
 `PRACTICE_SUPABASE_KEY`, `PRACTICE_COMPILER`, and `CXX`. Passing a collection
 directory to `src/nvim-driver/practice` has the highest precedence for the
@@ -267,6 +272,10 @@ response summaries. Reviewer summaries include the configured model and
 reasoning effort. Exercise source, metadata bodies, and full reviewer responses
 are not logged.
 
+When a reviewer retry is needed, the progress pane and diagnostic log include a
+safe category such as `http_403`, `timeout`, or `network`. These categories do
+not include API response bodies, prompts, submitted source, or credentials.
+
 After a rating is recorded, the exact submitted source and complete structured
 reviewer response are archived in the practice SQLite database. Expired
 artifacts are deleted when the next rating is recorded, while compact review and
@@ -281,6 +290,23 @@ Optional Supabase synchronization is documented in `../scripts/README.md`.
 The key is read only from `PRACTICE_SUPABASE_KEY`; do not store it in TOML.
 `:PracticeSync` reports explicit upload/download results, while automatic
 attempts are silent and never block local practice.
+
+### Reviewer providers
+
+`reviewer.provider` defaults to `"codex"`, which runs the bundled adapter through
+the locally authenticated Codex CLI. Set it to `"openai"` to call the OpenAI
+Responses API directly; the optional `follow_up_provider` inherits this value
+unless set separately. The direct provider reads `OPENAI_API_KEY` only from its
+process environment. Do not put that key in `practice.toml`, exercise metadata,
+or source files.
+
+The direct provider sends the exercise evidence, including submitted source and
+metadata, to the OpenAI API and requests strict schema-constrained JSON. It sets
+`store=false`; the local review-artifact retention setting is independent of API
+data handling. API usage is billed to the API project associated with the key,
+not to Codex CLI authentication. `PRACTICE_REVIEWER` and
+`PRACTICE_FOLLOW_UP_REVIEWER` remain higher-priority executable overrides for
+custom integrations and deterministic tests.
 
 ## Long-Term Workflow
 

@@ -875,13 +875,14 @@ function M.update_progress(elapsed_seconds, events)
   if not valid_buffer(feedback_buffer) then return end
   local frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
   local frame = frames[(math.floor(elapsed_seconds * 10) % #frames) + 1]
-  local compilation, attempt, retry_delay, review_finished = nil, nil, nil, nil
+  local compilation, attempt, retry_delay, review_finished, failure_category = nil, nil, nil, nil, nil
   local maximum_attempts = 3
   for _, event in ipairs(events) do
     if event.event == "compilation_finished" then compilation = event.compiled
     elseif event.event == "review_attempt_started" then
       attempt, maximum_attempts, retry_delay = event.attempt,
         event.maximum_attempts or maximum_attempts, nil
+    elseif event.event == "review_attempt_failed" then failure_category = event.failure_category
     elseif event.event == "review_retry_scheduled" then retry_delay = event.delay_seconds
     elseif event.event == "review_finished" then review_finished = event.status end
   end
@@ -902,8 +903,9 @@ function M.update_progress(elapsed_seconds, events)
       add_line(render, "✓ Reviewer finished: " .. review_finished,
         { section = "Practice evaluation" }, "PracticeSuccess")
     elseif retry_delay then
-      add_line(render, string.format("%s Reviewer retry %d of %d in %.1fs", frame,
-        (attempt or 0) + 1, maximum_attempts, retry_delay),
+      add_line(render, string.format("%s Reviewer retry %d of %d in %.1fs%s", frame,
+        (attempt or 0) + 1, maximum_attempts, retry_delay,
+        failure_category and " (" .. failure_category .. ")" or ""),
         { section = "Practice evaluation" }, "PracticeProgress")
     elseif attempt then
       add_line(render, string.format("%s Reviewer attempt %d of %d", frame, attempt,

@@ -113,6 +113,19 @@ end
 setup_which_key(editor_config.which_key_delay_ms or 300)
 
 local practice = require("practice")
+local function reviewer_provider(value, setting)
+  if value == "codex" or value == "openai" then return value end
+  error(setting .. " must be codex or openai")
+end
+local reviewer_provider_name = reviewer_provider(
+  environment("PRACTICE_REVIEWER_PROVIDER") or reviewer_config.provider or "codex",
+  "PRACTICE_REVIEWER_PROVIDER"
+)
+local follow_up_provider_name = reviewer_provider(
+  environment("PRACTICE_FOLLOW_UP_REVIEWER_PROVIDER") or reviewer_config.follow_up_provider
+    or reviewer_provider_name,
+  "PRACTICE_FOLLOW_UP_REVIEWER_PROVIDER"
+)
 local reviewer_model = environment("PRACTICE_REVIEW_MODEL") or reviewer_config.model or "gpt-5.6-luna"
 local reviewer_reasoning_effort = environment("PRACTICE_REVIEW_EFFORT")
   or reviewer_config.reasoning_effort or "low"
@@ -122,7 +135,8 @@ local follow_up_reasoning_effort = environment("PRACTICE_FOLLOW_UP_EFFORT")
   or reviewer_config.follow_up_reasoning_effort or reviewer_reasoning_effort
 local default_reviewer_command = {
   selected_python,
-  repository_dir .. "/src/scripts/codex_reviewer.py",
+  repository_dir .. "/src/scripts/"
+    .. (reviewer_provider_name == "openai" and "openai_reviewer.py" or "codex_reviewer.py"),
   "--model",
   reviewer_model,
   "--effort",
@@ -130,7 +144,8 @@ local default_reviewer_command = {
 }
 local default_follow_up_command = {
   selected_python,
-  repository_dir .. "/src/scripts/codex_reviewer.py",
+  repository_dir .. "/src/scripts/"
+    .. (follow_up_provider_name == "openai" and "openai_reviewer.py" or "codex_reviewer.py"),
   "--follow-up",
   "--model",
   follow_up_model,
@@ -184,7 +199,7 @@ practice.setup({
     command = { environment("PRACTICE_REVIEWER") }, name = environment("PRACTICE_REVIEWER_NAME")
   } or {
     command = default_reviewer_command,
-    name = "Codex",
+    name = reviewer_provider_name == "openai" and "OpenAI API" or "Codex",
     model = reviewer_model,
     reasoning_effort = reviewer_reasoning_effort,
   },
@@ -198,7 +213,7 @@ practice.setup({
     reasoning_effort = follow_up_reasoning_effort,
   } or {
     command = default_follow_up_command,
-    name = "Codex",
+    name = follow_up_provider_name == "openai" and "OpenAI API" or "Codex",
     model = follow_up_model,
     reasoning_effort = follow_up_reasoning_effort,
   },

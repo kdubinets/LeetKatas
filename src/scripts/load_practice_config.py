@@ -38,8 +38,10 @@ SCHEMA: dict[str, dict[str, type]] = {
         "implementation_language": str,
     },
     "reviewer": {
+        "provider": str,
         "model": str,
         "reasoning_effort": str,
+        "follow_up_provider": str,
         "follow_up_model": str,
         "follow_up_reasoning_effort": str,
     },
@@ -94,6 +96,7 @@ STATUSLINE_ITEMS = {
     "conversation",
 }
 EFFORTS = {"minimal", "low", "medium", "high", "xhigh"}
+REVIEWER_PROVIDERS = {"codex", "openai"}
 PATH_KEYS = {
     ("practice", "collection"),
     ("practice", "database_path"),
@@ -139,6 +142,9 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
     if "which_key_delay_ms" in editor and not 0 <= editor["which_key_delay_ms"] <= 5000:
         raise ConfigError("editor.which_key_delay_ms must be between 0 and 5000")
     reviewer = value.get("reviewer", {})
+    for name in ("provider", "follow_up_provider"):
+        if name in reviewer and reviewer[name] not in REVIEWER_PROVIDERS:
+            raise ConfigError(f"reviewer.{name} must be codex or openai")
     if "reasoning_effort" in reviewer and reviewer["reasoning_effort"] not in EFFORTS:
         raise ConfigError("reviewer.reasoning_effort must be minimal, low, medium, high, or xhigh")
     if "follow_up_reasoning_effort" in reviewer and reviewer["follow_up_reasoning_effort"] not in EFFORTS:

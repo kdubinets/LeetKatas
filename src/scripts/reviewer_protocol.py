@@ -1,12 +1,30 @@
 """Protocol and retry support for external practice reviewers."""
 from __future__ import annotations
-import json, os, subprocess, time
+import json, os, re, subprocess, time
 from typing import Any, Callable
 
 VERDICTS = {"correct", "minor_defect", "incorrect", "cannot_assess"}
 RATINGS = {"fail", "acceptable", "good", "excellent"}
 
 class ReviewerError(ValueError): pass
+
+
+def failure_category(error: Exception | str) -> str:
+    """Return a safe, stable retry diagnostic without preserving reviewer output."""
+    message = str(error)
+    if match := re.search(r"\bHTTP\s+(\d{3})\b", message):
+        return f"http_{match.group(1)}"
+    if "timed out" in message:
+        return "timeout"
+    if "could not be completed" in message:
+        return "network"
+    if "malformed reviewer JSON" in message:
+        return "malformed_reviewer_json"
+    if message.startswith(("invalid review", "review.")):
+        return "invalid_reviewer_response"
+    if "executable is not available" in message:
+        return "executable_unavailable"
+    return "reviewer_error"
 
 def validate_review(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict): raise ReviewerError("review must be an object")
@@ -61,9 +79,10 @@ def review_request(
             return {"status": "unavailable", "attempts": attempt, "feedback": None, "failure": f"reviewer executable is not available: {command[0]}"}
         except ReviewerError as error:
             last = str(error)
-        except subprocess.TimeoutExpired: last = f"reviewer timed out after {timeout:g} seconds"
+        except subprocess.TimeoutExpired:
+            last = f"reviewer timed out after {timeout:g} seconds"
         if progress:
-            progress("review_attempt_failed", attempt=attempt)
+            progress("review_attempt_failed", attempt=attempt, failure_category=failure_category(last))
         if attempt < 3:
             delay = 0.5 * (2 ** (attempt - 1))
             if progress:

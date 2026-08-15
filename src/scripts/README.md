@@ -90,9 +90,13 @@ starter and submitted source, exercise metadata, optional target environment,
 and a language-neutral `validation` object containing `command`, `succeeded`,
 and `diagnostics`.
 
-The Codex adapter reads its instructions from
-`prompts/codex_reviewer.txt`. Other reviewer adapters can use independent prompt
-files without changing the generic reviewer request or response contract.
+The Codex adapter and the optional direct OpenAI Responses API adapter both read
+their instructions from `prompts/codex_reviewer.txt` and share the same strict
+JSON Schema. The OpenAI adapter is selected by `reviewer.provider = "openai"`
+and reads `OPENAI_API_KEY` from its environment; it never accepts credentials in
+its JSON request or TOML configuration. It uses `store=false`. Other reviewer
+adapters can use independent prompt files without changing the generic reviewer
+request or response contract.
 
 `review_follow_up.py` provides a separate conversational contract. It accepts
 the original evidence, initial review, up to sixteen alternating history
