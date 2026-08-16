@@ -539,6 +539,9 @@ class CodexReviewerTests(unittest.TestCase):
         prompt = build_prompt({})
 
         self.assertIn("failed validation does not automatically require `fail`", prompt)
+        self.assertIn("missing an include or import", prompt)
+        self.assertIn("do not lower the verdict or proposed rating", prompt)
+        self.assertIn("Still mention the missing include/import", prompt)
         self.assertIn("target environment", prompt)
         self.assertIn("recall difficulty and confidence", prompt)
         self.assertIn("provide a corrected implementation", prompt)
