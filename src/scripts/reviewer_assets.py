@@ -8,6 +8,7 @@ from typing import Any
 
 PROMPT_PATH = Path(__file__).with_name("prompts") / "codex_reviewer.txt"
 FOLLOW_UP_PROMPT_PATH = Path(__file__).with_name("prompts") / "codex_review_follow_up.txt"
+COMPILER_FOLLOW_UP_PROMPT_PATH = Path(__file__).with_name("prompts") / "codex_compiler_follow_up.txt"
 
 SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -38,13 +39,18 @@ FOLLOW_UP_SCHEMA: dict[str, Any] = {
 
 
 def build_prompt(
-    request: dict[str, Any], follow_up: bool = False, prompt_path: Path | None = None
+    request: dict[str, Any], follow_up: bool = False, prompt_path: Path | None = None,
+    compiler_follow_up: bool = False,
 ) -> str:
-    instructions = load_instructions(follow_up=follow_up, prompt_path=prompt_path)
-    label = "Follow-up context" if follow_up else "Review evidence"
+    instructions = load_instructions(follow_up=follow_up, prompt_path=prompt_path,
+                                     compiler_follow_up=compiler_follow_up)
+    label = "Compiler question context" if compiler_follow_up else (
+        "Follow-up context" if follow_up else "Review evidence")
     return instructions + f"\n\n{label}:\n" + json.dumps(request)
 
 
-def load_instructions(follow_up: bool = False, prompt_path: Path | None = None) -> str:
-    selected_path = prompt_path or (FOLLOW_UP_PROMPT_PATH if follow_up else PROMPT_PATH)
+def load_instructions(follow_up: bool = False, prompt_path: Path | None = None,
+                      compiler_follow_up: bool = False) -> str:
+    selected_path = prompt_path or (COMPILER_FOLLOW_UP_PROMPT_PATH if compiler_follow_up
+                                    else FOLLOW_UP_PROMPT_PATH if follow_up else PROMPT_PATH)
     return selected_path.read_text(encoding="utf-8").rstrip()

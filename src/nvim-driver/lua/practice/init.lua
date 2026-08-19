@@ -8,7 +8,7 @@ local M = {}
 local RATINGS = { "fail", "acceptable", "good", "excellent" }
 local NOTE_KINDS = { "follow-up", "research", "exercise-fix" }
 local PRACTICE_KEYS = {
-  "<leader>s", "<leader>c", "<leader>a", "<leader>r", "<leader>1",
+  "<leader>s", "<leader>b", "<leader>c", "<leader>a", "<leader>R", "<leader>r", "<leader>1",
   "<leader>2", "<leader>3", "<leader>4", "<leader>n", "<leader>m",
   "<leader>f", "<leader>i", "<leader>o", "<leader>t", "<leader>q",
 }
@@ -37,6 +37,7 @@ function M.refresh_keymaps()
   end
 
   if status == "solving" then
+    map("<leader>b", M.compile, "Compile only")
     map("<leader>c", M.submit, "Check solution")
     map("<leader>n", M.next, "Skip exercise")
     map("<leader>m", M.note, "Add note")
@@ -48,8 +49,18 @@ function M.refresh_keymaps()
     return
   end
 
+  if status == "post_rating" then
+    map("<leader>b", M.compile, "Compile only")
+    map("<leader>n", M.next, "Next exercise")
+    map("<leader>m", M.note, "Add note")
+    map("<leader>i", M.fold_imports, "Toggle imports")
+    map("<leader>q", M.quit, "End practice")
+    return
+  end
+
   if status == "reviewing" then
     map("<leader>a", M.accept, "Accept rating")
+    map("<leader>R", M.accept_stay, "Accept rating and keep editing")
     map("<leader>1", function() M.rate("fail") end, "Rate: Fail")
     map("<leader>2", function() M.rate("acceptable") end, "Rate: Acceptable")
     map("<leader>3", function() M.rate("good") end, "Rate: Good")
@@ -93,8 +104,14 @@ function M.setup(options)
   vim.api.nvim_create_user_command("PracticeSubmit", session.submit, {
     desc = "Submit the current practice exercise",
   })
+  vim.api.nvim_create_user_command("PracticeCompile", session.compile, {
+    desc = "Compile without submitting for review",
+  })
   vim.api.nvim_create_user_command("PracticeAccept", session.accept, {
     desc = "Accept the proposed practice rating",
+  })
+  vim.api.nvim_create_user_command("PracticeAcceptStay", session.accept_stay, {
+    desc = "Accept the proposed rating and keep editing",
   })
   vim.api.nvim_create_user_command("PracticeAsk", function(command)
     session.ask(command.args ~= "" and command.args or nil)
@@ -116,6 +133,11 @@ function M.setup(options)
     end,
     desc = "Override the proposed practice rating",
   })
+  vim.api.nvim_create_user_command("PracticeRateStay", function(command)
+    session.rate(command.args, true)
+  end, { nargs = 1, complete = function(argument_lead)
+    return vim.tbl_filter(function(rating) return vim.startswith(rating, argument_lead:lower()) end, RATINGS)
+  end, desc = "Record a rating and keep editing" })
   vim.api.nvim_create_user_command("PracticeNext", session.next, {
     desc = "Skip to the next practice exercise",
   })
@@ -185,6 +207,10 @@ function M.submit()
   session.submit()
 end
 
+function M.compile()
+  session.compile()
+end
+
 function M.accept()
   session.accept()
 end
@@ -195,6 +221,10 @@ end
 
 function M.retry()
   session.retry()
+end
+
+function M.accept_stay()
+  session.accept_stay()
 end
 
 function M.next()

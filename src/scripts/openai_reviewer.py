@@ -24,16 +24,17 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--follow-up", action="store_true")
+    parser.add_argument("--compiler-follow-up", action="store_true")
     parser.add_argument("--model", required=False)
     parser.add_argument("--effort", choices=("minimal", "low", "medium", "high", "xhigh"))
     parser.add_argument("--service-tier", choices=("default", "fast", "flex"))
     return parser.parse_args()
 
 
-def response_format(schema: dict[str, Any], follow_up: bool) -> dict[str, Any]:
+def response_format(schema: dict[str, Any], follow_up: bool, compiler_follow_up: bool = False) -> dict[str, Any]:
     return {
         "type": "json_schema",
-        "name": "practice_follow_up" if follow_up else "practice_review",
+        "name": "practice_compiler_follow_up" if compiler_follow_up else "practice_follow_up" if follow_up else "practice_review",
         "strict": True,
         "schema": schema,
     }
@@ -41,15 +42,15 @@ def response_format(schema: dict[str, Any], follow_up: bool) -> dict[str, Any]:
 
 def build_request(
     evidence: dict[str, Any], model: str, effort: str | None, follow_up: bool,
-    service_tier: str | None = None,
+    service_tier: str | None = None, compiler_follow_up: bool = False,
 ) -> dict[str, Any]:
-    label = "Follow-up context" if follow_up else "Review evidence"
+    label = "Compiler question context" if compiler_follow_up else "Follow-up context" if follow_up else "Review evidence"
     body: dict[str, Any] = {
         "model": model,
-        "instructions": load_instructions(follow_up=follow_up),
+        "instructions": load_instructions(follow_up=follow_up, compiler_follow_up=compiler_follow_up),
         "input": f"{label}:\n" + json.dumps(evidence),
         "store": False,
-        "text": {"format": response_format(FOLLOW_UP_SCHEMA if follow_up else SCHEMA, follow_up)},
+        "text": {"format": response_format(FOLLOW_UP_SCHEMA if (follow_up or compiler_follow_up) else SCHEMA, follow_up, compiler_follow_up)},
     }
     if effort:
         body["reasoning"] = {"effort": effort}
@@ -126,7 +127,8 @@ def main() -> int:
         if not isinstance(evidence, dict):
             raise OpenAIReviewerError("reviewer input must be a JSON object")
         response = request_response(build_request(
-            evidence, args.model, args.effort, args.follow_up, args.service_tier), api_key)
+            evidence, args.model, args.effort, args.follow_up, args.service_tier,
+            args.compiler_follow_up), api_key)
         review = json.loads(output_text(response))
     except (OpenAIReviewerError, json.JSONDecodeError) as error:
         sys.stderr.write(f"{error}\n")

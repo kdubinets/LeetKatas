@@ -12,6 +12,7 @@ local feedback_contexts = {}
 local feedback_result = nil
 local feedback_callbacks = nil
 local expanded = { review = false, compiler = false, reference = false, chat = true }
+local compiler_result, compiler_callbacks = nil, nil
 local stats_buffer = nil
 local stats_window = nil
 
@@ -495,6 +496,8 @@ local function build_feedback(result)
   if rating then
     add_line(render, "Primary   a / <Space>a  Accept " .. rating .. " and continue",
       { section = "Actions", logical_section = "actions" }, "PracticeAction")
+    add_line(render, "Stay      S / <Space>R  Accept " .. rating .. " and keep editing",
+      { section = "Actions", logical_section = "actions" }, "PracticeAction")
   else
     add_line(render, "Primary   Choose a manual rating to continue",
       { section = "Actions", logical_section = "actions" }, "PracticeWarning")
@@ -594,6 +597,36 @@ local function build_feedback(result)
   return render
 end
 
+local function build_compiler_result(result)
+  local render = { lines = {}, contexts = {}, highlights = {}, positions = {} }
+  add_line(render, result.compiled and "Compilation succeeded" or "Compilation failed",
+    { section = "Compiler result", logical_section = "compiler" },
+    result.compiled and "PracticeSuccess" or "PracticeFailure")
+  blank(render)
+  if result.diagnostics ~= "" then
+    add_heading(render, "Compiler diagnostics", "compiler")
+    add_code(render, result.diagnostics, { section = "Compiler diagnostics", logical_section = "compiler" })
+  else
+    add_line(render, "The compiler reported no diagnostics.",
+      { section = "Compiler result", logical_section = "compiler" }, "PracticeHint")
+  end
+  add_heading(render, "Actions", "actions")
+  add_line(render, "? Ask LLM about these diagnostics   q Close pane",
+    { section = "Actions", logical_section = "actions" }, "PracticeAction")
+  local chat = result.chat and result.chat.turns or {}
+  if #chat > 0 then
+    add_heading(render, "Compiler questions", "chat")
+    for _, turn in ipairs(chat) do
+      add_line(render, "You: " .. turn.question, { section = "Compiler questions", logical_section = "chat" }, "PracticeQuestion")
+      add_text(render, turn.status == "available" and turn.answer or (turn.failure or "Waiting for explanation…"),
+        { section = "Compiler questions", logical_section = "chat" },
+        turn.status == "available" and nil or "PracticeWarning")
+      blank(render)
+    end
+  end
+  return render
+end
+
 local function set_feedback_lines(render)
   if not valid_buffer(feedback_buffer) then return end
   vim.bo[feedback_buffer].modifiable = true
@@ -667,6 +700,8 @@ local function install_feedback_mappings()
   local options = { buffer = feedback_buffer, silent = true, nowait = true }
   vim.keymap.set("n", "a", function() callback("accept") end,
     vim.tbl_extend("force", options, { desc = "Accept proposed rating" }))
+  vim.keymap.set("n", "S", function() callback("accept_stay") end,
+    vim.tbl_extend("force", options, { desc = "Accept proposed rating and keep editing" }))
   local ratings = { "fail", "acceptable", "good", "excellent" }
   for index, rating in ipairs(ratings) do
     vim.keymap.set("n", tostring(index), function() callback("rate", rating) end,
@@ -714,7 +749,28 @@ function M.close_feedback()
   if valid_buffer(feedback_buffer) then vim.api.nvim_buf_delete(feedback_buffer, { force = true }) end
   feedback_window, feedback_buffer = nil, nil
   feedback_contexts, feedback_result, feedback_callbacks = {}, nil, nil
+  compiler_result, compiler_callbacks = nil, nil
   expanded = { review = false, compiler = false, reference = false, chat = true }
+end
+
+function M.open_compiler_result(source_window, result, callbacks)
+  ensure_feedback(source_window, false)
+  compiler_result, compiler_callbacks = result, callbacks or {}
+  local render = build_compiler_result(result)
+  set_feedback_lines(render)
+  local options = { buffer = feedback_buffer, silent = true, nowait = true }
+  vim.keymap.set("n", "?", function()
+    if compiler_callbacks.ask then compiler_callbacks.ask() end
+  end, vim.tbl_extend("force", options, { desc = "Ask about compiler diagnostics" }))
+  vim.keymap.set("n", "q", M.close_feedback,
+    vim.tbl_extend("force", options, { desc = "Close compiler results" }))
+  return feedback_buffer, feedback_window
+end
+
+function M.refresh_compiler_result()
+  if compiler_result and valid_buffer(feedback_buffer) then
+    set_feedback_lines(build_compiler_result(compiler_result))
+  end
 end
 
 function M.close_stats()

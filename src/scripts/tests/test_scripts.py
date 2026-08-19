@@ -19,6 +19,8 @@ sys.path.insert(0, str(SCRIPTS))
 import codex_reviewer  # noqa: E402
 from codex_reviewer import SCHEMA, build_prompt  # noqa: E402
 from evaluate_exercise import evaluate, parse_metadata_sections  # noqa: E402
+from compile_exercise import compile_exercise  # noqa: E402
+from compiler_follow_up import ask as ask_compiler  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
 from openai_reviewer import build_request, output_text, request_review  # noqa: E402
 from record_rating import record_rating  # noqa: E402
@@ -38,6 +40,35 @@ def run_script(name: str, request: object) -> tuple[subprocess.CompletedProcess[
         text=True,
     )
     return result, json.loads(result.stdout)
+
+
+class CompileOnlyTests(unittest.TestCase):
+    def test_compiles_without_reviewer_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "solution.cpp"
+            source.write_text("int main() { return 0; }\n", encoding="utf-8")
+            response = compile_exercise({
+                "source_path": str(source),
+                "command": ["python3", "-c", "import sys", "{source}"],
+            })
+        self.assertTrue(response["compiled"])
+        self.assertEqual(response["diagnostics"], "")
+        self.assertIn("submitted_source", response)
+
+    def test_compiler_questions_use_follow_up_contract(self) -> None:
+        request = {
+            "question": "What does this error mean?",
+            "evidence": {"submitted_source": "bad", "validation": {"diagnostics": "error"}},
+            "messages": [],
+            "reviewer": {"command": ["fake"], "model": "test-model"},
+        }
+        with patch("compiler_follow_up.follow_up_request", return_value={
+            "status": "available", "attempts": 1, "answer": "It is a syntax error.", "failure": None,
+        }) as follow_up:
+            response = ask_compiler(request)
+        self.assertEqual(response["answer"], "It is a syntax error.")
+        self.assertEqual(response["model"], "test-model")
+        self.assertEqual(follow_up.call_args.args[0]["evidence"], request["evidence"])
 
 
 class PracticeConfigTests(unittest.TestCase):

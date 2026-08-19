@@ -164,6 +164,10 @@ if follow_up_provider_name == "openai" then
   table.insert(default_follow_up_command, "--service-tier")
   table.insert(default_follow_up_command, follow_up_service_tier)
 end
+local default_compiler_follow_up_command = vim.deepcopy(default_follow_up_command)
+for index, value in ipairs(default_compiler_follow_up_command) do
+  if value == "--follow-up" then default_compiler_follow_up_command[index] = "--compiler-follow-up" end
+end
 local compiler = environment("CXX") or evaluation_config.compiler
 if not compiler then
   compiler = environment("PRACTICE_COMPILER") == "gcc" and "g++" or "clang++"
@@ -230,6 +234,16 @@ practice.setup({
     name = follow_up_provider_name == "openai" and "OpenAI API" or "Codex",
     model = follow_up_model,
     reasoning_effort = follow_up_reasoning_effort,
+  },
+  compiler_follow_up_reviewer = (environment("PRACTICE_FOLLOW_UP_REVIEWER")
+      or environment("PRACTICE_REVIEWER")) and {
+    command = { environment("PRACTICE_FOLLOW_UP_REVIEWER") or environment("PRACTICE_REVIEWER") },
+    name = environment("PRACTICE_FOLLOW_UP_REVIEWER_NAME") or environment("PRACTICE_REVIEWER_NAME"),
+    model = follow_up_model, reasoning_effort = follow_up_reasoning_effort,
+  } or {
+    command = default_compiler_follow_up_command,
+    name = follow_up_provider_name == "openai" and "OpenAI API" or "Codex",
+    model = follow_up_model, reasoning_effort = follow_up_reasoning_effort,
   },
 })
 

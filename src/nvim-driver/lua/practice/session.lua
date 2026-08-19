@@ -40,6 +40,8 @@ local state = {
   progress_events = {},
   progress_event_count = 0,
   follow_up_pending = false,
+  compiler_chat_pending = false,
+  compiler_result = nil,
   double_z_buffer = nil,
   double_z_timer = nil,
   timing = {
@@ -196,6 +198,8 @@ local function start_progress()
   state.progress_events = {}
   state.progress_event_count = 0
   state.follow_up_pending = false
+  state.compiler_chat_pending = false
+  state.compiler_result = nil
   local progress_buffer = ui.open_progress(state.source_window)
   local timer = vim.uv.new_timer()
   state.progress_timer = timer
@@ -376,7 +380,7 @@ end
 
 function M.note(kind, first_line, last_line)
   if state.status ~= "solving" and state.status ~= "evaluating"
-    and state.status ~= "reviewing"
+    and state.status ~= "reviewing" and state.status ~= "post_rating"
   then
     ui.notify("A note can be captured only while an exercise is active", vim.log.levels.WARN)
     return nil
@@ -568,12 +572,110 @@ function M.submit()
     set_timing_phase("feedback")
     ui.open_feedback(state.source_window, response, {
       accept = M.accept,
+      accept_stay = M.accept_stay,
       rate = M.rate,
       retry = M.retry,
       skip = M.next,
       note = M.note,
       ask = M.ask,
     })
+  end)
+end
+
+local function save_working_source()
+  if not valid_buffer(state.source_buffer) then
+    ui.notify("The practice source buffer is no longer available", vim.log.levels.ERROR)
+    return false
+  end
+  local saved, save_error = pcall(function()
+    vim.api.nvim_buf_call(state.source_buffer, function() vim.cmd("silent write") end)
+  end)
+  if not saved then
+    ui.notify("Could not save the working copy: " .. tostring(save_error), vim.log.levels.ERROR)
+    return false
+  end
+  return true
+end
+
+local function compiler_messages(turns)
+  local messages = {}
+  local first = math.max(1, #turns - 7)
+  for index = first, #turns do
+    local turn = turns[index]
+    if turn.status == "available" then
+      table.insert(messages, { role = "user", content = turn.question })
+      table.insert(messages, { role = "assistant", content = turn.answer })
+    end
+  end
+  return messages
+end
+
+function M.compile()
+  if state.status ~= "solving" and state.status ~= "post_rating" then
+    ui.notify("Compile is available only while solving an exercise", vim.log.levels.WARN)
+    return
+  end
+  if not save_working_source() then return end
+  set_status("compiling")
+  process.run(config.python, script_path("compile_exercise.py"), {
+    source_path = state.working_path, command = config.evaluation_command,
+  }, function(error_message, response)
+    set_status("solving")
+    if error_message then
+      ui.open_compiler_result(state.source_window, { compiled = false, diagnostics = error_message,
+        chat = { turns = {} } }, {})
+      return
+    end
+    if type(response.compiled) ~= "boolean" or type(response.diagnostics) ~= "string"
+      or type(response.submitted_source) ~= "string" or type(response.command) ~= "table" then
+      ui.notify("Compile failed: invalid compiler response", vim.log.levels.ERROR)
+      return
+    end
+    response.chat = { turns = {} }
+    state.compiler_result = response
+    ui.open_compiler_result(state.source_window, response, { ask = M.ask_compiler })
+    ui.notify(response.compiled and "Compilation succeeded" or "Compilation has diagnostics",
+      response.compiled and vim.log.levels.INFO or vim.log.levels.WARN)
+  end)
+end
+
+function M.ask_compiler(question)
+  local result = state.compiler_result
+  if state.status ~= "solving" or not result then
+    ui.notify("Compile before asking about compiler diagnostics", vim.log.levels.WARN)
+    return
+  end
+  if state.compiler_chat_pending then
+    ui.notify("Wait for the current compiler explanation", vim.log.levels.WARN)
+    return
+  end
+  if question == nil then
+    vim.ui.input({ prompt = "Ask about compiler output: " }, function(value)
+      if value ~= nil then M.ask_compiler(value) end
+    end)
+    return
+  end
+  question = vim.trim(tostring(question))
+  if question == "" then return end
+  local turns = result.chat.turns
+  local turn = { question = question, status = "pending" }
+  table.insert(turns, turn)
+  state.compiler_chat_pending = true
+  ui.refresh_compiler_result()
+  process.run(config.python, script_path("compiler_follow_up.py"), {
+    evidence = { submitted_source = result.submitted_source, validation = {
+      command = result.command, succeeded = result.compiled, diagnostics = result.diagnostics },
+      exercise_metadata = state.exercise and table.concat(vim.fn.readfile(state.exercise.metadata_path), "\n") or "",
+      target_environment = state.exercise and state.exercise.target_environment or nil },
+    messages = compiler_messages(turns), question = question, reviewer = config.compiler_follow_up_reviewer,
+  }, function(error_message, response)
+    state.compiler_chat_pending = false
+    if error_message or not response or response.status ~= "available" or type(response.answer) ~= "string" then
+      turn.status, turn.failure = "failed", error_message or (response and response.failure) or "Compiler explanation unavailable"
+    else
+      turn.status, turn.answer = "available", response.answer
+    end
+    ui.refresh_compiler_result()
   end)
 end
 
@@ -710,7 +812,7 @@ function M.retry()
   ui.notify("Returned to the unchanged source; no rating was recorded")
 end
 
-function M.rate(rating)
+function M.rate(rating, stay)
   rating = rating and rating:lower() or nil
   if state.status ~= "reviewing" then
     ui.notify("A rating can be recorded only while reviewing feedback", vim.log.levels.WARN)
@@ -765,7 +867,17 @@ function M.rate(rating)
     ui.notify("Rated " .. rating:sub(1, 1):upper() .. rating:sub(2))
     statusline.invalidate(state.collections)
     sync.trigger(state.collections)
-    select_next()
+    if stay then
+      state.previous_result = state.result
+      state.result = nil
+      ui.close_feedback()
+      set_status("post_rating")
+      set_timing_phase(nil)
+      if valid_buffer(state.source_buffer) then vim.api.nvim_set_current_buf(state.source_buffer) end
+      ui.notify("Rating recorded. You can keep experimenting; further work is ungraded.")
+    else
+      select_next()
+    end
   end)
 end
 
@@ -781,8 +893,16 @@ function M.accept()
   M.rate(state.result.proposed_rating)
 end
 
+function M.accept_stay()
+  if state.status ~= "reviewing" or type(state.result.proposed_rating) ~= "string" then
+    ui.notify("There is no proposed rating to accept", vim.log.levels.WARN)
+    return
+  end
+  M.rate(state.result.proposed_rating, true)
+end
+
 function M.next()
-  if state.status ~= "solving" and state.status ~= "reviewing" then
+  if state.status ~= "solving" and state.status ~= "reviewing" and state.status ~= "post_rating" then
     ui.notify("Next is available only while solving or reviewing", vim.log.levels.WARN)
     return
   end

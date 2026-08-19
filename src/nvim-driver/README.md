@@ -509,6 +509,12 @@ abandoned attempts have no tracked duration rather than a zero duration.
 `:PracticeAccept` records the evaluator's proposed rating without requiring the
 user to restate it, then selects and opens the next exercise.
 
+`:PracticeAcceptStay` records that proposed rating, then returns to the same
+working copy for ungraded experimentation. `:PracticeRateStay {rating}` does
+the same for a manually chosen rating. While experimenting, use
+`:PracticeCompile` to check the build without a review and `:PracticeNext` to
+move on without another rating.
+
 `:PracticeRetry` closes feedback and returns to the unchanged working source
 without recording a rating. The previous result remains in session memory only
 until the next submission or exercise transition and is never archived.
@@ -561,7 +567,9 @@ Workflow mappings use the `p` prefix for practice:
 |---|---|---|
 | `<Space>s` | `:PracticeStart` | Start or restart a practice session. |
 | `<Space>c` | `:PracticeSubmit` | Check/submit the current solution. |
+| `<Space>b` | `:PracticeCompile` | Compile only, without AI review. |
 | `<Space>a` | `:PracticeAccept` | Accept the proposed rating and continue. |
+| `<Space>R` | `:PracticeAcceptStay` | Accept the proposed rating and keep editing. |
 | `<Space>r` | `:PracticeRetry` | Return to editing without recording. |
 | `<Space>1` | `:PracticeRate fail` | Record Fail and continue. |
 | `<Space>2` | `:PracticeRate acceptable` | Record Acceptable and continue. |
