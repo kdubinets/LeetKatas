@@ -35,6 +35,7 @@ Start work from this directory or a descendant so this guidance is loaded.
 
 ## Future Collections
 
+- Use the `generate-cpp-level-a-exercises` skill to create or grow a new Level A collection.
 - Create future collections under `collections/<descriptive_name>/`.
 - Each new collection must begin with `collection_spec.md` and `exercise_manifest.md`.
 - Record whether the collection is up-to-version or version-delta before generating exercises.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate C++ Level A Exercises"
+  short_description: "Create or grow Level A fluency collections"
+  default_prompt: "Use $generate-cpp-level-a-exercises to generate a new C++ Level A implementation-fluency collection."

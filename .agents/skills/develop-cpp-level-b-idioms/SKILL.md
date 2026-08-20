@@ -42,7 +42,7 @@ Target 3–8 minutes of learner work. Reject a candidate when it requires select
 6. Reassess the manifest after each batch. Stop rather than pad with weak variants.
 7. Do not declare the initial Level B core complete until a dedicated Level B corpus audit has checked it against solved interview solutions.
 
-Use GPT-5.6 Terra with high reasoning effort for collection design and generation. Use Sol selectively for difficult boundary or final-review decisions.
+Use your strongest available reasoning setting for collection design, generation, and difficult boundary or final-review decisions.
 
 ## Scope decisions
 
