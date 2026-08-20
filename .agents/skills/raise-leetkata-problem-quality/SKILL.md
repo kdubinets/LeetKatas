@@ -28,6 +28,8 @@ Keep the append-only, local-only audit trail at `logs/problem-quality-audit.json
 
 Record artifact paths and SHA-256 hashes, never artifact contents. Record the mode, scope, finding counts, outcome, changed solution paths, and validation results.
 
+Counts alone do not preserve an audit. Put the concrete findings themselves into `--note` entries: what was flagged, in which artifact, its classification, and why anything classified `optional` was deliberately left unresolved. A later audit reads the notes to tell a genuinely clean artifact from one whose issues were merely deferred.
+
 ## Quality bar
 
 Derive the expected solution independently from the source statement before trusting existing solution material. Assess:
