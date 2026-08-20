@@ -1,4 +1,4 @@
-Generate approximately 50 Level A C++20 implementation-fluency exercises.
+Generate approximately 30 Level A C++20 implementation-fluency exercises.
 
 The exercises are not intended to test algorithm discovery or problem-solving. They should train fast, idiomatic use of C++20 language features, standard containers, iterators, algorithms, ranges, lambdas, utilities, and common implementation patterns.
 

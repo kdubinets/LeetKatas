@@ -82,6 +82,7 @@ def main() -> int:
             executable,
             "exec",
             "--ephemeral",
+            "--ignore-user-config",
             "--sandbox",
             "read-only",
             "--skip-git-repo-check",

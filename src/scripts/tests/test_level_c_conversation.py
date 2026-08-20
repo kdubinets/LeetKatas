@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import subprocess
 import sys
@@ -21,6 +22,7 @@ COLLECTION = (
 FAKE = REPOSITORY_ROOT / "src" / "nvim-driver" / "tests" / "fake_level_c_reviewer.py"
 sys.path.insert(0, str(SCRIPTS))
 
+import level_c_codex  # noqa: E402
 from level_c_codex import build_prompt  # noqa: E402
 from level_c_conversation import clarify, discuss  # noqa: E402
 from level_c_conversation_protocol import (  # noqa: E402
@@ -220,6 +222,28 @@ class LevelCConversationTests(unittest.TestCase):
         self.assertIn("Do not reveal or imply an algorithm", clarification)
         self.assertNotIn("canonical solution outline has been revealed", clarification)
         self.assertIn("canonical solution outline has been revealed", discussion)
+
+    def test_level_c_codex_always_ignores_user_config(self) -> None:
+        commands: list[list[str]] = []
+
+        def run(command, **unused):
+            commands.append(command)
+            output = Path(command[command.index("--output-last-message") + 1])
+            output.write_text("{}", encoding="utf-8")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        stdout = io.StringIO()
+        with (
+            patch.object(sys, "argv", ["level_c_codex.py", "--mode", "clarification"]),
+            patch.object(sys, "stdin", io.StringIO("{}")),
+            patch.object(sys, "stdout", stdout),
+            patch("level_c_codex.subprocess.run", side_effect=run),
+        ):
+            returncode = level_c_codex.main()
+
+        self.assertEqual(returncode, 0)
+        self.assertIn("--ignore-user-config", commands[0])
+        self.assertEqual(json.loads(stdout.getvalue()), {})
 
 
 if __name__ == "__main__":
