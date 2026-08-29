@@ -1,6 +1,6 @@
 # Name
 
-Sum Positive Values Through a View
+Sum Only Positive Values
 
 # Description
 

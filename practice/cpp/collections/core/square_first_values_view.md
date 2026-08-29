@@ -1,6 +1,6 @@
 # Name
 
-Square First Values Through Views
+Square the First Values
 
 # Description
 

@@ -1,6 +1,6 @@
 # Name
 
-Sort Records by ID Projection
+Sort Records by ID
 
 # Description
 

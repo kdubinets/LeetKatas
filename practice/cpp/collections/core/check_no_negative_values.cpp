@@ -2,5 +2,5 @@
 #include <vector>
 
 bool solve(const std::vector<int>& values) {
-    // Finish: return whether the input contains no negative values
+    // Finish: return whether the input contains no negative values, treating an empty vector as true
 }

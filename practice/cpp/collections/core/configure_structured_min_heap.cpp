@@ -8,7 +8,7 @@ struct Task {
 
 struct TaskOrder {
     bool operator()(const Task& left, const Task& right) const {
-        // Finish: make the priority queue's top task have the lowest priority, breaking ties with the lowest id
+        // Finish: define a strict weak ordering that makes the priority queue's top task have the lowest priority, breaking ties with the lowest id
     }
 };
 

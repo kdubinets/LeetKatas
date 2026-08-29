@@ -63,6 +63,18 @@ Keep the unfinished portion small enough to complete in about one minute or less
 
 The surrounding code should make the required types, inputs, output, mutation rules, and relevant constraints clear.
 
+The `.cpp` file must be self-sufficient. The learner sees only the `.cpp` file while solving; the `.md` file is revealed afterwards. Every behavioral requirement the learner is expected to satisfy must therefore be stated in, or directly inferable from, the signature, the types, and the `Finish:` marker text. Requirements that commonly leak into the metadata alone include empty-input and other edge-case behavior, whether the input may be modified, whether copying is permitted, tie-breaking rules, and required result types for absent values. State such a requirement in the marker text, which constrains the result without naming the API or technique used to achieve it.
+
+Good:
+
+`// Finish: move the first value to the end while preserving the order of all other values, doing nothing when empty`
+
+Bad:
+
+`// Finish: move the first value to the end`
+
+with the empty-input rule appearing only in the metadata description.
+
 Prefer small functions such as:
 
 ```
@@ -93,6 +105,10 @@ A concise description of:
 * The important input and output types.
 * Relevant behavioral constraints, such as whether the input may be modified.
 * What implementation skill the exercise covers.
+
+The description restates and records requirements; it must never introduce one. Every constraint it names must already be visible in the `.cpp` file.
+
+Close the description with one curriculum annotation of the form `This exercise covers <skill>.` naming the skill the exercise trains. This annotation is bookkeeping for the manifest and for duplicate detection. It records why the exercise exists and never states a requirement, so it may name a technique, facility, or complexity class that the marker text deliberately withholds from the learner. Keep this exact sentence form: the review harness relies on it to distinguish the annotation from the specification.
 
 This description will also be used by future LLM runs to detect exercises that have already been generated. Make it specific enough to distinguish the exercise from similar exercises.
 
@@ -234,6 +250,7 @@ Before finalizing each pair of files, verify that:
 * The solution is idiomatic and concise without being cryptic.
 * The exercise has exactly one reasonable primary implementation objective.
 * The learner-written portion should normally take no more than one minute.
+* Every behavioral requirement in the metadata description is also stated in, or inferable from, the `.cpp` file. A requirement the learner could satisfy only by reading the metadata belongs in the marker text instead.
 
 ## Final review
 

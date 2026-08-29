@@ -53,6 +53,77 @@ def latest_for(records: list[dict[str, Any]], difficulty: str, problem_id: int) 
     return None
 
 
+def parse_utc_timestamp(value: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"invalid ISO-8601 timestamp: {value}") from error
+    if parsed.tzinfo is None:
+        raise argparse.ArgumentTypeError(f"timestamp must include a UTC offset: {value}")
+    return parsed.astimezone(UTC)
+
+
+def record_timestamp(record: dict[str, Any]) -> datetime:
+    value = record.get("audited_at")
+    if not isinstance(value, str):
+        raise ValueError("audit record is missing a string audited_at timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError(f"audit record has invalid audited_at timestamp: {value}") from error
+    if parsed.tzinfo is None:
+        raise ValueError(f"audit record timestamp lacks a UTC offset: {value}")
+    return parsed.astimezone(UTC)
+
+
+def history(args: argparse.Namespace) -> None:
+    records = load_records(args.log)
+    if args.not_before is not None and args.before is not None and args.not_before >= args.before:
+        raise ValueError("--not-before must be earlier than --before")
+
+    problems = []
+    for problem_id in dict.fromkeys(args.problem_id):
+        matching = []
+        for record in records:
+            if record.get("difficulty") != args.difficulty or record.get("problem_id") != problem_id:
+                continue
+            timestamp = record_timestamp(record)
+            if args.not_before is not None and timestamp < args.not_before:
+                continue
+            if args.before is not None and timestamp >= args.before:
+                continue
+            matching.append(record)
+        raises = [record for record in matching if record.get("mode") == "raise"]
+        latest_record = max(matching, key=record_timestamp) if matching else None
+        latest_raise = max(raises, key=record_timestamp) if raises else None
+        problems.append(
+            {
+                "problem_id": problem_id,
+                "record_count": len(matching),
+                "raise_count": len(raises),
+                "raised_in_window": bool(raises),
+                "latest_record_at": latest_record.get("audited_at") if latest_record else None,
+                "latest_raise_at": latest_raise.get("audited_at") if latest_raise else None,
+            }
+        )
+
+    print(
+        json.dumps(
+            {
+                "difficulty": args.difficulty,
+                "window": {
+                    "not_before": args.not_before.isoformat().replace("+00:00", "Z")
+                    if args.not_before
+                    else None,
+                    "before": args.before.isoformat().replace("+00:00", "Z") if args.before else None,
+                },
+                "problems": problems,
+            },
+            sort_keys=True,
+        )
+    )
+
+
 def status(args: argparse.Namespace) -> None:
     hashes, _ = parse_artifacts(args.artifact)
     latest = latest_for(load_records(args.log), args.difficulty, args.problem_id)
@@ -98,6 +169,14 @@ def main() -> None:
 
     status_parser = subparsers.add_parser("status", parents=[common])
     status_parser.set_defaults(handler=status)
+
+    history_parser = subparsers.add_parser("history")
+    history_parser.add_argument("--log", type=Path, default=Path("logs/problem-quality-audit.jsonl"))
+    history_parser.add_argument("--difficulty", required=True)
+    history_parser.add_argument("--problem-id", action="append", required=True, type=int)
+    history_parser.add_argument("--not-before", type=parse_utc_timestamp)
+    history_parser.add_argument("--before", type=parse_utc_timestamp)
+    history_parser.set_defaults(handler=history)
 
     record_parser = subparsers.add_parser("record", parents=[common])
     record_parser.add_argument("--mode", choices=("audit", "raise"), required=True)

@@ -1,6 +1,6 @@
 # Name
 
-Sum Tuple with Callable Application
+Sum Three Tuple Elements
 
 # Description
 
