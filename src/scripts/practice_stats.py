@@ -92,6 +92,7 @@ def single_practice_stats(
 
     store = PracticeStore(database_path(request))
     store.adopt_collection_key(path_key, collection_key)
+    active_ids -= store.disabled_exercise_ids(collection_key)
     connection = store.connect()
     try:
         card_rows = connection.execute(

@@ -522,6 +522,20 @@ until the next submission or exercise transition and is never archived.
 `:PracticeNext` explicitly skips without changing scheduling state and selects
 again from the scheduled queue.
 
+### Bad or obsolete exercises
+
+While an exercise is open, `:PracticeDisable` (or `<Space>d`) confirms a
+reversible local exclusion. Disabled exercises are not selected and are
+excluded from current progress and due counts; their review history is retained.
+Use `:PracticeEnable {exercise_id}` from that collection to restore it.
+
+`:PracticeDelete` (or `<Space>D`) requires a separate confirmation and
+permanently removes the current source/instructions pair and its entries in
+`exercise_manifest.md` and `exercise_order.md`. It also disables the ID first,
+so it cannot return to the queue if the file update is interrupted. Existing
+review history remains visible, but no longer contributes to current collection
+or forecast counts.
+
 `:PracticeQuit` ends the practice session and closes its temporary UI without
 changing the original exercises.
 
@@ -576,6 +590,8 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>3` | `:PracticeRate good` | Record Good and continue. |
 | `<Space>4` | `:PracticeRate excellent` | Record Excellent and continue. |
 | `<Space>n` | `:PracticeNext` | Skip and select again. |
+| `<Space>d` | `:PracticeDisable` | Reversibly exclude the current exercise. |
+| `<Space>D` | `:PracticeDelete` | Confirm and permanently remove the current exercise. |
 | `<Space>m` | `:PracticeNote` | Capture a note for the active exercise. |
 | `<Space>f` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
 | `<Space>i` | — | Toggle the current exercise's import/include preamble. |

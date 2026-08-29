@@ -21,8 +21,9 @@ from sync_progress import UnavailableError, sync_progress  # noqa: E402
 
 
 class FakeSupabase:
-    def __init__(self, events=None, failure=None):
+    def __init__(self, events=None, state_events=None, failure=None):
         self.events = []
+        self.state_events = []
         next_sequence = 1
         for value in events or []:
             event = dict(value)
@@ -30,7 +31,15 @@ class FakeSupabase:
                 event["sync_sequence"] = next_sequence
             next_sequence = max(next_sequence, event["sync_sequence"] + 1)
             self.events.append(event)
+        state_sequence = 1
+        for value in state_events or []:
+            event = dict(value)
+            if "sync_sequence" not in event:
+                event["sync_sequence"] = state_sequence
+            state_sequence = max(state_sequence, event["sync_sequence"] + 1)
+            self.state_events.append(event)
         self.next_sequence = next_sequence
+        self.next_state_sequence = state_sequence
         self.failure = failure
         self.calls = []
 
@@ -38,26 +47,31 @@ class FakeSupabase:
         self.calls.append((method, url, headers, body))
         if self.failure:
             raise UnavailableError(self.failure)
+        states = "practice_exercise_state_events" in url
+        events = self.state_events if states else self.events
         if method == "GET":
             query = dict(item.split("=", 1) for item in url.split("?", 1)[1].split("&"))
             after_sequence = int(query["sync_sequence"].removeprefix("gt."))
             limit = int(query["limit"])
             page = sorted(
                 (
-                    event for event in self.events
+                    event for event in events
                     if event["sync_sequence"] > after_sequence
                 ),
                 key=lambda event: event["sync_sequence"],
             )[:limit]
             return 200, json.dumps(page).encode()
         uploaded = json.loads(body)
-        known = {event["event_id"] for event in self.events}
+        known = {event["event_id"] for event in events}
         for value in uploaded:
             if value["event_id"] not in known:
                 event = dict(value)
-                event["sync_sequence"] = self.next_sequence
-                self.next_sequence += 1
-                self.events.append(event)
+                event["sync_sequence"] = self.next_state_sequence if states else self.next_sequence
+                if states:
+                    self.next_state_sequence += 1
+                else:
+                    self.next_sequence += 1
+                events.append(event)
                 known.add(event["event_id"])
         return 201, b""
 
@@ -105,6 +119,40 @@ class SyncProgressTests(unittest.TestCase):
             "solve_duration_ms": 10,
             "feedback_duration_ms": 20,
         }, when)
+
+    def state_event(self, collection: Path, action: str, when: datetime, event_id: str | None = None):
+        return {
+            "event_id": event_id or str(uuid.uuid4()),
+            "collection_id": "test.cpp.collection", "exercise_id": "example",
+            "action": action, "event_datetime": when.isoformat(),
+        }
+
+    def test_disable_syncs_to_fresh_database_and_enable_wins_later(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(
+            os.environ, {"PRACTICE_SUPABASE_KEY": "secret-key"}
+        ):
+            root = Path(temporary)
+            collection = self.make_collection(root)
+            source_db, restored_db = root / "source.sqlite3", root / "restored.sqlite3"
+            source_store = PracticeStore(source_db)
+            source_store.disable_exercise("test.cpp.collection", "example",
+                datetime(2026, 1, 1, tzinfo=timezone.utc))
+            remote = FakeSupabase()
+            uploaded = sync_progress(self.request(collection, source_db), remote)
+            self.assertEqual(uploaded["uploaded"], 1)
+            restored = sync_progress(self.request(collection, restored_db), remote)
+            self.assertEqual(restored["downloaded"], 1)
+            self.assertEqual(PracticeStore(restored_db).disabled_exercise_ids(
+                "test.cpp.collection"), {"example"})
+
+            remote.state_events.append({
+                **self.state_event(collection, "enable", datetime(2026, 1, 2, tzinfo=timezone.utc)),
+                "sync_sequence": remote.next_state_sequence,
+            })
+            remote.next_state_sequence += 1
+            sync_progress(self.request(collection, restored_db), remote)
+            self.assertEqual(PracticeStore(restored_db).disabled_exercise_ids(
+                "test.cpp.collection"), set())
 
     def test_identity_is_portable_and_malformed_metadata_is_local_only(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -196,7 +244,7 @@ class SyncProgressTests(unittest.TestCase):
             self.assertEqual(str(uuid.UUID(stored_review[14])), stored_review[14])
             self.assertEqual(stored_review[15], 0)
             self.assertEqual(tuple(stored_artifact), artifact)
-            self.assertEqual(version, "7")
+            self.assertEqual(version, "9")
 
     def test_v6_migration_adds_empty_remote_cursor_without_losing_sync_state(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -231,7 +279,7 @@ class SyncProgressTests(unittest.TestCase):
             self.assertEqual(tuple(metadata), (
                 "initialized", "2026-01-01T00:00:00+00:00", None,
             ))
-            self.assertEqual(version, "7")
+            self.assertEqual(version, "9")
 
     def test_rating_creates_pending_uuid_and_upload_is_idempotent_and_private(self):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(
@@ -351,7 +399,7 @@ class SyncProgressTests(unittest.TestCase):
             download_fake = FakeSupabase(fake.events)
             downloaded = sync_progress(self.request(collection, restored), download_fake)
             self.assertEqual(downloaded["downloaded"], 3)
-            self.assertEqual(sum(call[0] == "GET" for call in download_fake.calls), 3)
+            self.assertEqual(sum(call[0] == "GET" for call in download_fake.calls), 5)
             with sqlite3.connect(restored) as connection:
                 self.assertEqual(connection.execute("SELECT count(*) FROM reviews").fetchone()[0], 3)
 
@@ -370,9 +418,11 @@ class SyncProgressTests(unittest.TestCase):
             fake.calls.clear()
             second = sync_progress(self.request(collection, database), fake)
             get_calls = [call for call in fake.calls if call[0] == "GET"]
-            self.assertEqual(len(get_calls), 1)
-            self.assertIn("sync_sequence=gt.1", get_calls[0][1])
-            self.assertNotIn("offset=", get_calls[0][1])
+            self.assertEqual(len(get_calls), 2)
+            review_calls = [call for call in get_calls if "practice_review_events" in call[1]]
+            self.assertEqual(len(review_calls), 1)
+            self.assertIn("sync_sequence=gt.1", review_calls[0][1])
+            self.assertNotIn("offset=", review_calls[0][1])
             self.assertEqual(second["downloaded"], 0)
             with sqlite3.connect(database) as connection:
                 cursor = connection.execute(
@@ -394,7 +444,7 @@ class SyncProgressTests(unittest.TestCase):
             self.rating(collection, database, rating="excellent")
             fake.calls.clear()
             response = sync_progress(self.request(collection, database), fake)
-            self.assertEqual([call[0] for call in fake.calls], ["POST", "GET"])
+            self.assertEqual([call[0] for call in fake.calls], ["POST", "GET", "GET"])
             self.assertEqual(response["uploaded"], 1)
             self.assertEqual(response["downloaded"], 0)
             with sqlite3.connect(database) as connection:

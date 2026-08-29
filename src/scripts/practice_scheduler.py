@@ -20,7 +20,7 @@ else:
     FSRS_IMPORT_ERROR = None
 
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 9
 RATING_NAMES = {"fail", "acceptable", "good", "excellent"}
 COLLECTION_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)+$")
 
@@ -180,6 +180,30 @@ class PracticeStore:
                 updated_at TEXT NOT NULL,
                 PRIMARY KEY (collection_key, exercise_id)
             );
+            CREATE TABLE IF NOT EXISTS disabled_exercises (
+                collection_key TEXT NOT NULL,
+                exercise_id TEXT NOT NULL,
+                disabled_at TEXT NOT NULL,
+                PRIMARY KEY (collection_key, exercise_id)
+            );
+            CREATE TABLE IF NOT EXISTS exercise_state_events (
+                event_id TEXT PRIMARY KEY,
+                collection_key TEXT NOT NULL,
+                exercise_id TEXT NOT NULL,
+                action TEXT NOT NULL CHECK (action IN ('disable', 'enable')),
+                event_datetime TEXT NOT NULL,
+                remote_confirmed INTEGER NOT NULL DEFAULT 0 CHECK (remote_confirmed IN (0, 1))
+            );
+            CREATE INDEX IF NOT EXISTS exercise_state_events_collection_time_idx
+                ON exercise_state_events(collection_key, event_datetime, event_id);
+            CREATE TABLE IF NOT EXISTS exercise_availability (
+                collection_key TEXT NOT NULL,
+                exercise_id TEXT NOT NULL,
+                action TEXT NOT NULL CHECK (action IN ('disable', 'enable')),
+                event_datetime TEXT NOT NULL,
+                event_id TEXT NOT NULL,
+                PRIMARY KEY (collection_key, exercise_id)
+            );
             CREATE TABLE IF NOT EXISTS reviews (
                 review_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 event_id TEXT NOT NULL,
@@ -284,6 +308,11 @@ class PracticeStore:
                 "ALTER TABLE sync_metadata ADD COLUMN last_remote_sequence INTEGER "
                 "CHECK (last_remote_sequence IS NULL OR last_remote_sequence >= 0)"
             )
+        if "last_state_remote_sequence" not in sync_columns:
+            connection.execute(
+                "ALTER TABLE sync_metadata ADD COLUMN last_state_remote_sequence INTEGER "
+                "CHECK (last_state_remote_sequence IS NULL OR last_state_remote_sequence >= 0)"
+            )
         connection.execute(
             """CREATE TABLE IF NOT EXISTS review_artifacts (
                 review_id INTEGER PRIMARY KEY,
@@ -303,7 +332,7 @@ class PracticeStore:
                 "INSERT INTO schema_metadata (key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
-        elif row["value"] in {"1", "2", "3", "4", "5", "6"}:
+        elif row["value"] in {"1", "2", "3", "4", "5", "6", "7", "8"}:
             connection.execute("UPDATE schema_metadata SET value = ? WHERE key = 'schema_version'", (str(SCHEMA_VERSION),))
         elif row["value"] != str(SCHEMA_VERSION):
             raise SchedulerError(
@@ -327,6 +356,33 @@ class PracticeStore:
             connection.execute(
                 "INSERT INTO schema_metadata (key, value) VALUES ('legacy_collection_keys', '[]')"
             )
+        # Preserve exclusions created before they became syncable state events.
+        existing_disabled = connection.execute(
+            "SELECT collection_key, exercise_id, disabled_at FROM disabled_exercises"
+        ).fetchall()
+        for item in existing_disabled:
+            if connection.execute(
+                """SELECT 1 FROM exercise_state_events
+                   WHERE collection_key = ? AND exercise_id = ? LIMIT 1""",
+                (item["collection_key"], item["exercise_id"]),
+            ).fetchone() is not None:
+                continue
+            event_id = str(uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"leetkatas:disable:{item['collection_key']}:{item['exercise_id']}:{item['disabled_at']}",
+            ))
+            connection.execute(
+                """INSERT OR IGNORE INTO exercise_state_events
+                   (event_id, collection_key, exercise_id, action, event_datetime, remote_confirmed)
+                   VALUES (?, ?, ?, 'disable', ?, 0)""",
+                (event_id, item["collection_key"], item["exercise_id"], item["disabled_at"]),
+            )
+            connection.execute(
+                """INSERT OR IGNORE INTO exercise_availability
+                   (collection_key, exercise_id, action, event_datetime, event_id)
+                   VALUES (?, ?, 'disable', ?, ?)""",
+                (item["collection_key"], item["exercise_id"], item["disabled_at"], event_id),
+            )
         connection.commit()
 
     def adopt_collection_key(self, path_key: str, collection_key: str) -> None:
@@ -345,6 +401,18 @@ class PracticeStore:
             )
             connection.execute(
                 "UPDATE reviews SET collection_key = ? WHERE collection_key = ?",
+                (collection_key, path_key),
+            )
+            connection.execute(
+                "UPDATE exercise_state_events SET collection_key = ? WHERE collection_key = ?",
+                (collection_key, path_key),
+            )
+            connection.execute(
+                "UPDATE exercise_availability SET collection_key = ? WHERE collection_key = ?",
+                (collection_key, path_key),
+            )
+            connection.execute(
+                "UPDATE disabled_exercises SET collection_key = ? WHERE collection_key = ?",
                 (collection_key, path_key),
             )
             connection.execute("DELETE FROM cards WHERE collection_key = ?", (path_key,))
@@ -380,6 +448,88 @@ class PracticeStore:
         finally:
             connection.close()
         return {row["exercise_id"]: deserialize_card(row["card_json"]) for row in rows}
+
+    def disabled_exercise_ids(self, collection_key: str) -> set[str]:
+        """Return exercise IDs locally excluded from future selection."""
+        connection = self.connect()
+        try:
+            rows = connection.execute(
+                "SELECT exercise_id FROM disabled_exercises WHERE collection_key = ?",
+                (collection_key,),
+            ).fetchall()
+        finally:
+            connection.close()
+        return {row["exercise_id"] for row in rows}
+
+    @staticmethod
+    def apply_exercise_state_event(connection: sqlite3.Connection, event: dict[str, str]) -> bool:
+        """Record an event and materialize it if it wins the LWW availability state."""
+        connection.execute(
+            """INSERT OR IGNORE INTO exercise_state_events
+               (event_id, collection_key, exercise_id, action, event_datetime, remote_confirmed)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (event["event_id"], event["collection_key"], event["exercise_id"], event["action"],
+             event["event_datetime"], int(event.get("remote_confirmed", "0"))),
+        )
+        current = connection.execute(
+            """SELECT action, event_datetime, event_id FROM exercise_availability
+               WHERE collection_key = ? AND exercise_id = ?""",
+            (event["collection_key"], event["exercise_id"]),
+        ).fetchone()
+        if current is not None and (current["event_datetime"], current["event_id"]) >= (
+            event["event_datetime"], event["event_id"]
+        ):
+            return False
+        connection.execute(
+            """INSERT INTO exercise_availability
+               (collection_key, exercise_id, action, event_datetime, event_id)
+               VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT(collection_key, exercise_id) DO UPDATE SET
+                 action=excluded.action, event_datetime=excluded.event_datetime, event_id=excluded.event_id""",
+            (event["collection_key"], event["exercise_id"], event["action"],
+             event["event_datetime"], event["event_id"]),
+        )
+        if event["action"] == "disable":
+            connection.execute(
+                """INSERT INTO disabled_exercises (collection_key, exercise_id, disabled_at)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(collection_key, exercise_id) DO UPDATE SET disabled_at=excluded.disabled_at""",
+                (event["collection_key"], event["exercise_id"], event["event_datetime"]),
+            )
+        else:
+            connection.execute(
+                "DELETE FROM disabled_exercises WHERE collection_key = ? AND exercise_id = ?",
+                (event["collection_key"], event["exercise_id"]),
+            )
+        return True
+
+    def disable_exercise(
+        self, collection_key: str, exercise_id: str, disabled_at: datetime | None = None
+    ) -> None:
+        event = {
+            "event_id": str(uuid.uuid4()), "collection_key": collection_key,
+            "exercise_id": exercise_id, "action": "disable",
+            "event_datetime": ensure_utc(disabled_at).isoformat(), "remote_confirmed": "0",
+        }
+        connection = self.connect()
+        try:
+            self.apply_exercise_state_event(connection, event)
+            connection.commit()
+        finally:
+            connection.close()
+
+    def enable_exercise(self, collection_key: str, exercise_id: str) -> None:
+        event = {
+            "event_id": str(uuid.uuid4()), "collection_key": collection_key,
+            "exercise_id": exercise_id, "action": "enable",
+            "event_datetime": utc_now().isoformat(), "remote_confirmed": "0",
+        }
+        connection = self.connect()
+        try:
+            self.apply_exercise_state_event(connection, event)
+            connection.commit()
+        finally:
+            connection.close()
 
     def record_review(
         self,

@@ -212,10 +212,13 @@ supabase_url = "https://your-project.supabase.co"
 ```
 
 Export the server-side key as `PRACTICE_SUPABASE_KEY`. It must never be placed
-in TOML. `PRACTICE_SUPABASE_URL` overrides the configured URL. The remote table
-contains ratings, timestamps, compact compiler/reviewer metadata, and duration
-fields; source, feedback bodies, review artifacts, cards, notes, sessions, and
-diagnostics remain local.
+in TOML. `PRACTICE_SUPABASE_URL` overrides the configured URL. The remote review
+table contains ratings, timestamps, compact compiler/reviewer metadata, and
+duration fields. A separate append-only availability table synchronizes
+disable/enable events with last-write-wins ordering by timestamp and UUID.
+Deleting an exercise synchronizes a disable only: source files, metadata, and
+collection indexes remain local. Source, feedback bodies, review artifacts,
+cards, notes, sessions, and diagnostics remain local.
 
 For initial setup, synchronize the existing database on the one canonical
 machine before adding another machine. A secondary machine should start with a

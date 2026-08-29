@@ -333,12 +333,14 @@ local function select_next()
       ui.notify("Selection failed: " .. error_message, vim.log.levels.ERROR)
       return
     end
-    if (response.exercise == nil or response.exercise == vim.NIL)
-      and type(response.next_due) == "string"
-    then
+    if (response.exercise == nil or response.exercise == vim.NIL) then
       set_status("complete")
       state.next_due = response.next_due
-      ui.notify("No exercises are due. Next review: " .. response.next_due)
+      if type(response.next_due) == "string" then
+        ui.notify_next_due(response.next_due)
+      else
+        ui.notify("No enabled exercises remain in the selected collection")
+      end
       return
     end
     if not valid_exercise(response.exercise) then
@@ -507,6 +509,84 @@ function M.start(directory)
   statusline.refresh(state.collections)
   sync.trigger(state.collections)
   select_next()
+end
+
+local function manage_active_exercise(action)
+  if state.status ~= "solving" and state.status ~= "reviewing" and state.status ~= "post_rating" then
+    ui.notify("Problem management is available only while an exercise is active", vim.log.levels.WARN)
+    return
+  end
+  if not state.exercise then
+    ui.notify("The active exercise context is unavailable", vim.log.levels.ERROR)
+    return
+  end
+
+  local verb = action == "delete" and "permanently delete" or "disable"
+  local detail = action == "delete"
+    and "This removes the source, instructions, manifest row, and order entry."
+    or "It will no longer be selected. You can re-enable it with :PracticeEnable {id}."
+  if vim.fn.confirm(string.format("%s %s?\n%s", verb, state.exercise.name, detail),
+      "&Confirm\n&Cancel", 2) ~= 1 then
+    return
+  end
+
+  local exercise = state.exercise
+  process.run(config.python, script_path("manage_exercise.py"), {
+    action = action,
+    exercise_directory = exercise.collection_directory,
+    exercise_id = exercise.id,
+    database_path = config.database_path,
+    source_extension = config.source_extension,
+    metadata_extension = config.metadata_extension,
+  }, function(error_message, response)
+    if error_message or type(response) ~= "table" or response.managed ~= true then
+      ui.notify("Could not " .. verb .. " exercise: " .. tostring(error_message or "invalid response"),
+        vim.log.levels.ERROR)
+      return
+    end
+    ui.notify(string.format("%s %s", action == "delete" and "Deleted" or "Disabled", exercise.name))
+    statusline.invalidate(state.collections)
+    sync.trigger(state.collections)
+    select_next()
+  end)
+end
+
+function M.disable()
+  manage_active_exercise("disable")
+end
+
+function M.delete()
+  manage_active_exercise("delete")
+end
+
+function M.enable(directory, exercise_id)
+  if type(exercise_id) ~= "string" or exercise_id == "" then
+    ui.notify("Provide an exercise ID to re-enable", vim.log.levels.WARN)
+    return
+  end
+  local collection = directory or state.collection
+    or (state.collections and #state.collections == 1 and state.collections[1])
+  if type(collection) ~= "string" then
+    ui.notify("Start a single collection or provide a collection directory", vim.log.levels.WARN)
+    return
+  end
+  process.run(config.python, script_path("manage_exercise.py"), {
+    action = "enable",
+    exercise_directory = collection,
+    exercise_id = exercise_id,
+    database_path = config.database_path,
+    source_extension = config.source_extension,
+    metadata_extension = config.metadata_extension,
+  }, function(error_message, response)
+    if error_message or type(response) ~= "table" or response.managed ~= true then
+      ui.notify("Could not re-enable exercise: " .. tostring(error_message or "invalid response"),
+        vim.log.levels.ERROR)
+      return
+    end
+    ui.notify("Enabled " .. exercise_id)
+    statusline.invalidate(state.collections or { collection })
+    sync.trigger(state.collections or { collection })
+  end)
 end
 
 function M.submit()

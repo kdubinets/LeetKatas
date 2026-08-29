@@ -35,6 +35,11 @@ REMOTE_FIELDS = (
     "proposed_rating,review_status,reviewer_name,reviewer_model,"
     "reviewer_reasoning_effort,review_attempts,solve_duration_ms,feedback_duration_ms"
 )
+STATE_REMOTE_FIELDS = (
+    "sync_sequence,event_id,collection_id,exercise_id,action,event_datetime"
+)
+REVIEW_TABLE = "practice_review_events"
+STATE_TABLE = "practice_exercise_state_events"
 
 
 class SyncError(ValueError):
@@ -170,6 +175,45 @@ def event_payload(event: dict[str, Any]) -> dict[str, Any]:
     return {name: value for name, value in event.items() if name != "sync_sequence"}
 
 
+def validate_state_event(value: Any, collection_id: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise UnavailableError("remote state event is not an object")
+    sequence = value.get("sync_sequence")
+    if type(sequence) is not int or sequence <= 0:
+        raise UnavailableError("remote state event has invalid sync_sequence")
+    event_id = required_text(value.get("event_id"), "event_id")
+    try:
+        if str(uuid.UUID(event_id)) != event_id:
+            raise ValueError
+    except (ValueError, AttributeError) as error:
+        raise UnavailableError("remote state event has invalid event_id") from error
+    if value.get("collection_id") != collection_id:
+        raise UnavailableError("remote state event has an unexpected collection_id")
+    action = value.get("action")
+    if action not in {"disable", "enable"}:
+        raise UnavailableError("remote state event has invalid action")
+    event_datetime = required_text(value.get("event_datetime"), "event_datetime")
+    try:
+        parsed = datetime.fromisoformat(event_datetime)
+    except ValueError as error:
+        raise UnavailableError("remote state event has invalid event_datetime") from error
+    if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
+        raise UnavailableError("remote state event datetime must be UTC")
+    return {
+        "sync_sequence": sequence, "event_id": event_id, "collection_id": collection_id,
+        "exercise_id": required_text(value.get("exercise_id"), "exercise_id"),
+        "action": action, "event_datetime": parsed.isoformat(),
+    }
+
+
+def remote_state_event(row: sqlite3.Row, collection_id: str) -> dict[str, Any]:
+    return {
+        "event_id": row["event_id"], "collection_id": collection_id,
+        "exercise_id": row["exercise_id"], "action": row["action"],
+        "event_datetime": row["event_datetime"],
+    }
+
+
 def headers(key: str, prefer: str | None = None) -> dict[str, str]:
     result = {
         "apikey": key,
@@ -206,7 +250,7 @@ def fetch_remote(
             f"&sync_sequence=gt.{cursor}&order=sync_sequence.asc&limit={PAGE_SIZE}"
         )
         status, body = adapter.request(
-            "GET", f"{base_url}/rest/v1/practice_review_events?{query}", headers(key), None
+            "GET", f"{base_url}/rest/v1/{REVIEW_TABLE}?{query}", headers(key), None
         )
         if status == 400:
             raise UnavailableError(
@@ -244,9 +288,56 @@ def upload_events(
         payload = json.dumps(events[start : start + UPLOAD_BATCH_SIZE], separators=(",", ":")).encode()
         status, _ = adapter.request(
             "POST",
-            f"{base_url}/rest/v1/practice_review_events?on_conflict=event_id",
+            f"{base_url}/rest/v1/{REVIEW_TABLE}?on_conflict=event_id",
             headers(key, "resolution=ignore-duplicates,return=minimal"),
             payload,
+        )
+        check_status(status)
+
+
+def fetch_remote_states(
+    adapter: HttpAdapter, base_url: str, key: str, collection_id: str, after_sequence: int,
+) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    event_ids: set[str] = set()
+    cursor = after_sequence
+    encoded_collection = urllib.parse.quote(collection_id, safe="")
+    while True:
+        query = (f"collection_id=eq.{encoded_collection}&select={STATE_REMOTE_FIELDS}"
+                 f"&sync_sequence=gt.{cursor}&order=sync_sequence.asc&limit={PAGE_SIZE}")
+        status, body = adapter.request(
+            "GET", f"{base_url}/rest/v1/{STATE_TABLE}?{query}", headers(key), None
+        )
+        if status == 400:
+            raise UnavailableError("remote sync schema is outdated; rerun supabase_setup.sql")
+        check_status(status)
+        try:
+            page = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            raise UnavailableError("remote service returned malformed JSON") from error
+        if not isinstance(page, list):
+            raise UnavailableError("remote service returned an invalid state event page")
+        validated = [validate_state_event(event, collection_id) for event in page]
+        sequences = [event["sync_sequence"] for event in validated]
+        if sequences != sorted(sequences) or any(sequence <= cursor for sequence in sequences):
+            raise UnavailableError("remote response contains unordered state sync sequences")
+        if len(sequences) != len(set(sequences)) or any(event["event_id"] in event_ids for event in validated):
+            raise UnavailableError("remote response contains duplicate state events")
+        events.extend(validated)
+        event_ids.update(event["event_id"] for event in validated)
+        if validated:
+            cursor = validated[-1]["sync_sequence"]
+        if len(page) < PAGE_SIZE:
+            return events
+
+
+def upload_state_events(adapter: HttpAdapter, base_url: str, key: str,
+                        events: list[dict[str, Any]]) -> None:
+    for start in range(0, len(events), UPLOAD_BATCH_SIZE):
+        payload = json.dumps(events[start:start + UPLOAD_BATCH_SIZE], separators=(",", ":")).encode()
+        status, _ = adapter.request(
+            "POST", f"{base_url}/rest/v1/{STATE_TABLE}?on_conflict=event_id",
+            headers(key, "resolution=ignore-duplicates,return=minimal"), payload,
         )
         check_status(status)
 
@@ -305,10 +396,10 @@ def sync_progress(
             pending = 0
             metadata = None
         else:
-            pending = connection.execute(
+            pending = sum(connection.execute(query, (collection_id,)).fetchone()[0] for query in (
                 "SELECT count(*) FROM reviews WHERE collection_key = ? AND remote_confirmed = 0",
-                (collection_id,),
-            ).fetchone()[0]
+                "SELECT count(*) FROM exercise_state_events WHERE collection_key = ? AND remote_confirmed = 0",
+            ))
             metadata = connection.execute(
                 "SELECT * FROM sync_metadata WHERE collection_id = ?", (collection_id,)
             ).fetchone()
@@ -354,6 +445,10 @@ def sync_progress(
             "SELECT * FROM reviews WHERE collection_key = ? ORDER BY review_datetime, event_id",
             (collection_id,),
         ).fetchall()
+        local_state_rows = connection.execute(
+            "SELECT * FROM exercise_state_events WHERE collection_key = ? ORDER BY event_datetime, event_id",
+            (collection_id,),
+        ).fetchall()
         legacy_row = connection.execute(
             "SELECT value FROM schema_metadata WHERE key = 'legacy_collection_keys'"
         ).fetchone()
@@ -363,12 +458,13 @@ def sync_progress(
             legacy_keys = []
         legacy = collection_id in legacy_keys
         sync_row = connection.execute(
-            "SELECT bootstrap_state, last_remote_sequence FROM sync_metadata "
+            "SELECT bootstrap_state, last_remote_sequence, last_state_remote_sequence FROM sync_metadata "
             "WHERE collection_id = ?",
             (collection_id,),
         ).fetchone()
         bootstrap = sync_row["bootstrap_state"]
         last_remote_sequence = sync_row["last_remote_sequence"]
+        last_state_remote_sequence = sync_row["last_state_remote_sequence"]
     finally:
         connection.close()
 
@@ -452,6 +548,26 @@ def sync_progress(
                 adapter, base_url, key, collection_id, last_remote_sequence
             )
 
+        local_state_ids = {row["event_id"] for row in local_state_rows}
+        if last_state_remote_sequence is None:
+            remote_states = fetch_remote_states(adapter, base_url, key, collection_id, 0)
+            remote_state_ids = {event["event_id"] for event in remote_states}
+            state_uploads = [remote_state_event(row, collection_id) for row in local_state_rows
+                             if row["event_id"] not in remote_state_ids]
+            upload_state_events(adapter, base_url, key, state_uploads)
+            state_tail = fetch_remote_states(
+                adapter, base_url, key, collection_id,
+                max((event["sync_sequence"] for event in remote_states), default=0),
+            )
+            remote_states.extend(state_tail)
+        else:
+            state_uploads = [remote_state_event(row, collection_id) for row in local_state_rows
+                             if not row["remote_confirmed"]]
+            upload_state_events(adapter, base_url, key, state_uploads)
+            remote_states = fetch_remote_states(
+                adapter, base_url, key, collection_id, last_state_remote_sequence
+            )
+
         remote_ids = {event["event_id"] for event in remote}
         for event in remote:
             if (
@@ -460,9 +576,14 @@ def sync_progress(
             ):
                 raise UnavailableError("remote event conflicts with local event UUID")
         downloads = [event for event in remote if event["event_id"] not in local_ids]
+        state_downloads = [event for event in remote_states if event["event_id"] not in local_state_ids]
         new_cursor = max(
             (event["sync_sequence"] for event in remote),
             default=last_remote_sequence or 0,
+        )
+        new_state_cursor = max(
+            (event["sync_sequence"] for event in remote_states),
+            default=last_state_remote_sequence or 0,
         )
 
         connection = store.connect()
@@ -499,6 +620,12 @@ def sync_progress(
                         event["feedback_duration_ms"],
                     ),
                 )
+            for event in state_downloads:
+                PracticeStore.apply_exercise_state_event(connection, {
+                    "event_id": event["event_id"], "collection_key": collection_id,
+                    "exercise_id": event["exercise_id"], "action": event["action"],
+                    "event_datetime": event["event_datetime"], "remote_confirmed": "1",
+                })
             replay_exercises(connection, collection_id, affected)
             confirmed_ids = remote_ids | {event["event_id"] for event in uploads}
             if confirmed_ids:
@@ -506,18 +633,25 @@ def sync_progress(
                     "UPDATE reviews SET remote_confirmed=1 WHERE event_id=?",
                     ((event_id,) for event_id in confirmed_ids),
                 )
+            confirmed_state_ids = {event["event_id"] for event in remote_states} | {
+                event["event_id"] for event in state_uploads
+            }
+            if confirmed_state_ids:
+                connection.executemany(
+                    "UPDATE exercise_state_events SET remote_confirmed=1 WHERE event_id=?",
+                    ((event_id,) for event_id in confirmed_state_ids),
+                )
             succeeded_at = utc_timestamp()
             connection.execute(
                 """UPDATE sync_metadata SET bootstrap_state='initialized',
-                   last_success_at=?, last_error=NULL, last_remote_sequence=?
+                   last_success_at=?, last_error=NULL, last_remote_sequence=?, last_state_remote_sequence=?
                    WHERE collection_id=?""",
-                (succeeded_at, new_cursor, collection_id),
+                (succeeded_at, new_cursor, new_state_cursor, collection_id),
             )
-            pending = connection.execute(
-                "SELECT count(*) FROM reviews "
-                "WHERE collection_key=? AND remote_confirmed=0",
-                (collection_id,),
-            ).fetchone()[0]
+            pending = sum(connection.execute(query, (collection_id,)).fetchone()[0] for query in (
+                "SELECT count(*) FROM reviews WHERE collection_key=? AND remote_confirmed=0",
+                "SELECT count(*) FROM exercise_state_events WHERE collection_key=? AND remote_confirmed=0",
+            ))
             connection.commit()
         except Exception:
             connection.rollback()
@@ -525,8 +659,10 @@ def sync_progress(
         finally:
             connection.close()
         return {
-            "status": "success", "configured": True, "uploaded": len(uploads),
-            "downloaded": len(downloads), "pending": pending, "last_success": succeeded_at,
+            "status": "success", "configured": True,
+            "uploaded": len(uploads) + len(state_uploads),
+            "downloaded": len(downloads) + len(state_downloads), "pending": pending,
+            "last_success": succeeded_at,
         }
     except (UnavailableError, json.JSONDecodeError, UnicodeError) as error:
         safe_error = str(error)[:160] or "synchronization unavailable"
@@ -537,10 +673,10 @@ def sync_progress(
                 (safe_error, collection_id),
             )
             connection.commit()
-            pending = connection.execute(
+            pending = sum(connection.execute(query, (collection_id,)).fetchone()[0] for query in (
                 "SELECT count(*) FROM reviews WHERE collection_key=? AND remote_confirmed=0",
-                (collection_id,),
-            ).fetchone()[0]
+                "SELECT count(*) FROM exercise_state_events WHERE collection_key=? AND remote_confirmed=0",
+            ))
         finally:
             connection.close()
         return {

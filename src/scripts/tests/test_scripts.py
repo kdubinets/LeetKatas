@@ -24,6 +24,7 @@ from compiler_follow_up import ask as ask_compiler  # noqa: E402
 from load_practice_config import ConfigError, load_config  # noqa: E402
 from openai_reviewer import build_request, output_text, request_review  # noqa: E402
 from record_rating import record_rating  # noqa: E402
+from manage_exercise import manage_exercise  # noqa: E402
 from practice_scheduler import PracticeStore, deserialize_card  # noqa: E402
 from practice_stats import practice_stats  # noqa: E402
 from review_follow_up import ask  # noqa: E402
@@ -231,6 +232,47 @@ class SelectExerciseTests(unittest.TestCase):
             self.assertEqual(response["exercise"]["name"], "complete")
             self.assertTrue(Path(response["exercise"]["source_path"]).is_absolute())
             self.assertNotIn("target_environment", response["exercise"])
+
+    def test_disabled_exercise_is_not_selected_and_can_be_reenabled(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "first")
+            self.create_pair(directory, "second")
+            self.write_order(directory, ["first", "second"])
+            request = self.request(directory)
+
+            response = manage_exercise({
+                **request, "action": "disable", "exercise_id": "first",
+            })
+            self.assertTrue(response["managed"])
+            self.assertEqual(select_exercise(request)["exercise"]["id"], "second")
+
+            manage_exercise({**request, "action": "enable", "exercise_id": "first"})
+            self.assertEqual(select_exercise(request)["exercise"]["id"], "first")
+
+    def test_delete_removes_pair_and_collection_indexes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            self.create_pair(directory, "keep")
+            self.create_pair(directory, "remove")
+            self.write_order(directory, ["keep", "remove"])
+            (directory / "exercise_manifest.md").write_text(
+                "# Exercise Manifest\n\n| Exercise | Primary skill | Secondary topics |\n"
+                "|---|---|---|\n| `keep` | Keep | |\n| `remove` | Remove | |\n",
+                encoding="utf-8",
+            )
+            request = self.request(directory)
+
+            response = manage_exercise({
+                **request, "action": "delete", "exercise_id": "remove",
+            })
+
+            self.assertEqual(response["action"], "delete")
+            self.assertFalse((directory / "remove.cpp").exists())
+            self.assertFalse((directory / "remove.md").exists())
+            self.assertNotIn("remove", (directory / "exercise_order.md").read_text())
+            self.assertNotIn("`remove`", (directory / "exercise_manifest.md").read_text())
+            self.assertEqual(select_exercise(request)["exercise"]["id"], "keep")
 
     def test_includes_optional_collection_target_environment(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -581,6 +623,12 @@ class CodexReviewerTests(unittest.TestCase):
         self.assertIn("one or two learner-facing plain-text sentences", prompt)
         self.assertIn("Optionally provide `version_notes`", prompt)
         self.assertIn("must not affect the verdict, proposed rating", prompt)
+        self.assertIn("does not see the exercise metadata while solving", prompt)
+        self.assertIn("binding on the rating only when the starter source", prompt)
+        self.assertIn("requirement stated only in the metadata", prompt)
+        self.assertIn("curriculum annotation", prompt)
+        self.assertIn("never a requirement placed on the learner", prompt)
+        self.assertIn("Require a particular technique only when the starter source", prompt)
 
     def test_follow_up_prompt_uses_separate_instructions(self) -> None:
         prompt = build_prompt({"question": "Why?"}, follow_up=True)
@@ -1117,7 +1165,7 @@ class PracticeStatsTests(unittest.TestCase):
                 connection.close()
             self.assertIn("solve_duration_ms", columns)
             self.assertIn("feedback_duration_ms", columns)
-            self.assertEqual(version, "7")
+            self.assertEqual(version, "9")
 
 
 class SchedulerIntegrationTests(unittest.TestCase):

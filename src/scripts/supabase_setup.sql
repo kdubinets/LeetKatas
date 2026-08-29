@@ -61,6 +61,33 @@ $$;
 -- The client uses INSERT ... ON CONFLICT DO NOTHING. Updates and deletes are
 -- intentionally not granted: synchronized history is an append-only ledger.
 
+-- Availability is a separate append-only stream. A deletion only publishes a
+-- disable event; it never remotely deletes a checked-out exercise file.
+CREATE TABLE IF NOT EXISTS public.practice_exercise_state_events (
+    event_id uuid PRIMARY KEY,
+    sync_sequence bigint GENERATED ALWAYS AS IDENTITY,
+    collection_id text NOT NULL,
+    exercise_id text NOT NULL,
+    action text NOT NULL CHECK (action IN ('disable', 'enable')),
+    event_datetime timestamptz NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS practice_exercise_state_events_sequence_idx
+    ON public.practice_exercise_state_events (sync_sequence);
+CREATE INDEX IF NOT EXISTS practice_exercise_state_events_collection_idx
+    ON public.practice_exercise_state_events (collection_id, sync_sequence);
+ALTER TABLE public.practice_exercise_state_events ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.practice_exercise_state_events FROM anon, authenticated;
+GRANT SELECT, INSERT ON public.practice_exercise_state_events TO service_role;
+DO $$
+DECLARE sequence_name text;
+BEGIN
+    sequence_name := pg_get_serial_sequence(
+        'public.practice_exercise_state_events', 'sync_sequence'
+    );
+    EXECUTE format('GRANT USAGE, SELECT ON SEQUENCE %s TO service_role', sequence_name);
+END
+$$;
+
 CREATE TABLE IF NOT EXISTS public.problem_solving_review_events (
     event_id uuid PRIMARY KEY,
     sync_sequence bigint GENERATED ALWAYS AS IDENTITY,

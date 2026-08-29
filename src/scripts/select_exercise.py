@@ -146,10 +146,14 @@ def collection_candidates(
         )
     order = exercise_order(collection, exercises)
     cards = store.cards_for_collection(collection_key)
+    disabled_ids = store.disabled_exercise_ids(collection_key)
     by_id = {exercise["id"]: exercise for exercise in exercises}
+    by_id = {exercise_id: exercise for exercise_id, exercise in by_id.items()
+             if exercise_id not in disabled_ids}
     scheduled = {exercise_id: card for exercise_id, card in cards.items() if exercise_id in by_id}
     due = [(exercise_id, card) for exercise_id, card in scheduled.items() if card.due <= now]
-    unseen = ([exercise_id for exercise_id in order if exercise_id not in scheduled]
+    unseen = ([exercise_id for exercise_id in order
+               if exercise_id in by_id and exercise_id not in scheduled]
               if order is not None else [exercise["id"] for exercise in exercises if exercise["id"] not in scheduled])
     return {
         "path": path_key,
@@ -230,8 +234,13 @@ def select_exercise(
         selected = selected_candidate["exercises"][selected_id]
         return {"exercise": {**selected, "name": exercise_name(Path(selected["metadata_path"]), selected_id)}}
 
-    next_due = min(card.due for candidate in candidates for card in candidate["scheduled"].values())
-    return {"exercise": None, "next_due": next_due.isoformat()}
+    remaining_due = [
+        card.due for candidate in candidates for card in candidate["scheduled"].values()
+    ]
+    return {
+        "exercise": None,
+        "next_due": min(remaining_due).isoformat() if remaining_due else None,
+    }
 
 
 def main() -> int:

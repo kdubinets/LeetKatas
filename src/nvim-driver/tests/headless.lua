@@ -1,10 +1,28 @@
 local practice = require("practice")
+local practice_ui = require("practice.ui")
 
 assert(vim.env.PRACTICE_DATABASE and vim.env.PRACTICE_DATABASE ~= "",
   "PRACTICE_DATABASE must point to a temporary test database")
 assert(vim.env.PRACTICE_NOTES_DIRECTORY and vim.env.PRACTICE_NOTES_DIRECTORY ~= "",
   "PRACTICE_NOTES_DIRECTORY must point to a temporary test directory")
 assert(vim.o.termguicolors, "practice must enable true-color highlighting")
+
+local timestamp = vim.fn.strptime("%Y-%m-%dT%H:%M:%S%z", "2026-07-02T12:34:56+0000")
+assert(practice_ui.format_local_timestamp("2026-07-02T12:34:56+00:00")
+  == os.date("%-d %b %Y at %-I:%M %p", timestamp),
+  "next review timestamp was not formatted in the local timezone")
+assert(practice_ui.format_local_timestamp("2026-07-02T12:34:56.123456+00:00")
+  == os.date("%-d %b %Y at %-I:%M %p", timestamp),
+  "next review timestamp did not handle fractional seconds")
+local next_due_buffer = practice_ui.notify_next_due("2026-07-02T12:34:56+00:00")
+assert(vim.api.nvim_buf_get_lines(next_due_buffer, 0, 1, false)[1]
+  == " No exercises are due. Next review: 2 Jul 2026 at 12:34 PM ",
+  "next review notification was not rendered")
+assert(#vim.api.nvim_buf_get_extmarks(next_due_buffer, -1, 0, -1, {}) == 3,
+  "next review notification did not highlight its text segments")
+assert(vim.api.nvim_get_hl(0, { name = "PracticeDate", link = false }).fg
+  ~= vim.api.nvim_get_hl(0, { name = "PracticeTime", link = false }).fg,
+  "next review date and time highlights are indistinguishable")
 
 local function wait_for(status)
   local completed = vim.wait(10000, function()

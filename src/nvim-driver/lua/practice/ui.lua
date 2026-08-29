@@ -8,6 +8,7 @@ local feedback_window = nil
 local feedback_namespace = vim.api.nvim_create_namespace("practice_feedback")
 local instruction_namespace = vim.api.nvim_create_namespace("practice_instruction")
 local source_syntax_namespace = vim.api.nvim_create_namespace("practice_source_syntax")
+local next_due_namespace = vim.api.nvim_create_namespace("practice_next_due")
 local feedback_contexts = {}
 local feedback_result = nil
 local feedback_callbacks = nil
@@ -15,6 +16,9 @@ local expanded = { review = false, compiler = false, reference = false, chat = t
 local compiler_result, compiler_callbacks = nil, nil
 local stats_buffer = nil
 local stats_window = nil
+local next_due_buffer = nil
+local next_due_window = nil
+local next_due_timer = nil
 
 local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeSuccess", { default = true, link = "DiagnosticOk" })
@@ -33,6 +37,8 @@ local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeAnswer", { default = true, link = "Normal" })
   vim.api.nvim_set_hl(0, "PracticeQuestionLabel", { default = true, bold = true })
   vim.api.nvim_set_hl(0, "PracticeAnswerLabel", { default = true, bold = true })
+  vim.api.nvim_set_hl(0, "PracticeDate", { default = true, fg = "#e5c07b", bold = true })
+  vim.api.nvim_set_hl(0, "PracticeTime", { default = true, fg = "#98c379", bold = true })
   -- These deliberately use visible colours rather than linking to the active
   -- theme: several otherwise-good dark themes render all C++ identifiers white.
   vim.api.nvim_set_hl(0, "PracticeSyntaxKeyword", { default = true, fg = "#c678dd", bold = true })
@@ -148,6 +154,25 @@ local function format_date(value, include_year)
   end
   return string.format("%s, %d %s", os.date("%a", timestamp),
     tonumber(os.date("%d", timestamp)), os.date("%b", timestamp))
+end
+
+local function local_timestamp_parts(value)
+  if type(value) ~= "string" then return value end
+  local normalized = value:gsub("%.%d+([+-]%d%d:%d%d)$", "%1")
+  local date, time, offset_hour, offset_minute = normalized:match(
+    "^(%d%d%d%d%-%d%d%-%d%d)T(%d%d:%d%d:%d%d)([+-]%d%d):(%d%d)$"
+  )
+  if not date then return value end
+  local timestamp = vim.fn.strptime(
+    "%Y-%m-%dT%H:%M:%S%z", date .. "T" .. time .. offset_hour .. offset_minute
+  )
+  if type(timestamp) ~= "number" or timestamp < 0 then return value end
+  return os.date("%-d %b %Y", timestamp), os.date("%-I:%M %p", timestamp)
+end
+
+function M.format_local_timestamp(value)
+  local date, time = local_timestamp_parts(value)
+  return time and date .. " at " .. time or date
 end
 
 local function bar(value, maximum, width)
@@ -737,6 +762,56 @@ function M.notify(message, level)
   log.event("notification", level == vim.log.levels.ERROR and "error" or "info",
     { message = message, nvim_level = level })
   vim.notify(message, level or vim.log.levels.INFO, { title = "Practice" })
+end
+
+local function close_next_due_notification()
+  if next_due_timer then
+    next_due_timer:stop()
+    if not next_due_timer:is_closing() then next_due_timer:close() end
+  end
+  if valid_window(next_due_window) then vim.api.nvim_win_close(next_due_window, true) end
+  if valid_buffer(next_due_buffer) then vim.api.nvim_buf_delete(next_due_buffer, { force = true }) end
+  next_due_buffer, next_due_window, next_due_timer = nil, nil, nil
+end
+
+function M.notify_next_due(value)
+  local date, time = local_timestamp_parts(value)
+  if not time then
+    M.notify("No exercises are due. Next review: " .. tostring(date))
+    return
+  end
+
+  close_next_due_notification()
+  local prefix = "No exercises are due. Next review: "
+  local message = " " .. prefix .. date .. " at " .. time .. " "
+  local width = math.min(vim.fn.strdisplaywidth(message), math.max(1, vim.o.columns - 4))
+  next_due_buffer = vim.api.nvim_create_buf(false, true)
+  vim.bo[next_due_buffer].bufhidden = "wipe"
+  vim.bo[next_due_buffer].modifiable = true
+  vim.api.nvim_buf_set_lines(next_due_buffer, 0, -1, false, { message })
+  vim.bo[next_due_buffer].modifiable = false
+  vim.api.nvim_buf_add_highlight(next_due_buffer, next_due_namespace, "PracticeProgress", 0, 1, #prefix + 1)
+  vim.api.nvim_buf_add_highlight(next_due_buffer, next_due_namespace, "PracticeDate", 0, #prefix + 1,
+    #prefix + #date + 1)
+  vim.api.nvim_buf_add_highlight(next_due_buffer, next_due_namespace, "PracticeTime", 0,
+    #prefix + #date + 5, #message - 1)
+  next_due_window = vim.api.nvim_open_win(next_due_buffer, false, {
+    relative = "editor",
+    anchor = "NW",
+    row = 1,
+    col = vim.o.columns - width - 2,
+    width = width,
+    height = 1,
+    focusable = false,
+    style = "minimal",
+    border = "rounded",
+    zindex = 200,
+  })
+  vim.wo[next_due_window].wrap = false
+  vim.wo[next_due_window].winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder"
+  log.event("notification", "info", { message = message, nvim_level = vim.log.levels.INFO })
+  next_due_timer = vim.defer_fn(close_next_due_notification, 8000)
+  return next_due_buffer
 end
 
 function M.confirm_discard(action)

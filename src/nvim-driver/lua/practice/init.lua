@@ -9,7 +9,7 @@ local RATINGS = { "fail", "acceptable", "good", "excellent" }
 local NOTE_KINDS = { "follow-up", "research", "exercise-fix" }
 local PRACTICE_KEYS = {
   "<leader>s", "<leader>b", "<leader>c", "<leader>a", "<leader>R", "<leader>r", "<leader>1",
-  "<leader>2", "<leader>3", "<leader>4", "<leader>n", "<leader>m",
+  "<leader>2", "<leader>3", "<leader>4", "<leader>n", "<leader>m", "<leader>d", "<leader>D",
   "<leader>f", "<leader>i", "<leader>o", "<leader>t", "<leader>q",
 }
 
@@ -40,6 +40,8 @@ function M.refresh_keymaps()
     map("<leader>b", M.compile, "Compile only")
     map("<leader>c", M.submit, "Check solution")
     map("<leader>n", M.next, "Skip exercise")
+    map("<leader>d", M.disable, "Disable exercise")
+    map("<leader>D", M.delete, "Delete exercise")
     map("<leader>m", M.note, "Add note")
     vim.keymap.set("x", "<leader>m", ":PracticeNote<CR>", {
       silent = true, desc = "Add note",
@@ -52,6 +54,8 @@ function M.refresh_keymaps()
   if status == "post_rating" then
     map("<leader>b", M.compile, "Compile only")
     map("<leader>n", M.next, "Next exercise")
+    map("<leader>d", M.disable, "Disable exercise")
+    map("<leader>D", M.delete, "Delete exercise")
     map("<leader>m", M.note, "Add note")
     map("<leader>i", M.fold_imports, "Toggle imports")
     map("<leader>q", M.quit, "End practice")
@@ -67,6 +71,8 @@ function M.refresh_keymaps()
     map("<leader>4", function() M.rate("excellent") end, "Rate: Excellent")
     map("<leader>r", M.retry, "Retry exercise")
     map("<leader>n", M.next, "Skip exercise")
+    map("<leader>d", M.disable, "Disable exercise")
+    map("<leader>D", M.delete, "Delete exercise")
     map("<leader>m", M.note, "Add note")
     vim.keymap.set("x", "<leader>m", ":PracticeNote<CR>", {
       silent = true, desc = "Add note",
@@ -141,6 +147,15 @@ function M.setup(options)
   vim.api.nvim_create_user_command("PracticeNext", session.next, {
     desc = "Skip to the next practice exercise",
   })
+  vim.api.nvim_create_user_command("PracticeDisable", session.disable, {
+    desc = "Disable the current exercise from future selection",
+  })
+  vim.api.nvim_create_user_command("PracticeDelete", session.delete, {
+    desc = "Permanently delete the current exercise from its collection",
+  })
+  vim.api.nvim_create_user_command("PracticeEnable", function(command)
+    session.enable(nil, command.args)
+  end, { nargs = 1, desc = "Re-enable a disabled exercise by ID" })
   vim.api.nvim_create_user_command("PracticeQuit", session.quit, {
     desc = "End the coding practice session",
   })
@@ -229,6 +244,14 @@ end
 
 function M.next()
   session.next()
+end
+
+function M.disable()
+  session.disable()
+end
+
+function M.delete()
+  session.delete()
 end
 
 function M.quit()
