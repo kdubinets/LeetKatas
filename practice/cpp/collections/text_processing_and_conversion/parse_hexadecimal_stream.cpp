@@ -5,5 +5,5 @@
 #include <string_view>
 
 std::optional<unsigned int> solve(std::string_view text) {
-    // Finish: return the unsigned value read from hexadecimal stream input
+    // Finish: return the leading unsigned hexadecimal value, accepting an optional conventional prefix, or an empty result when none can be read
 }

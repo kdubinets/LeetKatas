@@ -8,7 +8,7 @@ public:
     Handle& operator=(const Handle&) = delete;
 
     ~Handle() {
-        // Finish: release the handle at scope exit when it is valid
+        // Finish: release the handle at scope exit when it differs from -1
     }
 
 private:

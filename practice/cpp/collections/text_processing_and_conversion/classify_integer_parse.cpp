@@ -9,5 +9,5 @@ enum class ParseResult {
 };
 
 ParseResult solve(std::string_view text) {
-    // Finish: classify the complete decimal integer input into the appropriate result category
+    // Finish: return invalid for a non-numeric start, out_of_range for an out-of-range digit sequence even with trailing characters, trailing_characters for other incomplete consumption, or success otherwise
 }

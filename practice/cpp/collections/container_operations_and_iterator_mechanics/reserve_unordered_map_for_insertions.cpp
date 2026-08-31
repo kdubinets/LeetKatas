@@ -6,5 +6,5 @@
 void solve(
     std::unordered_map<int, std::string>& destination,
     const std::vector<std::pair<int, std::string>>& additions) {
-    // Finish: prepare for the known maximum final size and then insert the new entries
+    // Finish: prepare for the known maximum final size and then insert the new entries without replacing values for existing keys
 }

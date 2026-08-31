@@ -8,5 +8,5 @@ struct Record {
 
 std::shared_ptr<const std::string> solve(
     const std::shared_ptr<Record>& owner) {
-    // Finish: for this non-null owner, share its lifetime while pointing at its name member
+    // Finish: for this non-null owner, share its lifetime while pointing at its name member without allocating or copying the string
 }

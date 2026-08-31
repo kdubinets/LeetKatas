@@ -7,5 +7,5 @@ struct Resource {
 void legacy_adopt(Resource* resource);
 
 void solve(std::unique_ptr<Resource>& owner) {
-    // Finish: give the owned resource to the legacy function that assumes responsibility for destroying it
+    // Finish: give the owned resource to the legacy function that assumes responsibility for destroying it and leave the owner empty
 }

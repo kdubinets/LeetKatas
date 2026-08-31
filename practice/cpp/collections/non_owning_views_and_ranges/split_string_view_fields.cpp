@@ -5,6 +5,6 @@
 
 std::vector<std::string_view> solve(std::string_view text, char delimiter) {
     std::vector<std::string_view> result;
-    // Finish: collect non-owning views of the fields produced by splitting at every delimiter
+    // Finish: collect non-owning views of the fields produced by splitting at every delimiter, preserving empty fields but producing none from empty input
     return result;
 }

@@ -10,5 +10,5 @@ struct FormatResult {
 };
 
 FormatResult solve(std::span<char> output, int value) {
-    // Finish: write as much decimal text as fits and report both the written and required character counts
+    // Finish: write as much decimal text as fits without a null terminator and report both the written and required character counts
 }
