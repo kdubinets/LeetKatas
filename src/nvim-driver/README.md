@@ -436,6 +436,11 @@ expanded correction for defective submissions, and grouped actions. A failed
 compilation does not cap a positive reviewer rating; the feedback explains when
 the reviewer recognized the approach despite the compiler result.
 
+`:PracticeGiveUp` skips compilation and reviewer assessment, opens feedback with
+Fail proposed, and expands the exercise reference. The usual follow-up chat is
+still available, so the learner can ask questions about the revealed material
+before accepting or changing the rating.
+
 Detailed review evidence, non-empty compiler diagnostics, and the parsed
 exercise reference follow lower in the buffer. Detailed review starts expanded
 unless the proposed rating is `Excellent`; compiler details and the reference
@@ -581,6 +586,7 @@ Workflow mappings use the `p` prefix for practice:
 |---|---|---|
 | `<Space>s` | `:PracticeStart` | Start or restart a practice session. |
 | `<Space>c` | `:PracticeSubmit` | Check/submit the current solution. |
+| `<Space>g` | `:PracticeGiveUp` | Give up, reveal the reference, and suggest Fail. |
 | `<Space>b` | `:PracticeCompile` | Compile only, without AI review. |
 | `<Space>a` | `:PracticeAccept` | Accept the proposed rating and continue. |
 | `<Space>R` | `:PracticeAcceptStay` | Accept the proposed rating and keep editing. |

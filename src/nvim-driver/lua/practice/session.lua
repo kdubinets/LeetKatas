@@ -677,6 +677,47 @@ local function save_working_source()
   return true
 end
 
+function M.give_up()
+  if state.status ~= "solving" then
+    ui.notify("Give up is available only while solving an exercise", vim.log.levels.WARN)
+    return
+  end
+  if not save_working_source() then return end
+  if vim.fn.confirm(
+      "Give up on this exercise? This will reveal the reference and suggest a Fail rating.",
+      "&Give up\n&Cancel", 2) ~= 1 then
+    return
+  end
+
+  state.previous_result = nil
+  state.follow_up_pending = false
+  set_timing_phase("feedback")
+  state.result = {
+    gave_up = true,
+    compiled = false,
+    diagnostics = "",
+    metadata = table.concat(vim.fn.readfile(state.exercise.metadata_path), "\n"),
+    submitted_source = table.concat(vim.api.nvim_buf_get_lines(state.source_buffer, 0, -1, false), "\n"),
+    proposed_rating = "fail",
+    review = {
+      status = "skipped",
+      attempts = 0,
+      feedback = nil,
+      failure = "Compilation and reviewer assessment were skipped because you gave up.",
+    },
+  }
+  set_status("reviewing")
+  ui.open_feedback(state.source_window, state.result, {
+    accept = M.accept,
+    accept_stay = M.accept_stay,
+    rate = M.rate,
+    retry = M.retry,
+    skip = M.next,
+    note = M.note,
+    ask = M.ask,
+  })
+end
+
 local function compiler_messages(turns)
   local messages = {}
   local first = math.max(1, #turns - 7)
@@ -909,7 +950,7 @@ function M.rate(rating, stay)
 
   set_timing_phase(nil)
   set_status("recording")
-  process.run(config.python, script_path("record_rating.py"), {
+  local record_request = {
     exercise_directory = state.collection,
     database_path = config.database_path,
     exercise_id = state.exercise.id,
@@ -925,10 +966,13 @@ function M.rate(rating, stay)
     review_attempts = state.result.review.attempts,
     solve_duration_ms = state.timing.solve_ms,
     feedback_duration_ms = state.timing.feedback_ms,
-    submitted_source = state.result.submitted_source,
-    review_response = state.result.review,
     review_archive_ttl_days = config.review_archive_ttl_days,
-  }, function(error_message, response)
+  }
+  if state.result.review.status ~= "skipped" then
+    record_request.submitted_source = state.result.submitted_source
+    record_request.review_response = state.result.review
+  end
+  process.run(config.python, script_path("record_rating.py"), record_request, function(error_message, response)
     if error_message then
       set_status("reviewing")
       set_timing_phase("feedback")

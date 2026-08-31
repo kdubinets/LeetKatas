@@ -156,17 +156,35 @@ local function format_date(value, include_year)
     tonumber(os.date("%d", timestamp)), os.date("%b", timestamp))
 end
 
+local function days_since_unix_epoch(year, month, day)
+  local adjusted_year = year - (month <= 2 and 1 or 0)
+  local era = math.floor(adjusted_year / 400)
+  local year_of_era = adjusted_year - era * 400
+  local month_since_march = month + (month > 2 and -3 or 9)
+  local day_of_year = math.floor((153 * month_since_march + 2) / 5) + day - 1
+  local day_of_era = year_of_era * 365 + math.floor(year_of_era / 4)
+    - math.floor(year_of_era / 100) + day_of_year
+  return era * 146097 + day_of_era - 719468
+end
+
 local function local_timestamp_parts(value)
   if type(value) ~= "string" then return value end
   local normalized = value:gsub("%.%d+([+-]%d%d:%d%d)$", "%1")
-  local date, time, offset_hour, offset_minute = normalized:match(
-    "^(%d%d%d%d%-%d%d%-%d%d)T(%d%d:%d%d:%d%d)([+-]%d%d):(%d%d)$"
+  local year, month, day, hour, minute, second, offset_sign, offset_hour, offset_minute = normalized:match(
+    "^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)([+-])(%d%d):(%d%d)$"
   )
-  if not date then return value end
-  local timestamp = vim.fn.strptime(
-    "%Y-%m-%dT%H:%M:%S%z", date .. "T" .. time .. offset_hour .. offset_minute
-  )
-  if type(timestamp) ~= "number" or timestamp < 0 then return value end
+  if not year then return value end
+  year, month, day = tonumber(year), tonumber(month), tonumber(day)
+  hour, minute, second = tonumber(hour), tonumber(minute), tonumber(second)
+  offset_hour, offset_minute = tonumber(offset_hour), tonumber(offset_minute)
+  if month < 1 or month > 12 or day < 1 or day > 31 or hour > 23 or minute > 59 or second > 59
+    or offset_hour > 23 or offset_minute > 59 then
+    return value
+  end
+  local offset_seconds = (offset_hour * 60 + offset_minute) * 60
+  if offset_sign == "-" then offset_seconds = -offset_seconds end
+  local timestamp = days_since_unix_epoch(year, month, day) * 86400 + hour * 3600 + minute * 60 + second
+    - offset_seconds
   return os.date("%-d %b %Y", timestamp), os.date("%-I:%M %p", timestamp)
 end
 
@@ -374,6 +392,9 @@ end
 
 local function outcome(result)
   local review = result.review
+  if result.gave_up then
+    return "Gave up", "PracticeFailure", nil
+  end
   local feedback = type(review) == "table" and review.status == "available"
       and type(review.feedback) == "table" and review.feedback or nil
   if not feedback or feedback.verdict == "cannot_assess" then
@@ -494,7 +515,9 @@ local function build_feedback(result)
     add_text(render, review.summary, { section = "Summary", logical_section = "summary" })
   elseif type(result.review) == "table" and result.review.failure then
     blank(render)
-    add_line(render, "Structured review is unavailable. Choose a manual rating.",
+    add_line(render, result.gave_up
+        and "Compilation and reviewer assessment were skipped. The reference is shown below; ask follow-up questions if useful."
+        or "Structured review is unavailable. Choose a manual rating.",
       { section = "Summary", logical_section = "summary" }, "PracticeWarning")
   end
 
@@ -974,6 +997,7 @@ function M.open_feedback(source_window, result, callbacks)
     and review.version_notes ~= ""
   expanded.review = result.proposed_rating ~= "excellent"
     or has_improved_implementation or has_version_notes
+  expanded.reference = result.gave_up == true
   local render = render_feedback("outcome")
   local rendered_improved_section, rendered_version_section = false, false
   for _, line in ipairs(render and render.lines or {}) do

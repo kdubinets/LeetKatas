@@ -10,7 +10,7 @@ local NOTE_KINDS = { "follow-up", "research", "exercise-fix" }
 local PRACTICE_KEYS = {
   "<leader>s", "<leader>b", "<leader>c", "<leader>a", "<leader>R", "<leader>r", "<leader>1",
   "<leader>2", "<leader>3", "<leader>4", "<leader>n", "<leader>m", "<leader>d", "<leader>D",
-  "<leader>f", "<leader>i", "<leader>o", "<leader>t", "<leader>q",
+  "<leader>f", "<leader>g", "<leader>i", "<leader>o", "<leader>t", "<leader>q",
 }
 
 local function map(lhs, rhs, description)
@@ -39,6 +39,7 @@ function M.refresh_keymaps()
   if status == "solving" then
     map("<leader>b", M.compile, "Compile only")
     map("<leader>c", M.submit, "Check solution")
+    map("<leader>g", M.give_up, "Give up and reveal reference")
     map("<leader>n", M.next, "Skip exercise")
     map("<leader>d", M.disable, "Disable exercise")
     map("<leader>D", M.delete, "Delete exercise")
@@ -109,6 +110,9 @@ function M.setup(options)
 
   vim.api.nvim_create_user_command("PracticeSubmit", session.submit, {
     desc = "Submit the current practice exercise",
+  })
+  vim.api.nvim_create_user_command("PracticeGiveUp", session.give_up, {
+    desc = "Give up, reveal the reference, and suggest Fail",
   })
   vim.api.nvim_create_user_command("PracticeCompile", session.compile, {
     desc = "Compile without submitting for review",
@@ -220,6 +224,10 @@ end
 
 function M.submit()
   session.submit()
+end
+
+function M.give_up()
+  session.give_up()
 end
 
 function M.compile()

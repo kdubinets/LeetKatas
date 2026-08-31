@@ -7,16 +7,20 @@ assert(vim.env.PRACTICE_NOTES_DIRECTORY and vim.env.PRACTICE_NOTES_DIRECTORY ~= 
   "PRACTICE_NOTES_DIRECTORY must point to a temporary test directory")
 assert(vim.o.termguicolors, "practice must enable true-color highlighting")
 
-local timestamp = vim.fn.strptime("%Y-%m-%dT%H:%M:%S%z", "2026-07-02T12:34:56+0000")
+local timestamp = 1782995696 -- 2026-07-02T12:34:56Z
+local expected_next_due = os.date("%-d %b %Y at %-I:%M %p", timestamp)
 assert(practice_ui.format_local_timestamp("2026-07-02T12:34:56+00:00")
-  == os.date("%-d %b %Y at %-I:%M %p", timestamp),
+  == expected_next_due,
   "next review timestamp was not formatted in the local timezone")
 assert(practice_ui.format_local_timestamp("2026-07-02T12:34:56.123456+00:00")
-  == os.date("%-d %b %Y at %-I:%M %p", timestamp),
+  == expected_next_due,
   "next review timestamp did not handle fractional seconds")
+assert(practice_ui.format_local_timestamp("2026-07-02T12:34:56+02:00")
+  == os.date("%-d %b %Y at %-I:%M %p", 1782988496),
+  "next review timestamp did not honor its timezone offset")
 local next_due_buffer = practice_ui.notify_next_due("2026-07-02T12:34:56+00:00")
 assert(vim.api.nvim_buf_get_lines(next_due_buffer, 0, 1, false)[1]
-  == " No exercises are due. Next review: 2 Jul 2026 at 12:34 PM ",
+  == " No exercises are due. Next review: " .. expected_next_due .. " ",
   "next review notification was not rendered")
 assert(#vim.api.nvim_buf_get_extmarks(next_due_buffer, -1, 0, -1, {}) == 3,
   "next review notification did not highlight its text segments")
@@ -67,6 +71,7 @@ end
 
 assert(vim.fn.exists(":PracticeStart") == 2, "PracticeStart was not registered")
 assert(vim.fn.exists(":PracticeSubmit") == 2, "PracticeSubmit was not registered")
+assert(vim.fn.exists(":PracticeGiveUp") == 2, "PracticeGiveUp was not registered")
 assert(vim.fn.exists(":PracticeAccept") == 2, "PracticeAccept was not registered")
 assert(vim.fn.exists(":PracticeAsk") == 2, "PracticeAsk was not registered")
 assert(vim.fn.exists(":PracticeRetry") == 2, "PracticeRetry was not registered")
@@ -158,6 +163,7 @@ assert(enhanced_highlighting_started,
 
 local first_state = practice.get_state()
 assert(has_normal_mapping("<Space>c"), "submit mapping was not registered while solving")
+assert(has_normal_mapping("<Space>g"), "give-up mapping was not registered while solving")
 assert(has_normal_mapping("<Space>n"), "skip mapping was not registered while solving")
 assert(has_normal_mapping("<Space>m"), "note mapping was not registered while solving")
 assert(has_normal_mapping("<Space>i"), "fold imports mapping was not registered while solving")
@@ -272,6 +278,7 @@ assert(has_normal_mapping("<Space>a"), "accept mapping was not registered while 
 assert(has_normal_mapping("<Space>r"), "retry mapping was not registered while reviewing")
 assert(has_normal_mapping("<Space>f"), "follow-up mapping was not registered while reviewing")
 assert(not has_normal_mapping("<Space>c"), "submit mapping was shown while reviewing")
+assert(not has_normal_mapping("<Space>g"), "give-up mapping was shown while reviewing")
 assert(not has_normal_mapping("<Space>i"), "fold imports mapping was shown while reviewing")
 assert(vim.fn.maparg("<Space>a", "n", false, true).desc == "Accept rating",
   "practice shortcut descriptions were not shortened")
@@ -490,13 +497,27 @@ assert(practice.get_state().status == "solving",
 assert(buffer_text(second_state.source_buffer):find("return;", 1, true),
   "defective-result retry changed the source")
 
-vim.api.nvim_buf_set_lines(second_state.source_buffer, 1, 2, false, { "    return 0;" })
-practice.submit()
-wait_for("reviewing")
+local original_confirm = vim.fn.confirm
+vim.fn.confirm = function() return 1 end
+practice.give_up()
+vim.fn.confirm = original_confirm
+assert(practice.get_state().status == "reviewing", "give up did not enter review")
 feedback_buffer = find_feedback_buffer()
 feedback = buffer_text(feedback_buffer)
-assert(feedback:find("Needs another attempt  [Fail]", 1, true),
-  "incorrect outcome is missing")
+assert(practice.get_state().result.gave_up == true, "give-up result was not marked")
+assert(practice.get_state().result.review.status == "skipped", "give-up reviewer was not skipped")
+assert(practice.get_state().result.compiled == false, "give-up result claimed compilation")
+assert(feedback:find("Gave up  [Fail]", 1, true), "give-up outcome is missing")
+assert(feedback:find("Compilation and reviewer assessment were skipped.", 1, true),
+  "give-up explanation is missing")
+assert(feedback:find("Exercise reference  [r collapse]", 1, true)
+  and feedback:find("return 42;", 1, true), "give up did not expand the reference")
+practice.ask("What should I focus on in this solution?")
+local give_up_follow_up = vim.wait(10000, function()
+  local turns = practice.get_state().result.follow_up.turns
+  return #turns == 1 and turns[1].status == "available"
+end, 10)
+assert(give_up_follow_up, "give-up follow-up question was not answered")
 practice.accept()
 wait_for("complete")
 local complete_state = practice.get_state()
@@ -542,10 +563,8 @@ local archive_output = vim.fn.system({
 })
 assert(vim.v.shell_error == 0, "could not inspect the review artifact archive")
 local archived = vim.json.decode(archive_output)
-assert(#archived == 2, "rated submissions were not archived")
+assert(#archived == 1, "a give-up outcome must not archive a fabricated review")
 assert(archived[1][1]:find("return 42;", 1, true), "successful submission source was not archived")
-assert(archived[2][1]:find("return 0;", 1, true), "final incorrect submission was not archived")
-assert(not archived[2][1]:find("return;", 1, true), "retried submission was archived")
 assert(vim.json.decode(archived[1][2]).feedback.summary
   == "The submitted implementation is correct.", "full reviewer response was not archived")
 
@@ -559,6 +578,14 @@ assert(vim.v.shell_error == 0, "could not inspect stored practice timing")
 local timings = vim.json.decode(timing_output)
 assert(#timings == 2 and timings[1][1] ~= vim.NIL and timings[1][2] ~= vim.NIL,
   "completed review timing was not persisted")
+local review_statuses = vim.json.decode(vim.fn.system({
+  "python3", "-c",
+  "import json,sqlite3,sys; c=sqlite3.connect(sys.argv[1]); "
+    .. "print(json.dumps(c.execute('SELECT review_status,proposed_rating,final_rating FROM reviews ORDER BY review_id').fetchall()))",
+  vim.env.PRACTICE_DATABASE,
+}))
+assert(review_statuses[2][1] == "skipped" and review_statuses[2][2] == "fail"
+  and review_statuses[2][3] == "fail", "give-up rating was not recorded as skipped Fail")
 
 local ui = require("practice.ui")
 local excellent = vim.deepcopy(successful_result)
