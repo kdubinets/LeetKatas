@@ -10,6 +10,9 @@ review_archive_ttl_days = 30
 # Optional. Due reviews are never limited; 0 makes the day review-only.
 # new_problems_per_day = 3
 
+[statusline]
+left = ["exercise_name", "new_exercise"]
+
 [reviewer]
 # "codex" uses the local Codex CLI; "openai" calls the Responses API with OPENAI_API_KEY.
 # provider = "openai"

@@ -116,6 +116,13 @@ local function item(name, state)
     return today and string.format("Due later %d", today.due_later_today) or nil
   elseif name == "new_today" then
     return today and string.format("New today %d", today.new_introduced) or nil
+  elseif name == "new_exercise" then
+    if not exercise or exercise.is_new ~= true then return nil end
+    if today and type(driver_config.new_problems_per_day) == "number" then
+      return string.format("New %d/%d today", today.new_introduced + 1,
+        driver_config.new_problems_per_day)
+    end
+    return "New"
   elseif name == "new_left" then
     return collection and string.format("New left %d", collection.unseen) or nil
   elseif name == "collection_progress" then

@@ -199,7 +199,7 @@ practice.setup({
   local_completion = editor_config.local_completion == true,
   statusline = {
     enabled = statusline_config.enabled ~= false,
-    left = statusline_config.left or { "exercise_name" },
+    left = statusline_config.left or { "exercise_name", "new_exercise" },
     right = statusline_config.right
       or { "solve_elapsed", "time_today", "reviews_today", "due_now", "new_left" },
     separator = statusline_config.separator or " · ",

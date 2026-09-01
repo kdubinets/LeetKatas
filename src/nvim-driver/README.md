@@ -186,7 +186,7 @@ enhanced_syntax_highlighting = true
 local_completion = false
 
 [statusline]
-left = ["exercise_name"]
+left = ["exercise_name", "new_exercise"]
 right = ["solve_elapsed", "time_today", "reviews_today", "due_now", "new_left"]
 separator = " · "
 
@@ -225,6 +225,9 @@ status line.
 Available items are:
 
 - `exercise_name`, `exercise_id`, `collection`, and `language` for exercise context.
+- `new_exercise` labels an unseen active exercise as `New`; when
+  `new_problems_per_day` is set, it shows its in-progress daily position, such
+  as `New 2/3 today`.
 - `time_today`, `reviews_today`, `new_today`, and `new_left` for today's work and
   remaining unseen exercises. `time_today` includes the active exercise timer.
 - `due_now`, `due_later_today`, and `tomorrow_due` for the current workload.

@@ -283,7 +283,11 @@ def select_exercise(
                            else random.SystemRandom().choice(unseen))
     if selected_candidate is not None and selected_id is not None:
         selected = selected_candidate["exercises"][selected_id]
-        return {"exercise": {**selected, "name": exercise_name(Path(selected["metadata_path"]), selected_id)}}
+        return {"exercise": {
+            **selected,
+            "name": exercise_name(Path(selected["metadata_path"]), selected_id),
+            "is_new": selected_id not in selected_candidate["scheduled"],
+        }}
 
     remaining_due = [
         card.due for candidate in candidates for card in candidate["scheduled"].values()

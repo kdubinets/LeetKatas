@@ -178,7 +178,8 @@ assert(not has_normal_mapping("<Space>f"), "follow-up mapping was shown while so
 assert(vim.fn.maparg("<Space>m", "x") ~= "", "visual note mapping was not registered while solving")
 local statusline_ready = vim.wait(10000, function()
   local line = _G.PracticeStatusline and _G.PracticeStatusline() or ""
-  return line:find("Return Answer", 1, true) and line:find("Today ", 1, true)
+  return line:find("Return Answer", 1, true) and line:find("New%=", 1, true)
+    and line:find("Today ", 1, true)
     and line:find("Solved 0", 1, true) and line:find("Due now 0", 1, true)
     and line:find("New left 2", 1, true)
 end, 10)

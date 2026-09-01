@@ -87,6 +87,7 @@ STATUSLINE_ITEMS = {
     "due_now",
     "due_later_today",
     "new_today",
+    "new_exercise",
     "new_left",
     "collection_progress",
     "tomorrow_due",

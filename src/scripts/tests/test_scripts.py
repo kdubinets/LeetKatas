@@ -236,6 +236,7 @@ class SelectExerciseTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             self.assertEqual(response["exercise"]["id"], "complete")
             self.assertEqual(response["exercise"]["name"], "complete")
+            self.assertTrue(response["exercise"]["is_new"])
             self.assertTrue(Path(response["exercise"]["source_path"]).is_absolute())
             self.assertNotIn("target_environment", response["exercise"])
 
