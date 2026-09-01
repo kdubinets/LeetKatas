@@ -323,6 +323,7 @@ local function select_next()
     database_path = config.database_path,
     source_extension = config.source_extension,
     metadata_extension = config.metadata_extension,
+    new_problems_per_day = config.new_problems_per_day,
     previous_exercise = state.collection and state.previous_id and {
       collection_directory = state.collection,
       exercise_id = state.previous_id,
@@ -336,7 +337,14 @@ local function select_next()
     if (response.exercise == nil or response.exercise == vim.NIL) then
       set_status("complete")
       state.next_due = response.next_due
-      if type(response.next_due) == "string" then
+      if response.new_limit_reached == true then
+        if type(response.next_available) == "string" then
+          ui.notify_next_due(response.next_available,
+            "Daily new-problem limit reached. Next problem: ")
+        else
+          ui.notify("Daily new-problem limit reached", vim.log.levels.INFO)
+        end
+      elseif type(response.next_due) == "string" then
         ui.notify_next_due(response.next_due)
       else
         ui.notify("No enabled exercises remain in the selected collection")

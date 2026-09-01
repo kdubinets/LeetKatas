@@ -24,6 +24,11 @@ assert(vim.api.nvim_buf_get_lines(next_due_buffer, 0, 1, false)[1]
   "next review notification was not rendered")
 assert(#vim.api.nvim_buf_get_extmarks(next_due_buffer, -1, 0, -1, {}) == 3,
   "next review notification did not highlight its text segments")
+local next_available_buffer = practice_ui.notify_next_due("2026-07-02T12:34:56+00:00",
+  "Daily new-problem limit reached. Next problem: ")
+assert(vim.api.nvim_buf_get_lines(next_available_buffer, 0, 1, false)[1]
+  == " Daily new-problem limit reached. Next problem: " .. expected_next_due .. " ",
+  "next available notification did not use the popup dialog")
 assert(vim.api.nvim_get_hl(0, { name = "PracticeDate", link = false }).fg
   ~= vim.api.nvim_get_hl(0, { name = "PracticeTime", link = false }).fg,
   "next review date and time highlights are indistinguishable")

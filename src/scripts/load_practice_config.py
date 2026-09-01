@@ -26,6 +26,7 @@ SCHEMA: dict[str, dict[str, type]] = {
         "log_path": str,
         "notes_directory": str,
         "review_archive_ttl_days": int,
+        "new_problems_per_day": int,
     },
     "problem_solving": {
         "collection": str,
@@ -175,6 +176,8 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
         practice["collections"] = resolved_collections
     if "review_archive_ttl_days" in practice and not 0 <= practice["review_archive_ttl_days"] <= 3650:
         raise ConfigError("practice.review_archive_ttl_days must be between 0 and 3650")
+    if "new_problems_per_day" in practice and practice["new_problems_per_day"] < 0:
+        raise ConfigError("practice.new_problems_per_day must be a non-negative integer")
     problem_solving = value.get("problem_solving", {})
     if (language := problem_solving.get("implementation_language")) is not None and language != "cpp":
         raise ConfigError("problem_solving.implementation_language currently supports only cpp")

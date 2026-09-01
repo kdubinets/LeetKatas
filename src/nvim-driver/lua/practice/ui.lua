@@ -797,15 +797,15 @@ local function close_next_due_notification()
   next_due_buffer, next_due_window, next_due_timer = nil, nil, nil
 end
 
-function M.notify_next_due(value)
+function M.notify_next_due(value, prefix)
   local date, time = local_timestamp_parts(value)
+  prefix = prefix or "No exercises are due. Next review: "
   if not time then
-    M.notify("No exercises are due. Next review: " .. tostring(date))
+    M.notify(prefix .. tostring(date))
     return
   end
 
   close_next_due_notification()
-  local prefix = "No exercises are due. Next review: "
   local message = " " .. prefix .. date .. " at " .. time .. " "
   local width = math.min(vim.fn.strdisplaywidth(message), math.max(1, vim.o.columns - 4))
   next_due_buffer = vim.api.nvim_create_buf(false, true)

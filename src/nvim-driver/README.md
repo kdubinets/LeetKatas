@@ -164,6 +164,9 @@ collections = [
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
 # notes_directory = "~/.local/share/leetkatas/notes"
 review_archive_ttl_days = 30
+# Optional: cap first-time exercises across this portfolio each local calendar day.
+# Due reviews are never limited; 0 means review-only practice.
+# new_problems_per_day = 3
 
 [reviewer]
 # "codex" (the default) uses the local Codex CLI. "openai" calls the
@@ -260,7 +263,9 @@ Supported environment overrides include `PRACTICE_COLLECTION`,
 directory to `src/nvim-driver/practice` has the highest precedence for the
 collection. Review artifacts are retained for 30 days by default; set
 `review_archive_ttl_days` to `0` to disable archiving or up to `3650` days to
-change retention.
+change retention. Set `new_problems_per_day` to a non-negative integer to limit
+first-time exercises introduced across the configured portfolio per local
+calendar day. Due reviews continue to take priority and are not limited.
 
 ### Diagnostics and logs
 

@@ -7,7 +7,7 @@ import json
 import random
 import sqlite3
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +53,49 @@ def collection_directories(request: dict[str, Any]) -> list[str]:
             or any(not isinstance(item, str) or not item for item in directories)):
         raise RequestError("exercise_directories must be a non-empty list of strings")
     return directories
+
+
+def max_new_problems_per_day(request: dict[str, Any]) -> int | None:
+    """Return an optional portfolio-wide cap on first-time introductions."""
+    value = request.get("new_problems_per_day")
+    if value is None:
+        return None
+    if type(value) is not int or value < 0:
+        raise RequestError("new_problems_per_day must be a non-negative integer")
+    return value
+
+
+def introductions_today(
+    store: PracticeStore, collection_keys: list[str], now: datetime
+) -> int:
+    """Count cards whose first recorded review falls on the local current day."""
+    placeholders = ", ".join("?" for _ in collection_keys)
+    connection = store.connect()
+    try:
+        rows = connection.execute(
+            f"""
+            SELECT MIN(review_datetime) AS first_review
+            FROM reviews
+            WHERE collection_key IN ({placeholders})
+            GROUP BY collection_key, exercise_id
+            """,
+            collection_keys,
+        ).fetchall()
+    finally:
+        connection.close()
+    today = now.astimezone().date()
+    return sum(
+        datetime.fromisoformat(row["first_review"]).astimezone().date() == today
+        for row in rows
+    )
+
+
+def next_new_problem_time(now: datetime) -> datetime:
+    """Return the next local midnight, when a daily introduction cap resets."""
+    local_now = now.astimezone()
+    return (local_now + timedelta(days=1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
 
 def exercise_order(
@@ -157,6 +200,7 @@ def collection_candidates(
               if order is not None else [exercise["id"] for exercise in exercises if exercise["id"] not in scheduled])
     return {
         "path": path_key,
+        "collection_key": collection_key,
         "exercises": by_id,
         "scheduled": scheduled,
         "due": due,
@@ -170,6 +214,7 @@ def select_exercise(
 ) -> dict[str, Any]:
     source_extension = required_string(request, "source_extension")
     metadata_extension = required_string(request, "metadata_extension")
+    daily_new_limit = max_new_problems_per_day(request)
     previous_id = request.get("previous_exercise_id")
     previous = request.get("previous_exercise")
     if previous_id is not None and not isinstance(previous_id, str):
@@ -214,8 +259,14 @@ def select_exercise(
                        if exercise_id != previous_id] or options
         selected_candidate, selected_id = random.SystemRandom().choice(options)
     else:
-        available = [(index, candidate) for index, candidate in enumerate(candidates)
-                     if candidate["unseen"]]
+        limit_reached = (
+            daily_new_limit is not None
+            and introductions_today(store, [candidate["collection_key"] for candidate in candidates], now)
+            >= daily_new_limit
+        )
+        available = ([] if limit_reached else [
+            (index, candidate) for index, candidate in enumerate(candidates) if candidate["unseen"]
+        ])
         if available:
             _, selected_candidate = min(
                 available, key=lambda item: (len(item[1]["scheduled"]), item[0])
@@ -237,10 +288,22 @@ def select_exercise(
     remaining_due = [
         card.due for candidate in candidates for card in candidate["scheduled"].values()
     ]
-    return {
+    response = {
         "exercise": None,
         "next_due": min(remaining_due).isoformat() if remaining_due else None,
     }
+    if daily_new_limit is not None and not due_options and any(candidate["unseen"] for candidate in candidates):
+        response["new_limit_reached"] = introductions_today(
+            store, [candidate["collection_key"] for candidate in candidates], now
+        ) >= daily_new_limit
+        if response["new_limit_reached"]:
+            next_new_available = next_new_problem_time(now)
+            response["next_new_available"] = next_new_available.isoformat()
+            next_due = min(remaining_due) if remaining_due else None
+            response["next_available"] = min(
+                candidate for candidate in (next_due, next_new_available) if candidate is not None
+            ).isoformat()
+    return response
 
 
 def main() -> int:

@@ -112,6 +112,7 @@ retain_conversation_history = false
 collection = "collections/core"
 notes_directory = "notes"
 review_archive_ttl_days = 45
+new_problems_per_day = 3
 
 [reviewer]
 provider = "openai"
@@ -145,6 +146,7 @@ separator = " | "
             self.assertEqual(config["practice"]["collection"], str(directory / "collections/core"))
             self.assertEqual(config["practice"]["notes_directory"], str(directory / "notes"))
             self.assertEqual(config["practice"]["review_archive_ttl_days"], 45)
+            self.assertEqual(config["practice"]["new_problems_per_day"], 3)
             self.assertEqual(config["reviewer"]["model"], "gpt-5.6-luna")
             self.assertEqual(config["reviewer"]["provider"], "openai")
             self.assertEqual(config["reviewer"]["follow_up_provider"], "codex")
@@ -185,6 +187,10 @@ separator = " | "
 
             path.write_text("[practice]\nreview_archive_ttl_days = 3651\n")
             with self.assertRaises(ConfigError):
+                load_config(path)
+
+            path.write_text("[practice]\nnew_problems_per_day = -1\n")
+            with self.assertRaisesRegex(ConfigError, "new_problems_per_day"):
                 load_config(path)
 
             path.write_text('[statusline]\nleft = ["not_a_real_item"]\n')
@@ -1260,6 +1266,48 @@ class SchedulerIntegrationTests(unittest.TestCase):
             )
 
             self.assertEqual(response["exercise"]["id"], "unseen")
+
+    def test_daily_new_problem_limit_blocks_unseen_but_not_due_reviews(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            database = directory / "practice.sqlite3"
+            self.create_pair(directory, "introduced")
+            self.create_pair(directory, "unseen")
+            record_rating(
+                self.record_request(directory, database, "introduced", "good"), self.NOW
+            )
+            request = {**self.select_request(directory, database), "new_problems_per_day": 1}
+
+            response = select_exercise(request, self.NOW + timedelta(minutes=1))
+            self.assertIsNone(response["exercise"])
+            self.assertTrue(response["new_limit_reached"])
+            expected_reset = (self.NOW.astimezone() + timedelta(days=1)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            self.assertEqual(response["next_new_available"], expected_reset.isoformat())
+            self.assertEqual(
+                response["next_available"],
+                min(datetime.fromisoformat(response["next_due"]), expected_reset).isoformat(),
+            )
+
+            response = select_exercise(
+                {**request, "new_problems_per_day": 0}, self.NOW + timedelta(days=1)
+            )
+            self.assertEqual(response["exercise"]["id"], "introduced")
+
+    def test_zero_daily_new_problem_limit_prevents_first_introduction(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            database = directory / "practice.sqlite3"
+            self.create_pair(directory, "unseen")
+
+            response = select_exercise(
+                {**self.select_request(directory, database), "new_problems_per_day": 0}, self.NOW
+            )
+
+            self.assertIsNone(response["exercise"])
+            self.assertTrue(response["new_limit_reached"])
+            self.assertIn("next_new_available", response)
 
     def test_returns_next_due_when_collection_is_complete(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

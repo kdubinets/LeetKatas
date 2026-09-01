@@ -182,6 +182,7 @@ practice.setup({
   supabase_url = environment("PRACTICE_SUPABASE_URL") or sync_config.supabase_url,
   sync_first = vim.env.PRACTICE_SYNC_FIRST == "1",
   review_archive_ttl_days = review_archive_ttl_days,
+  new_problems_per_day = practice_config.new_problems_per_day,
   notes_directory = environment("PRACTICE_NOTES_DIRECTORY") or practice_config.notes_directory
     or ((environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share"))
       .. "/leetkatas/notes"),
