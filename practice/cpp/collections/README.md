@@ -1,6 +1,6 @@
 # Exercise Collections
 
-Each exercise collection lives in its own descriptively named subdirectory. The completed [core collection](core/collection_spec.md) establishes the baseline layout; focused follow-up collections live alongside it.
+Each Level A exercise collection lives in its own descriptively named subdirectory. The completed [core collection](core/collection_spec.md) establishes the baseline layout; focused Level A follow-up collections live alongside it. Level B interview-idiom collections live beneath [b_level](b_level/README.md) so their supplied-pattern practice remains distinct from Level A API fluency.
 
 ## Available Collections
 
@@ -20,11 +20,13 @@ Each exercise collection lives in its own descriptively named subdirectory. The 
 - [Compile-Time Programming](compile_time_programming/collection_spec.md): 18 focused Level A exercises, up to C++20.
 - [Stream and File I/O](stream_and_file_io/collection_spec.md): 20 focused Level A exercises, up to C++20.
 - [Container Operations and Iterator Mechanics](container_operations_and_iterator_mechanics/collection_spec.md): 23 focused Level A exercises, up to C++20.
+- [Sequence Scanning and Window Idioms](b_level/sequence_scanning_and_window_idioms/collection_spec.md): 19 Level B named interview-implementation idioms, up to C++20.
 
 ## Required Collection Files
 
 ```text
-collections/<collection_name>/
+collections/<collection_name>/              # Level A
+collections/b_level/<collection_name>/      # Level B
 ├── collection.json              # optional stable identity for progress sync
 ├── environment.json             # optional machine-readable target environment
 ├── collection_spec.md

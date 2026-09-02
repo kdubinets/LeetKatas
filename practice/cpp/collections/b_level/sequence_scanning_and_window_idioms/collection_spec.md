@@ -38,8 +38,8 @@ An exercise should normally require 3–8 minutes. Its source contains one `// P
 
 ## Format and Validation
 
-Exercise pairs follow `../../CppProblemsGenerationPrompt.md` except for the documented single `// Pattern:` comment. Validate from `practice/cpp/` with:
+Exercise pairs follow `../../../CppProblemsGenerationPrompt.md` except for the documented single `// Pattern:` comment. Validate from `practice/cpp/` with:
 
 ```bash
-tools/validate_exercises.sh collections/sequence_scanning_and_window_idioms c++20
+tools/validate_exercises.sh collections/b_level/sequence_scanning_and_window_idioms c++20
 ```

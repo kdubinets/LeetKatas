@@ -20,8 +20,9 @@ cpp/
 │   │   ├── exercise_manifest.md
 │   │   ├── exercise_order.md
 │   │   └── 108 exercise pairs
-│   ├── sequence_scanning_and_window_idioms/
-│   │   └── 19 Level B exercise pairs plus collection metadata
+│   ├── b_level/
+│   │   └── sequence_scanning_and_window_idioms/
+│   │       └── 19 Level B exercise pairs plus collection metadata
 │   ├── non_owning_views_and_ranges/
 │   │   └── 30 exercise pairs plus collection metadata
 │   ├── ownership_move_semantics_and_raii/
@@ -78,7 +79,7 @@ Fifteen focused up-to-C++20 follow-up collections are also complete:
 - [Stream and File I/O](collections/stream_and_file_io/collection_spec.md) contains 20 exercises on line input, stream-state recovery, file modes, input and output positioning, bounded byte transfer, stream-buffer copying, and C++20 string-stream buffer views and moves.
 - [Container Operations and Iterator Mechanics](collections/container_operations_and_iterator_mechanics/collection_spec.md) contains 23 exercises on deque endpoints, list sorting and node operations, forward-list operations, multimap ranges, associative node transfer, unordered capacity, iterator adaptors, ranges result objects, and iterator customization points.
 
-The proposed Level B [Sequence Scanning and Window Idioms](collections/sequence_scanning_and_window_idioms/collection_spec.md) collection contains 19 named, supplied interview implementation patterns. It is intentionally not yet complete: a dedicated Level B corpus audit must evaluate it against solved interview solutions before it is frozen or extended.
+The proposed Level B [Sequence Scanning and Window Idioms](collections/b_level/sequence_scanning_and_window_idioms/collection_spec.md) collection contains 19 named, supplied interview implementation patterns. It is intentionally not yet complete: a dedicated Level B corpus audit must evaluate it against solved interview solutions before it is frozen or extended.
 
 The core [exercise order](collections/core/exercise_order.md) records the canonical
 1-to-108 progression as one exercise basename per line. The
@@ -112,14 +113,14 @@ tools/validate_exercises.sh collections/concurrency c++20
 tools/validate_exercises.sh collections/compile_time_programming c++20
 tools/validate_exercises.sh collections/stream_and_file_io c++20
 tools/validate_exercises.sh collections/container_operations_and_iterator_mechanics c++20
-tools/validate_exercises.sh collections/sequence_scanning_and_window_idioms c++20
+tools/validate_exercises.sh collections/b_level/sequence_scanning_and_window_idioms c++20
 ```
 
 The validator compiles temporary completed forms through a pipe; it does not modify learner files or leave generated solutions in the repository.
 
 ## Adding a Collection
 
-1. Create `collections/<descriptive_name>/`.
+1. Create a Level A collection under `collections/<descriptive_name>/`, or a Level B interview-idiom collection under `collections/b_level/<descriptive_name>/`.
 2. Write `collection_spec.md` before generating exercises.
 3. Add `collection.json` with a stable, globally unique ID when progress should be portable or syncable.
 4. Add `environment.json` when the evaluation harness should receive explicit target-language, library, or tool restrictions.

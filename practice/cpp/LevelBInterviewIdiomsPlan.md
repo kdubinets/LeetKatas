@@ -33,7 +33,7 @@ Generate the core in small, reviewable batches. Validate it against real solutio
 
 ## Initial core proposal
 
-Start with `collections/sequence_scanning_and_window_idioms/`, targeting roughly 16–24 exercises. Its scope is sequential stateful scans, not every interview pattern.
+Start with `collections/b_level/sequence_scanning_and_window_idioms/`, targeting roughly 16–24 exercises. Its scope is sequential stateful scans, not every interview pattern.
 
 Strong candidate families:
 
@@ -72,4 +72,3 @@ Begin with the current compile-and-review workflow. Add deterministic runtime te
 Use `$develop-cpp-level-b-idioms` for planning, creating, or reviewing Level B collections. Use GPT-5.6 Terra with high reasoning effort as the default; reserve Sol for difficult boundary judgments or final audits.
 
 After the initial core exists, add a separate Level B audit skill. It should use seeded, stratified, unseen-first samples of solved C++ medium and hard solutions, a hash-aware ledger distinct from the Level A ledger, and explicit classifications for trained idioms, partial coverage, candidate gaps, duplicate variations, and out-of-scope algorithm discovery.
-
