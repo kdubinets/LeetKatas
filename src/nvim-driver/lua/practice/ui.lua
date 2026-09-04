@@ -949,6 +949,9 @@ function M.open_source(path, preferred_window, practice_marker, enhanced_syntax_
   vim.bo[buffer].bufhidden = "wipe"
   vim.bo[buffer].swapfile = false
   vim.bo[buffer].completefunc, vim.bo[buffer].omnifunc, vim.bo[buffer].tagfunc = "", "", ""
+  -- A practice prompt is a comment, but it is also the first line learners
+  -- commonly open below with `o`.  Do not carry that comment onto their code.
+  vim.bo[buffer].formatoptions = vim.bo[buffer].formatoptions:gsub("o", "")
   if local_completion then completion.enable(buffer) end
   if enhanced_syntax_highlighting then
     local started = vim.treesitter and type(vim.treesitter.start) == "function"

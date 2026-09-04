@@ -229,6 +229,15 @@ assert(type(finish_mapping) == "table" and finish_mapping.buffer == 1 and finish
 local insert_submit_mapping = vim.fn.maparg("<C-CR>", "i", false, true)
 assert(type(insert_submit_mapping) == "table" and insert_submit_mapping.buffer == 1,
   "Insert-mode submit shortcut is not installed in the practice source buffer")
+assert(not vim.bo[first_state.source_buffer].formatoptions:find("o", 1, true),
+  "practice source buffer continues comments after o")
+vim.api.nvim_set_current_win(first_state.source_window)
+vim.api.nvim_win_set_cursor(first_state.source_window, { 2, 4 })
+vim.cmd("normal! o")
+vim.cmd("stopinsert")
+assert(vim.api.nvim_buf_get_lines(first_state.source_buffer, 2, 3, false)[1] == "",
+  "opening a line below the finish prompt inserted a comment prefix")
+vim.api.nvim_buf_set_lines(first_state.source_buffer, 2, 3, false, {})
 
 vim.api.nvim_set_current_win(first_state.source_window)
 vim.api.nvim_set_current_buf(first_state.source_buffer)
