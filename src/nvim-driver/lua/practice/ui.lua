@@ -19,6 +19,9 @@ local stats_window = nil
 local next_due_buffer = nil
 local next_due_window = nil
 local next_due_timer = nil
+-- Retain the latency renderer for a future dedicated view without using
+-- vertical space in the everyday statistics pane.
+local show_reviewer_latency = false
 
 local function define_highlights()
   vim.api.nvim_set_hl(0, "PracticeSuccess", { default = true, link = "DiagnosticOk" })
@@ -209,6 +212,18 @@ local function pad_display(value, width)
   return value .. string.rep(" ", math.max(0, width - vim.fn.strdisplaywidth(value)))
 end
 
+local function truncate_display(value, width)
+  if vim.fn.strdisplaywidth(value) <= width then return value end
+  local suffix = "…"
+  local index = 0
+  while index < vim.fn.strchars(value) do
+    local candidate = vim.fn.strcharpart(value, 0, index + 1)
+    if vim.fn.strdisplaywidth(candidate .. suffix) > width then break end
+    index = index + 1
+  end
+  return vim.fn.strcharpart(value, 0, index) .. suffix
+end
+
 local function append_columns(lines, left, right, width)
   local gap = 3
   local left_width = math.floor((width - gap) / 2)
@@ -268,11 +283,16 @@ local function stats_lines(stats, width)
 
   if type(stats.collections) == "table" then
     vim.list_extend(lines, { "", "COLLECTION BREAKDOWN", string.rep("─", width) })
+    local metric_headers = string.format("%10s  %3s  %6s", "Introduced", "Due", "Unseen")
+    local name_width = math.max(12, width - 4 - vim.fn.strdisplaywidth(metric_headers))
+    table.insert(lines, "  " .. pad_display("Collection", name_width) .. "  " .. metric_headers)
     for _, entry in ipairs(stats.collections) do
       local state = entry.collection_state
-      table.insert(lines, string.format("  %-30s %3d/%-3d introduced  %3d due  %3d unseen",
-        humanize_collection(entry.collection), state.introduced, state.total,
-        entry.today.due_now, state.unseen))
+      local metrics = string.format("%10s  %3d  %6d", string.format("%d / %d",
+        state.introduced, state.total), entry.today.due_now, state.unseen)
+      table.insert(lines, "  " .. pad_display(
+        truncate_display(humanize_collection(entry.collection), name_width), name_width
+      ) .. "  " .. metrics)
     end
   end
 
@@ -310,7 +330,7 @@ local function stats_lines(stats, width)
     end
   end
   if activity_count == 0 then table.insert(lines, "  No practice activity yet") end
-  if type(stats.reviewer_usage) == "table" and #stats.reviewer_usage > 0 then
+  if show_reviewer_latency and type(stats.reviewer_usage) == "table" and #stats.reviewer_usage > 0 then
     vim.list_extend(lines, { "", "REVIEWER LATENCY", string.rep("─", width) })
     table.insert(lines, "  Provider / model / effort / tier                         Calls  Avg     Cost")
     for _, item in ipairs(stats.reviewer_usage) do

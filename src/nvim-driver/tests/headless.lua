@@ -562,6 +562,8 @@ assert(stats_text:find("COLLECTION", 1, true) and stats_text:find("unseen", 1, t
 assert(stats_text:find("DUE", 1, true) and stats_text:find("Tomorrow", 1, true),
   "forecast statistics are missing")
 assert(stats_text:find("RECENT ACTIVITY", 1, true), "statistics history is missing")
+assert(not stats_text:find("REVIEWER LATENCY", 1, true),
+  "reviewer latency should not appear in the everyday statistics pane")
 assert(not stats_text:find(collection, 1, true),
   "statistics exposed the raw collection path")
 assert(stats_text:find("Accept.", 1, true), "statistics rating columns are ambiguous")
