@@ -286,6 +286,16 @@ for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
   end
 end
 assert(progress_visible, "evaluation progress pane was not opened immediately")
+local progress_text = buffer_text(progress_buffer)
+assert(progress_text:find("Exercise reference", 1, true)
+  and progress_text:find("return 42;", 1, true),
+  "evaluation progress did not expose the suggested solution")
+practice_ui.update_progress(0, {
+  { event = "compilation_finished", compiled = false, diagnostics = "example.cpp:2: error: expected expression" },
+}, { metadata = "# Solution\n\n```cpp\nreturn 42;\n```" })
+assert(buffer_text(progress_buffer):find("Compiler details", 1, true)
+  and buffer_text(progress_buffer):find("error: expected expression", 1, true),
+  "evaluation progress did not expose compiler diagnostics immediately")
 wait_for("reviewing")
 assert(practice.get_state().timing.phase == "feedback",
   "feedback timing did not start after evaluation")

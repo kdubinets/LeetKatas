@@ -1032,9 +1032,9 @@ function M.open_feedback(source_window, result, callbacks)
   return feedback_buffer, feedback_window
 end
 
-function M.open_progress(source_window)
+function M.open_progress(source_window, reference)
   ensure_feedback(source_window, false)
-  M.update_progress(0, {})
+  M.update_progress(0, {}, reference)
   return feedback_buffer, feedback_window
 end
 
@@ -1042,14 +1042,15 @@ function M.refresh_feedback(cursor_section)
   render_feedback(cursor_section)
 end
 
-function M.update_progress(elapsed_seconds, events)
+function M.update_progress(elapsed_seconds, events, reference)
   if not valid_buffer(feedback_buffer) then return end
   local frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
   local frame = frames[(math.floor(elapsed_seconds * 10) % #frames) + 1]
-  local compilation, attempt, retry_delay, review_finished, failure_category = nil, nil, nil, nil, nil
+  local compilation, diagnostics, attempt, retry_delay, review_finished, failure_category = nil, nil, nil, nil, nil, nil
   local maximum_attempts = 3
   for _, event in ipairs(events) do
-    if event.event == "compilation_finished" then compilation = event.compiled
+    if event.event == "compilation_finished" then
+      compilation, diagnostics = event.compiled, event.diagnostics
     elseif event.event == "review_attempt_started" then
       attempt, maximum_attempts, retry_delay = event.attempt,
         event.maximum_attempts or maximum_attempts, nil
@@ -1086,6 +1087,14 @@ function M.update_progress(elapsed_seconds, events)
         "PracticeProgress")
     end
   end
+  blank(render)
+  if compilation == false and type(diagnostics) == "string" and diagnostics ~= "" then
+    add_heading(render, "Compiler details", "compiler")
+    add_code(render, diagnostics, { section = "Compiler details", logical_section = "compiler" })
+    blank(render)
+  end
+  add_heading(render, "Exercise reference", "reference")
+  add_reference(render, reference or {})
   blank(render)
   add_line(render, "Final feedback will replace this pane automatically.",
     { section = "Practice evaluation" }, "PracticeHint")

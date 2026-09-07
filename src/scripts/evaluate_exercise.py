@@ -118,7 +118,12 @@ def evaluate(request: dict[str,Any]):
         compiled=result.returncode==0; diagnostics="\n".join(x.rstrip() for x in (result.stdout,result.stderr) if x and x.strip())
     except FileNotFoundError as e: raise RequestError(f"evaluation command is not available: {command[0]}") from e
     except subprocess.TimeoutExpired: compiled=False; diagnostics="Evaluation timed out after 30 seconds."
-    progress("compilation_finished", compiled=compiled)
+    # The progress channel is temporary and lets the UI show errors while the
+    # reviewer is still working.  Do not put successful compiler output here:
+    # warnings are part of the final evidence, whereas this pane is for a
+    # failed compilation that needs immediate attention.
+    progress("compilation_finished", compiled=compiled,
+             diagnostics=diagnostics if not compiled else "")
     metadata_text=metadata.read_text(encoding="utf-8")
     target_environment = request.get("target_environment")
     if target_environment is not None:

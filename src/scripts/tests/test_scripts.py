@@ -466,11 +466,14 @@ class EvaluateExerciseTests(unittest.TestCase):
             directory = Path(temporary)
             source = directory / "invalid.cpp"
             metadata = directory / "invalid.md"
+            progress = directory / "progress.jsonl"
             source.write_text("int solve(\n")
             metadata.write_text("# Solution\n")
+            request = self.request(source, metadata)
+            request["progress_path"] = str(progress)
 
             result, response = run_script(
-                "evaluate_exercise.py", self.request(source, metadata)
+                "evaluate_exercise.py", request
             )
 
             self.assertEqual(result.returncode, 0)
@@ -479,6 +482,9 @@ class EvaluateExerciseTests(unittest.TestCase):
             self.assertEqual(response["review"]["status"], "unavailable")
             self.assertIn("error:", response["diagnostics"])
             self.assertEqual(response["metadata"], metadata.read_text())
+            events = [json.loads(line) for line in progress.read_text().splitlines()]
+            self.assertFalse(events[1]["compiled"])
+            self.assertIn("error:", events[1]["diagnostics"])
 
     def test_missing_command_placeholder_is_a_command_error(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -520,6 +526,7 @@ class EvaluateExerciseTests(unittest.TestCase):
                 ],
             )
             self.assertTrue(events[1]["compiled"])
+            self.assertEqual(events[1]["diagnostics"], "")
 
     def test_passes_target_environment_as_language_neutral_review_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

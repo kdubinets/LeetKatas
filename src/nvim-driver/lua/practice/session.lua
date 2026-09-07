@@ -184,7 +184,11 @@ local function read_progress()
     end
   end
   for index = state.progress_event_count + 1, #events do
-    log.event("evaluation_progress", "info", events[index])
+    -- Compiler diagnostics can quote submitted source.  They are useful in
+    -- the ephemeral progress pane but must never enter the persistent log.
+    local logged_event = vim.deepcopy(events[index])
+    logged_event.diagnostics = nil
+    log.event("evaluation_progress", "info", logged_event)
   end
   state.progress_event_count = #events
   state.progress_events = events
@@ -200,7 +204,10 @@ local function start_progress()
   state.follow_up_pending = false
   state.compiler_chat_pending = false
   state.compiler_result = nil
-  local progress_buffer = ui.open_progress(state.source_window)
+  local progress_reference = {
+    metadata = table.concat(vim.fn.readfile(state.exercise.metadata_path), "\n"),
+  }
+  local progress_buffer = ui.open_progress(state.source_window, progress_reference)
   local timer = vim.uv.new_timer()
   state.progress_timer = timer
   timer:start(0, 100, vim.schedule_wrap(function()
@@ -209,7 +216,7 @@ local function start_progress()
     end
     read_progress()
     local elapsed = (vim.uv.hrtime() - state.progress_started) / 1000000000
-    ui.update_progress(elapsed, state.progress_events)
+    ui.update_progress(elapsed, state.progress_events, progress_reference)
   end))
   return progress_buffer
 end
