@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """Compile a submission, then pass all evidence to a replaceable reviewer."""
 from __future__ import annotations
-import json, subprocess, sys
+import json, signal, subprocess, sys
 import re
 from pathlib import Path
 from typing import Any
 from practice_environment import TargetEnvironmentError, validate_target_environment
-from reviewer_protocol import ReviewerError, configured_reviewer, review_request
+from reviewer_protocol import ReviewerError, cancel_active_reviewer, configured_reviewer, review_request
 from openai_pricing import priced_usage
 
 class RequestError(ValueError): pass
+
+
+def cancel_reviewer(signum: int, _frame: Any) -> None:
+    cancel_active_reviewer()
+    raise SystemExit(128 + signum)
+
 
 HEADING = re.compile(r"^#\s+(.+?)\s*$")
 FENCE = re.compile(r"^```([^`]*)$")
@@ -147,6 +153,8 @@ def evaluate(request: dict[str,Any]):
     usage = priced_usage(reviewer_model, service_tier, review.get("telemetry"))
     return {"compiled":compiled,"diagnostics":diagnostics,"metadata":metadata_text,"metadata_sections":parse_metadata_sections(metadata_text),"submitted_source":submitted_source,"review":{**review,"reviewer":name,"model":reviewer_model,"reasoning_effort":reviewer_reasoning_effort,"service_tier":service_tier,"usage":usage},"proposed_rating":feedback.get("proposed_rating") if feedback else None}
 def main():
+    signal.signal(signal.SIGTERM, cancel_reviewer)
+    signal.signal(signal.SIGINT, cancel_reviewer)
     try: response=evaluate(read_request())
     except (OSError,UnicodeError,RequestError,ReviewerError,TargetEnvironmentError) as e: json.dump({"error":str(e)},sys.stdout); sys.stdout.write("\n"); return 1
     json.dump(response,sys.stdout); sys.stdout.write("\n"); return 0

@@ -52,6 +52,14 @@ function M.refresh_keymaps()
     return
   end
 
+  if status == "evaluating" then
+    map("<leader>1", function() M.rate("fail") end, "Rate now: Fail")
+    map("<leader>2", function() M.rate("acceptable") end, "Rate now: Acceptable")
+    map("<leader>3", function() M.rate("good") end, "Rate now: Good")
+    map("<leader>4", function() M.rate("excellent") end, "Rate now: Excellent")
+    return
+  end
+
   if status == "post_rating" then
     map("<leader>b", M.compile, "Compile only")
     map("<leader>n", M.next, "Next exercise")

@@ -278,6 +278,9 @@ assert(type(evaluation_exit_mapping) == "table" and evaluation_exit_mapping.buff
   "Z is not immediately intercepted while evaluation is running")
 assert(practice.get_state().timing.phase == nil,
   "evaluation wait was included in learner timing")
+assert(vim.api.nvim_buf_call(first_state.source_buffer, function()
+  return vim.fn.maparg("4", "n", false, true).buffer == 1
+end), "source buffer cannot record a manual rating while evaluation is pending")
 local progress_visible = false
 for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
   if vim.api.nvim_buf_is_valid(buffer) and buffer_text(buffer):find("Practice evaluation", 1, true) then

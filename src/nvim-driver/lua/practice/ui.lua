@@ -1052,8 +1052,10 @@ function M.open_feedback(source_window, result, callbacks)
   return feedback_buffer, feedback_window
 end
 
-function M.open_progress(source_window, reference)
+function M.open_progress(source_window, reference, callbacks)
   ensure_feedback(source_window, false)
+  feedback_callbacks = callbacks or {}
+  install_feedback_mappings()
   M.update_progress(0, {}, reference)
   return feedback_buffer, feedback_window
 end
@@ -1117,6 +1119,8 @@ function M.update_progress(elapsed_seconds, events, reference)
   add_reference(render, reference or {})
   blank(render)
   add_line(render, "Final feedback will replace this pane automatically.",
+    { section = "Practice evaluation" }, "PracticeHint")
+  add_line(render, "Press 1–4 to record your own rating now and skip LLM feedback.",
     { section = "Practice evaluation" }, "PracticeHint")
   set_feedback_lines(render)
 end

@@ -599,10 +599,10 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>a` | `:PracticeAccept` | Accept the proposed rating and continue. |
 | `<Space>R` | `:PracticeAcceptStay` | Accept the proposed rating and keep editing. |
 | `<Space>r` | `:PracticeRetry` | Return to editing without recording. |
-| `<Space>1` | `:PracticeRate fail` | Record Fail and continue. |
-| `<Space>2` | `:PracticeRate acceptable` | Record Acceptable and continue. |
-| `<Space>3` | `:PracticeRate good` | Record Good and continue. |
-| `<Space>4` | `:PracticeRate excellent` | Record Excellent and continue. |
+| `<Space>1` | `:PracticeRate fail` | Record Fail and continue; after compilation, skip the pending LLM review. |
+| `<Space>2` | `:PracticeRate acceptable` | Record Acceptable and continue; after compilation, skip the pending LLM review. |
+| `<Space>3` | `:PracticeRate good` | Record Good and continue; after compilation, skip the pending LLM review. |
+| `<Space>4` | `:PracticeRate excellent` | Record Excellent and continue; after compilation, skip the pending LLM review. |
 | `<Space>n` | `:PracticeNext` | Skip and select again. |
 | `<Space>d` | `:PracticeDisable` | Reversibly exclude the current exercise. |
 | `<Space>D` | `:PracticeDelete` | Confirm and permanently remove the current exercise. |
@@ -619,6 +619,10 @@ press cannot fall through to Neovim's built-in write-and-quit command. In Insert
 mode, `<C-Enter>` also submits and leaves Insert mode. While an evaluation (or
 another practice operation) is pending, the same gesture asks for confirmation
 before exiting Neovim.
+
+After compilation finishes, press `1`–`4` in either the source buffer or the
+evaluation pane. This stops the in-flight reviewer, records the chosen manual
+rating, and advances without waiting for or retaining an LLM review.
 
 The numeric rating mappings should be displayed in the feedback UI so they do
 not need to be memorized. The feedback UI should also display `<Space>a` next

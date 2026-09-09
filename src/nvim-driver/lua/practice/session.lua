@@ -35,6 +35,8 @@ local state = {
   source_buffer = nil,
   source_window = nil,
   progress_timer = nil,
+  progress_buffer = nil,
+  evaluation_rating_buffer = nil,
   progress_path = nil,
   progress_started = nil,
   progress_events = {},
@@ -42,6 +44,7 @@ local state = {
   follow_up_pending = false,
   compiler_chat_pending = false,
   compiler_result = nil,
+  evaluation_process = nil,
   double_z_buffer = nil,
   double_z_timer = nil,
   timing = {
@@ -163,6 +166,29 @@ local function remove_double_z_mapping(buffer)
   end
 end
 
+local function remove_evaluation_rating_mappings()
+  local buffer = state.evaluation_rating_buffer
+  state.evaluation_rating_buffer = nil
+  if not valid_buffer(buffer) then return end
+  for index = 1, 4 do
+    pcall(vim.keymap.del, "n", tostring(index), { buffer = buffer })
+  end
+end
+
+local function install_evaluation_rating_mappings(buffer)
+  remove_evaluation_rating_mappings()
+  local ratings = { "fail", "acceptable", "good", "excellent" }
+  for index, rating in ipairs(ratings) do
+    vim.keymap.set("n", tostring(index), function() M.rate(rating) end, {
+      buffer = buffer,
+      silent = true,
+      nowait = true,
+      desc = "Practice: record " .. rating .. " and skip LLM feedback",
+    })
+  end
+  state.evaluation_rating_buffer = buffer
+end
+
 local function stop_progress()
   if state.progress_timer then
     state.progress_timer:stop()
@@ -207,7 +233,10 @@ local function start_progress()
   local progress_reference = {
     metadata = table.concat(vim.fn.readfile(state.exercise.metadata_path), "\n"),
   }
-  local progress_buffer = ui.open_progress(state.source_window, progress_reference)
+  local progress_buffer = ui.open_progress(state.source_window, progress_reference, {
+    rate = M.rate,
+  })
+  state.progress_buffer = progress_buffer
   local timer = vim.uv.new_timer()
   state.progress_timer = timer
   timer:start(0, 100, vim.schedule_wrap(function()
@@ -239,6 +268,8 @@ local function delete_working_copy()
   state.source_buffer = nil
   state.next_due = nil
   state.progress_path = nil
+  state.progress_buffer = nil
+  remove_evaluation_rating_mappings()
   state.progress_events = {}
   state.progress_event_count = 0
   state.follow_up_pending = false
@@ -629,7 +660,9 @@ function M.submit()
   set_status("evaluating")
   local progress_buffer = start_progress()
   install_double_z_mapping(progress_buffer, "Practice: press Z again to confirm exit")
-  process.run(config.python, script_path("evaluate_exercise.py"), {
+  install_evaluation_rating_mappings(state.source_buffer)
+  local evaluation_process
+  evaluation_process = process.run(config.python, script_path("evaluate_exercise.py"), {
     source_path = state.working_path,
     starter_source_path = state.exercise.source_path,
     metadata_path = state.exercise.metadata_path,
@@ -638,9 +671,17 @@ function M.submit()
     reviewer = config.reviewer,
     progress_path = state.progress_path,
   }, function(error_message, response)
+    if state.evaluation_process == evaluation_process then
+      state.evaluation_process = nil
+    end
+    -- A learner may rate immediately after compilation completes.  The killed
+    -- evaluator still invokes this callback, but must not replace that rating.
+    if state.status ~= "evaluating" then return end
     read_progress()
     stop_progress()
     remove_double_z_mapping(progress_buffer)
+    remove_evaluation_rating_mappings()
+    state.progress_buffer = nil
     if error_message then
       set_status("solving")
       set_timing_phase("solve")
@@ -675,6 +716,7 @@ function M.submit()
       ask = M.ask,
     })
   end)
+  state.evaluation_process = evaluation_process
 end
 
 local function save_working_source()
@@ -950,6 +992,57 @@ end
 
 function M.rate(rating, stay)
   rating = rating and rating:lower() or nil
+  if state.status == "evaluating" then
+    read_progress()
+    local compilation
+    for index = #state.progress_events, 1, -1 do
+      local event = state.progress_events[index]
+      if event.event == "compilation_finished" and type(event.compiled) == "boolean" then
+        compilation = event
+        break
+      end
+    end
+    if not compilation then
+      ui.notify("Choose a rating after compilation finishes", vim.log.levels.WARN)
+      return
+    end
+    if not RATINGS[rating] then
+      ui.notify("Unknown rating: " .. tostring(rating), vim.log.levels.ERROR)
+      return
+    end
+
+    local evaluator = state.evaluation_process
+    state.evaluation_process = nil
+    if evaluator then evaluator:kill(15) end
+    local progress_buffer = state.progress_buffer
+    state.progress_buffer = nil
+    stop_progress()
+    remove_double_z_mapping(progress_buffer)
+    remove_evaluation_rating_mappings()
+    log.event("evaluation_review_skipped", "info", {
+      compiled = compilation.compiled,
+      final_rating = rating,
+    })
+    -- The progress pane has no evaluator result yet, so build the minimum
+    -- durable result from compilation evidence and the saved working copy.
+    state.result = {
+      compiled = compilation.compiled,
+      diagnostics = type(compilation.diagnostics) == "string" and compilation.diagnostics or "",
+      metadata = table.concat(vim.fn.readfile(state.exercise.metadata_path), "\n"),
+      submitted_source = table.concat(vim.fn.readfile(state.working_path), "\n"),
+      proposed_rating = nil,
+      review = {
+        status = "skipped",
+        attempts = 0,
+        feedback = nil,
+        failure = "LLM review was skipped by the learner after compilation.",
+      },
+    }
+    set_status("reviewing")
+    set_timing_phase("feedback")
+    M.rate(rating, stay)
+    return
+  end
   if state.status ~= "reviewing" then
     ui.notify("A rating can be recorded only while reviewing feedback", vim.log.levels.WARN)
     return

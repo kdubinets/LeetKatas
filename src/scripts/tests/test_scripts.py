@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from zoneinfo import ZoneInfo
 
 
@@ -723,9 +723,10 @@ class OpenAIReviewerTests(unittest.TestCase):
 class ReviewerProtocolTests(unittest.TestCase):
     def test_reports_safe_http_category_for_each_failed_attempt(self) -> None:
         progress: list[dict] = []
-        failed = subprocess.CompletedProcess(["reviewer"], 1, stdout="", stderr="OpenAI API request failed with HTTP 403")
+        failed = Mock(returncode=1)
+        failed.communicate.return_value = ("", "OpenAI API request failed with HTTP 403")
 
-        with patch("reviewer_protocol.subprocess.run", return_value=failed), patch("reviewer_protocol.time.sleep"):
+        with patch("reviewer_protocol.subprocess.Popen", return_value=failed), patch("reviewer_protocol.time.sleep"):
             result = review_request({}, ["reviewer"], progress=lambda event, **details: progress.append({"event": event, **details}))
 
         self.assertEqual(result["status"], "unavailable")

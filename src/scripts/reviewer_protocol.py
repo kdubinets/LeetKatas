@@ -1,12 +1,26 @@
 """Protocol and retry support for external practice reviewers."""
 from __future__ import annotations
-import json, os, re, subprocess, time
+import json, os, re, signal, subprocess, time
 from typing import Any, Callable
 
 VERDICTS = {"correct", "minor_defect", "incorrect", "cannot_assess"}
 RATINGS = {"fail", "acceptable", "good", "excellent"}
 
 class ReviewerError(ValueError): pass
+
+
+_active_reviewer: subprocess.Popen[str] | None = None
+
+
+def cancel_active_reviewer() -> None:
+    """Terminate the active reviewer and every process it started."""
+    reviewer = _active_reviewer
+    if reviewer is None or reviewer.poll() is not None:
+        return
+    try:
+        os.killpg(reviewer.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
 
 
 def failure_category(error: Exception | str) -> str:
@@ -69,14 +83,32 @@ def review_request(
     timeout: float = 60,
     progress: Callable[..., None] | None = None,
 ) -> dict[str, Any]:
+    global _active_reviewer
     last = "reviewer failed"
     for attempt in range(1, 4):
         if progress:
             progress("review_attempt_started", attempt=attempt, maximum_attempts=3)
         try:
-            result = subprocess.run(command, input=json.dumps(request), text=True, capture_output=True, timeout=timeout, check=False)
-            if result.returncode != 0: raise ReviewerError((result.stderr or result.stdout or "reviewer exited unsuccessfully").strip())
-            try: value = json.loads(result.stdout)
+            reviewer = subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                start_new_session=True,
+            )
+            _active_reviewer = reviewer
+            try:
+                stdout, stderr = reviewer.communicate(json.dumps(request), timeout=timeout)
+            except subprocess.TimeoutExpired:
+                cancel_active_reviewer()
+                reviewer.communicate()
+                raise
+            finally:
+                if _active_reviewer is reviewer:
+                    _active_reviewer = None
+            if reviewer.returncode != 0: raise ReviewerError((stderr or stdout or "reviewer exited unsuccessfully").strip())
+            try: value = json.loads(stdout)
             except json.JSONDecodeError as error: raise ReviewerError(f"malformed reviewer JSON: {error.msg}") from error
             review, telemetry = review_with_telemetry(value)
             if progress:
