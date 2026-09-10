@@ -2,6 +2,8 @@
 #include <iterator>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(const std::vector<int>& left,
                        const std::vector<int>& right) {
     std::vector<int> result;

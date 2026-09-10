@@ -1,5 +1,7 @@
 #include <functional>
 
+using namespace std;
+
 struct Scale {
     int factor;
 

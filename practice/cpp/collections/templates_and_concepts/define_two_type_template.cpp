@@ -1,5 +1,7 @@
 #include <utility>
 
+using namespace std;
+
 // Finish: define a function that independently deduces and stores its two argument types
 
 int main() {

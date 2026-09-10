@@ -4,6 +4,8 @@
 #include <string>
 #include <thread>
 
+using namespace std;
+
 void consume(std::unique_ptr<std::string> text, std::size_t& length) {
     length = text->size();
 }

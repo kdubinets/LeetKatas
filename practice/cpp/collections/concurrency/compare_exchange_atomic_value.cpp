@@ -1,5 +1,7 @@
 #include <atomic>
 
+using namespace std;
+
 bool replace_if_observed(std::atomic<int>& value,
                          int& expected,
                          int desired) {

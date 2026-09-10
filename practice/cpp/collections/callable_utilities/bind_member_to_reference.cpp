@@ -1,5 +1,7 @@
 #include <functional>
 
+using namespace std;
+
 struct Accumulator {
     int total = 0;
 

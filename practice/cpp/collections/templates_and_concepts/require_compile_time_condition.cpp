@@ -1,3 +1,5 @@
+using namespace std;
+
 template <class T>
 // Finish: require T to occupy no more storage than an int
 

@@ -27,6 +27,9 @@ It must:
 * Target C++20.
 * Be self-contained apart from the unfinished practice section.
 * Include all necessary standard-library headers.
+* Place `using namespace std;` immediately after the include preamble (or at
+  the beginning when there are no includes). The practice UI folds this setup
+  preamble closed by default.
 * Contain minimal supporting code.
 * Avoid unnecessary domain models, realistic scenarios, frameworks, input parsing, logging, and boilerplate.
 * Contain exactly one unfinished practice section.

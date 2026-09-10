@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include <vector>
 
+using namespace std;
+
 std::size_t count_all_distinct_windows(const std::vector<int>& values, std::size_t width) {
     if (width == 0 || width > values.size()) {
         return 0;

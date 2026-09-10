@@ -1,5 +1,7 @@
 #include <forward_list>
 
+using namespace std;
+
 std::forward_list<int>::iterator solve(
     std::forward_list<int>& values,
     std::forward_list<int>::const_iterator predecessor) {

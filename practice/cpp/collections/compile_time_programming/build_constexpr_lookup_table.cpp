@@ -1,6 +1,8 @@
 #include <array>
 #include <cstddef>
 
+using namespace std;
+
 constexpr std::array<int, 6> make_squares() {
     // Finish: build and return a table whose element at each index is that index squared
 }

@@ -4,6 +4,8 @@
 #include <optional>
 #include <utility>
 
+using namespace std;
+
 std::optional<std::ofstream> solve(const std::filesystem::path& path) {
     // Finish: return an output stream that preserves existing text and writes after it
 }

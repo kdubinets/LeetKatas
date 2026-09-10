@@ -1,5 +1,7 @@
 #include <string>
 
+using namespace std;
+
 std::string combine(std::string first) {
     return first;
 }

@@ -1,5 +1,7 @@
 #include <string>
 
+using namespace std;
+
 template <class T>
 // Finish: return the larger value without fixing its type in advance
 

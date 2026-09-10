@@ -1,5 +1,7 @@
 #include <chrono>
 
+using namespace std;
+
 std::chrono::months solve(
     std::chrono::year_month first,
     std::chrono::year_month last) {

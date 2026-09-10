@@ -2,6 +2,8 @@
 #include <functional>
 #include <unordered_set>
 
+using namespace std;
+
 struct UserId {
     int value;
     friend bool operator==(const UserId&, const UserId&) = default;

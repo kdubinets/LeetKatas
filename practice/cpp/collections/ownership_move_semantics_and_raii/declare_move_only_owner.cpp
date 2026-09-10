@@ -1,6 +1,8 @@
 #include <memory>
 #include <utility>
 
+using namespace std;
+
 class Owner {
 public:
     explicit Owner(std::unique_ptr<int> value) : value_(std::move(value)) {}

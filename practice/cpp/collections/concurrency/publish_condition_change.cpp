@@ -1,6 +1,8 @@
 #include <condition_variable>
 #include <mutex>
 
+using namespace std;
+
 void mark_ready(bool& ready,
                 std::mutex& mutex,
                 std::condition_variable& changed) {

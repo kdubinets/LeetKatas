@@ -1,5 +1,7 @@
 #include <memory>
 
+using namespace std;
+
 struct Resource {
     explicit Resource(int identifier) : id(identifier) {}
     int id;

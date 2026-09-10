@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <span>
 
+using namespace std;
+
 struct Progress {
     std::size_t consumed;
     std::size_t written;

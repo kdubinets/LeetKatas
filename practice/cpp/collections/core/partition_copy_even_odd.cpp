@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 std::pair<std::vector<int>, std::vector<int>> solve(
     const std::vector<int>& values) {
     std::pair<std::vector<int>, std::vector<int>> result;

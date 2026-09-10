@@ -3,6 +3,8 @@
 #include <utility>
 #include <variant>
 
+using namespace std;
+
 enum class Error { missing };
 using Result = std::variant<std::string, Error>;
 

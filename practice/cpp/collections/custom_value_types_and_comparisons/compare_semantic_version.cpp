@@ -1,6 +1,8 @@
 #include <compare>
 #include <tuple>
 
+using namespace std;
+
 struct Version {
     int major;
     int minor;

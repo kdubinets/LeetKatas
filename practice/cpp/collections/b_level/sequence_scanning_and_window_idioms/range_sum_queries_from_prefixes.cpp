@@ -2,6 +2,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 std::vector<long long> range_sum_queries(
     const std::vector<int>& values,
     const std::vector<std::pair<std::size_t, std::size_t>>& queries) {

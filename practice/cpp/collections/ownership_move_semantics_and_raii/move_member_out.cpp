@@ -1,6 +1,8 @@
 #include <string>
 #include <utility>
 
+using namespace std;
+
 struct Box {
     std::string value;
 };

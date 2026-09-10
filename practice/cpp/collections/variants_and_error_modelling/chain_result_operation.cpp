@@ -2,6 +2,8 @@
 #include <string>
 #include <variant>
 
+using namespace std;
+
 enum class Error { invalid, unavailable };
 using TextResult = std::variant<std::string, Error>;
 using SizeResult = std::variant<std::size_t, Error>;

@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <string>
 
+using namespace std;
+
 struct ApproximateSize {
     int size() const;
 };

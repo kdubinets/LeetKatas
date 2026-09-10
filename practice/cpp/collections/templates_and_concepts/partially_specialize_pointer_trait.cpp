@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 template <class T>
 struct is_raw_pointer : std::false_type {};
 

@@ -1,5 +1,7 @@
 #include <string>
 
+using namespace std;
+
 struct UserId {
     int organization;
     std::string name;

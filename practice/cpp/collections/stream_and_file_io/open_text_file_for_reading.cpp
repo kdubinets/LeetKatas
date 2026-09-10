@@ -3,6 +3,8 @@
 #include <optional>
 #include <utility>
 
+using namespace std;
+
 std::optional<std::ifstream> solve(const std::filesystem::path& path) {
     // Finish: return an open text input stream or explicitly represent open failure
 }

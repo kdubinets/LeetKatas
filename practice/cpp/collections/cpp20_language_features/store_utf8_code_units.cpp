@@ -1,6 +1,8 @@
 #include <string_view>
 #include <type_traits>
 
+using namespace std;
+
 constexpr auto solve() {
     // Finish: return a non-owning sequence of the UTF-8 code units in the given literal
 }

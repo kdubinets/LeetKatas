@@ -2,6 +2,8 @@
 #include <numeric>
 #include <vector>
 
+using namespace std;
+
 long long solve(const std::vector<int>& values) {
     // Finish: return the product of all values using one for an empty input
 }

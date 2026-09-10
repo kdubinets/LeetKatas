@@ -1,5 +1,7 @@
 #include <memory>
 
+using namespace std;
+
 struct Base {
     virtual ~Base() = default;
 };

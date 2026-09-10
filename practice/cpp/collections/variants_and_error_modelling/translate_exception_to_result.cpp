@@ -2,6 +2,8 @@
 #include <string>
 #include <variant>
 
+using namespace std;
+
 int read_value();
 
 using Result = std::variant<int, std::string>;

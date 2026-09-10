@@ -1,5 +1,7 @@
 #include <system_error>
 
+using namespace std;
+
 void write_data(std::error_code& error);
 
 void solve() {

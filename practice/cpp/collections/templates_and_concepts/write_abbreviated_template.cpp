@@ -1,5 +1,7 @@
 #include <concepts>
 
+using namespace std;
+
 // Finish: define increment for any inferred integral parameter type
 
 int main() {

@@ -1,5 +1,7 @@
 #include <chrono>
 
+using namespace std;
+
 bool solve(
     std::chrono::steady_clock::time_point now,
     std::chrono::steady_clock::time_point deadline) {

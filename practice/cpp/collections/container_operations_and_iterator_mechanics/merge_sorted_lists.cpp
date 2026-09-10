@@ -1,5 +1,7 @@
 #include <list>
 
+using namespace std;
+
 void solve(std::list<int>& destination, std::list<int>& source) {
     // Finish: combine the ascending sequences by transferring every source node, preserving each sequence's order among equivalent values
 }

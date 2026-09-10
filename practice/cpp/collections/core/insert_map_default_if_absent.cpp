@@ -1,6 +1,8 @@
 #include <map>
 #include <string>
 
+using namespace std;
+
 bool solve(std::map<std::string, int>& values,
            const std::string& key,
            int initial_value) {

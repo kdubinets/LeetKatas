@@ -1,3 +1,5 @@
+using namespace std;
+
 struct Counters {
     int accepted = 0;
     int rejected = 0;

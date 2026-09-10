@@ -1,5 +1,7 @@
 #include <array>
 
+using namespace std;
+
 constexpr int sum(const std::array<int, 4>& values) {
     // Finish: return the total in a form that can be evaluated at compile time
 }

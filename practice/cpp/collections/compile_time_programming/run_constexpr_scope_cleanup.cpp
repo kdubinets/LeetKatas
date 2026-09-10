@@ -1,3 +1,5 @@
+using namespace std;
+
 struct ScopeIncrement {
     int* count;
 

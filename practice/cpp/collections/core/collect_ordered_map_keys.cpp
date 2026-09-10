@@ -1,6 +1,8 @@
 #include <map>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(const std::map<int, int>& values) {
     std::vector<int> keys;
     keys.reserve(values.size());

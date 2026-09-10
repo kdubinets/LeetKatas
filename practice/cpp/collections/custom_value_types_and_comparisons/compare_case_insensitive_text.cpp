@@ -3,6 +3,8 @@
 #include <compare>
 #include <string>
 
+using namespace std;
+
 char ascii_lower(char ch) {
     return ch >= 'A' && ch <= 'Z' ? static_cast<char>(ch + ('a' - 'A')) : ch;
 }

@@ -1,5 +1,7 @@
 #include <memory>
 
+using namespace std;
+
 struct Node {
     std::shared_ptr<Node> next;
     std::weak_ptr<Node> previous;

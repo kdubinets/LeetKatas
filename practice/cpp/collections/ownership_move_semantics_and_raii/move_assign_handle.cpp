@@ -1,5 +1,7 @@
 #include <utility>
 
+using namespace std;
+
 void release_handle(int handle) noexcept;
 
 class Handle {

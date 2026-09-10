@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <vector>
 
+using namespace std;
+
 std::vector<long long> solve(const std::vector<int>& left,
                              const std::vector<int>& right) {
     std::vector<long long> result(left.size());

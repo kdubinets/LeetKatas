@@ -1,5 +1,7 @@
 #include <vector>
 
+using namespace std;
+
 template <class T>
 // Finish: define HasValueType for types that declare a nested value_type
 

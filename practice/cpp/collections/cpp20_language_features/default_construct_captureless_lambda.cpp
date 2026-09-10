@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 constexpr auto positive = [](int value) { return value > 0; };
 
 constexpr auto solve() {

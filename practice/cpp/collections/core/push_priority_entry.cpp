@@ -2,6 +2,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 void solve(std::priority_queue<std::pair<int, int>>& tasks,
            int priority,
            int id) {

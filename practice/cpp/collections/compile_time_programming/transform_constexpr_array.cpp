@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <array>
 
+using namespace std;
+
 constexpr std::array<int, 4> squared(const std::array<int, 4>& values) {
     std::array<int, 4> result{};
     // Finish: fill the result with squared input values during constant evaluation and return it

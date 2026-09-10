@@ -1,6 +1,8 @@
 #include <map>
 #include <optional>
 
+using namespace std;
+
 struct Ticket {
     int number;
 };

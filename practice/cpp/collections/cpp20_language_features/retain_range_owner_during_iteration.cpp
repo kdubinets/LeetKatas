@@ -1,5 +1,7 @@
 #include <vector>
 
+using namespace std;
+
 struct Numbers {
     std::vector<int> values;
 

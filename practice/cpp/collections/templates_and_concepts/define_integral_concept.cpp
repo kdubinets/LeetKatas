@@ -1,5 +1,7 @@
 #include <concepts>
 
+using namespace std;
+
 template <class T>
 // Finish: define Integral as the standard requirement for integral types
 

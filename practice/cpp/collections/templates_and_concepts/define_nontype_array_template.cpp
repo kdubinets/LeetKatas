@@ -1,5 +1,7 @@
 #include <cstddef>
 
+using namespace std;
+
 // Finish: return the compile-time bound of any referenced built-in array
 
 int main() {

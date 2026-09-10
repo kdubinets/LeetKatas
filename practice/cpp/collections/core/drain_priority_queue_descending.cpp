@@ -1,6 +1,8 @@
 #include <queue>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(std::priority_queue<int> values) {
     std::vector<int> result;
     result.reserve(values.size());

@@ -1,6 +1,8 @@
 #include <utility>
 #include <variant>
 
+using namespace std;
+
 enum class Error { invalid, unavailable };
 using Result = std::variant<int, Error>;
 using Combined = std::variant<std::pair<int, int>, Error>;

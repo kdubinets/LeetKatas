@@ -1,3 +1,5 @@
+using namespace std;
+
 class Rectangle {
 public:
     constexpr Rectangle(int width, int height)

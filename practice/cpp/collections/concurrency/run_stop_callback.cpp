@@ -1,5 +1,7 @@
 #include <stop_token>
 
+using namespace std;
+
 bool solve() {
     std::stop_source source;
     bool called = false;

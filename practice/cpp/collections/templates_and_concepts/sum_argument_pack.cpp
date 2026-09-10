@@ -1,3 +1,5 @@
+using namespace std;
+
 template <class... Values>
 int sum_values(Values... values) {
     // Finish: add every value to an integer zero

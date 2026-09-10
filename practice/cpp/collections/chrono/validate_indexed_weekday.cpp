@@ -1,5 +1,7 @@
 #include <chrono>
 
+using namespace std;
+
 bool solve(
     std::chrono::year_month value,
     std::chrono::weekday weekday,

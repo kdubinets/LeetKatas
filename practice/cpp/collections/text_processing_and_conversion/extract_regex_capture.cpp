@@ -3,6 +3,8 @@
 #include <regex>
 #include <string>
 
+using namespace std;
+
 std::optional<std::string> solve(
     const std::string& text,
     const std::regex& pattern,

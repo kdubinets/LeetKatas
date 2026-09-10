@@ -1,6 +1,8 @@
 #include <memory>
 #include <string>
 
+using namespace std;
+
 struct Record {
     int id;
     std::string name;

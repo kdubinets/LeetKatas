@@ -1,5 +1,7 @@
 #include <bit>
 
+using namespace std;
+
 int solve(unsigned int value) {
     // Finish: return the number of bits needed to represent the value, using zero for zero
 }

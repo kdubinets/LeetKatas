@@ -3,6 +3,8 @@
 #include <string>
 #include <utility>
 
+using namespace std;
+
 struct Key {
     int group;
     int id;

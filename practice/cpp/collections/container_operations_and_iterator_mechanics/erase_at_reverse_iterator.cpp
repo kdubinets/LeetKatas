@@ -1,6 +1,8 @@
 #include <iterator>
 #include <vector>
 
+using namespace std;
+
 std::vector<int>::iterator solve(
     std::vector<int>& values,
     std::vector<int>::const_reverse_iterator position) {

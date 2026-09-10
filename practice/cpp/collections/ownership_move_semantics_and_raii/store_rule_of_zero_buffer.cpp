@@ -1,6 +1,8 @@
 #include <cstddef>
 #include <vector>
 
+using namespace std;
+
 class Buffer {
 public:
     explicit Buffer(std::size_t size) : data_(size) {}

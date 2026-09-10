@@ -1,5 +1,7 @@
 #include <mutex>
 
+using namespace std;
+
 void consume_snapshot(const int& value,
                       std::mutex& mutex,
                       void (*work)(int) noexcept) {

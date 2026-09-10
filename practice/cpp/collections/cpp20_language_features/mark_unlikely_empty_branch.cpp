@@ -1,5 +1,7 @@
 #include <string_view>
 
+using namespace std;
+
 std::size_t checked_length(std::string_view text) {
     // Finish: treat empty input as an uncommon zero-result branch and otherwise return the length
 }

@@ -1,5 +1,7 @@
 #include <compare>
 
+using namespace std;
+
 struct Revision {
     int value;
 

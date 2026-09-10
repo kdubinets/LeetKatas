@@ -4,6 +4,8 @@
 #include <ranges>
 #include <vector>
 
+using namespace std;
+
 std::vector<long long> solve(const std::vector<int>& values,
                              std::size_t count) {
     std::vector<long long> result;

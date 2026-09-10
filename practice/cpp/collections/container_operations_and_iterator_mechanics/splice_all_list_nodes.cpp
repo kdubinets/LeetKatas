@@ -1,5 +1,7 @@
 #include <list>
 
+using namespace std;
+
 void solve(std::list<int>& destination,
            std::list<int>::const_iterator position,
            std::list<int>& source) {

@@ -2,6 +2,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 struct Task {
     int id;
 };

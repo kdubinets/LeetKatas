@@ -1,6 +1,8 @@
 #include <string>
 #include <type_traits>
 
+using namespace std;
+
 template <class T>
 struct storage_type {
     using type = T;

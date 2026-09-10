@@ -2,6 +2,8 @@
 #include <limits>
 #include <optional>
 
+using namespace std;
+
 std::optional<int> solve(std::istream& input) {
     // Finish: discard the failed record and return the integer from the next record
 }

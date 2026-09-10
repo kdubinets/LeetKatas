@@ -1,5 +1,7 @@
 #include <functional>
 
+using namespace std;
+
 int difference_from(int base, int value) {
     return value - base;
 }

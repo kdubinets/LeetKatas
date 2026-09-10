@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 struct EmptyPolicy {};
 
 struct Storage {

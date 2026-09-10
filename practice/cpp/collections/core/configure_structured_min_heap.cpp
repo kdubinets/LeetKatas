@@ -1,6 +1,8 @@
 #include <queue>
 #include <vector>
 
+using namespace std;
+
 struct Task {
     int priority;
     int id;

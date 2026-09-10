@@ -1,6 +1,8 @@
 #include <cstddef>
 #include <vector>
 
+using namespace std;
+
 std::vector<std::vector<int>> solve(std::size_t rows,
                                     std::size_t columns,
                                     int initial_value) {

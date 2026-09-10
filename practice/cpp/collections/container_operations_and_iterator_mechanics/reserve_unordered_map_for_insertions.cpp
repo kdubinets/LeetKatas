@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 void solve(
     std::unordered_map<int, std::string>& destination,
     const std::vector<std::pair<int, std::string>>& additions) {

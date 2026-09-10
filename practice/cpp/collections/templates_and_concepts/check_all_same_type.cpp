@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 template <class Expected, class... Types>
 inline constexpr bool all_same_as =
     // Finish: report whether every packed type is Expected

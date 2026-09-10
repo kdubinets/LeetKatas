@@ -2,6 +2,8 @@
 #include <type_traits>
 #include <utility>
 
+using namespace std;
+
 template <class T, class = void>
 struct has_size_member : std::false_type {};
 

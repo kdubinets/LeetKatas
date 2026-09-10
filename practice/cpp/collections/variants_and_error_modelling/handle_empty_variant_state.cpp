@@ -1,6 +1,8 @@
 #include <string>
 #include <variant>
 
+using namespace std;
+
 using Selection = std::variant<std::monostate, int, std::string>;
 
 bool solve(const Selection& selection) {

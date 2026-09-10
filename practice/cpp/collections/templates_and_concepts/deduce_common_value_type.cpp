@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 template <class... Types>
 using common_value_t =
     // Finish: select the type all supplied types can commonly convert to

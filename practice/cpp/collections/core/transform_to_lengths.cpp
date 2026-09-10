@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 std::vector<std::size_t> solve(const std::vector<std::string>& values) {
     std::vector<std::size_t> lengths;
     lengths.reserve(values.size());

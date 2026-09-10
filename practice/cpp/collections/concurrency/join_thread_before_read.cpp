@@ -1,5 +1,7 @@
 #include <thread>
 
+using namespace std;
+
 int solve() {
     int result = 0;
     std::thread worker([&result] { result = 42; });

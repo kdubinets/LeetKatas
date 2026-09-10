@@ -1,3 +1,5 @@
+using namespace std;
+
 struct Reader {
     template <class T>
     T read() const {

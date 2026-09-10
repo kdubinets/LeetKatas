@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <system_error>
 
+using namespace std;
+
 bool solve(
     const std::filesystem::path& value,
     std::error_code& error) {

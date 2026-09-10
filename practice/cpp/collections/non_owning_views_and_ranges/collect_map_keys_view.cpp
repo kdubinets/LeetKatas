@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 std::vector<std::string> solve(const std::map<std::string, int>& values) {
     std::vector<std::string> result;
     result.reserve(values.size());

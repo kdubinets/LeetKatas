@@ -1,6 +1,8 @@
 #include <latch>
 #include <thread>
 
+using namespace std;
+
 bool solve() {
     std::latch gate{1};
     bool observed = false;

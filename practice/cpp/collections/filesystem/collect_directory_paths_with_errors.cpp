@@ -2,6 +2,8 @@
 #include <system_error>
 #include <vector>
 
+using namespace std;
+
 std::vector<std::filesystem::path> solve(
     const std::filesystem::path& directory,
     std::error_code& error) {

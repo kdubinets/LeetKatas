@@ -1,5 +1,7 @@
 #include <chrono>
 
+using namespace std;
+
 using MillisecondPoint = std::chrono::time_point<
     std::chrono::steady_clock,
     std::chrono::milliseconds>;

@@ -1,3 +1,5 @@
+using namespace std;
+
 struct SafeReset {
     void reset() noexcept;
 };

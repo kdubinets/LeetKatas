@@ -1,6 +1,8 @@
 #include <functional>
 #include <string>
 
+using namespace std;
+
 struct Record {
     std::string name;
     std::string label;

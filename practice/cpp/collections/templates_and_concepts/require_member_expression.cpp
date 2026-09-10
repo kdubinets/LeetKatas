@@ -1,6 +1,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 template <class T>
 // Finish: define HasClear for types whose mutable value supports a zero-argument clear operation
 

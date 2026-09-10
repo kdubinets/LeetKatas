@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <vector>
 
+using namespace std;
+
 struct Record {
     int id;
     int score;

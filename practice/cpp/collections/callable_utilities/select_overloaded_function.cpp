@@ -1,5 +1,7 @@
 #include <functional>
 
+using namespace std;
+
 int convert(int value) {
     return value;
 }

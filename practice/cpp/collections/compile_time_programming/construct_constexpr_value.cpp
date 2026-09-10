@@ -1,3 +1,5 @@
+using namespace std;
+
 class Point {
 public:
     // Finish: initialize both coordinates in a form usable during constant evaluation

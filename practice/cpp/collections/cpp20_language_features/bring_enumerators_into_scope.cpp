@@ -1,3 +1,5 @@
+using namespace std;
+
 enum class Status {
     idle,
     running,

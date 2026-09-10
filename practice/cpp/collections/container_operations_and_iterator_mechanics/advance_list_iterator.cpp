@@ -2,6 +2,8 @@
 #include <iterator>
 #include <list>
 
+using namespace std;
+
 using Iterator = std::list<int>::iterator;
 
 Iterator solve(Iterator position, std::size_t steps) {

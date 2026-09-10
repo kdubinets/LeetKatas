@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <memory>
 
+using namespace std;
+
 struct FileCloser {
     void operator()(std::FILE* file) const {
         std::fclose(file);

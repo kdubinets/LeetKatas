@@ -1,6 +1,8 @@
 #include <concepts>
 #include <string_view>
 
+using namespace std;
+
 template <class T>
 concept Number = std::integral<T> || std::floating_point<T>;
 

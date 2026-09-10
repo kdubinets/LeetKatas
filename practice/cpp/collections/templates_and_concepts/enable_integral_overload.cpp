@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 template <class T>
 // Finish: define twice only for integral argument types
 

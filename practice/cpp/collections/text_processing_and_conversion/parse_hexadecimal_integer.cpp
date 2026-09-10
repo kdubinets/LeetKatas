@@ -2,6 +2,8 @@
 #include <optional>
 #include <string_view>
 
+using namespace std;
+
 std::optional<unsigned int> solve(std::string_view text) {
     // Finish: return the hexadecimal value only when every input character belongs to one valid value
 }

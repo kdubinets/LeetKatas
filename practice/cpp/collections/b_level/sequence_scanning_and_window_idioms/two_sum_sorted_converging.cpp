@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 std::optional<std::pair<std::size_t, std::size_t>> two_sum_sorted_indices(
     const std::vector<int>& values,
     long long target) {

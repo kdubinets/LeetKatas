@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 void solve(std::list<std::size_t>& destination,
            std::list<std::size_t>::iterator position,
            const std::vector<std::string>& source) {

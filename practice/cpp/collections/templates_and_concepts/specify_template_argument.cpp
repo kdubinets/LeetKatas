@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 template <class Result, class Value>
 Result convert(Value value) {
     return static_cast<Result>(value);

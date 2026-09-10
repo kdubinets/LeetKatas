@@ -3,6 +3,8 @@
 #include <ranges>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(const std::vector<int>& values) {
     std::vector<int> result;
     // Finish: copy the leading values up to but excluding the first negative value

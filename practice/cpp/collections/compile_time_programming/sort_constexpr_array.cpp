@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <array>
 
+using namespace std;
+
 constexpr std::array<int, 5> sorted(std::array<int, 5> values) {
     // Finish: return the values in ascending order during constant evaluation
 }

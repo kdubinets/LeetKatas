@@ -2,6 +2,8 @@
 #include <optional>
 #include <set>
 
+using namespace std;
+
 struct AbsoluteOrder {
     bool operator()(int left, int right) const {
         return std::abs(left) < std::abs(right);

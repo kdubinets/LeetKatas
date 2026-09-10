@@ -1,6 +1,8 @@
 #include <exception>
 #include <stdexcept>
 
+using namespace std;
+
 void load_settings();
 
 void solve() {

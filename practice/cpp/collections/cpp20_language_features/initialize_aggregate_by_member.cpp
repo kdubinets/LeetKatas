@@ -1,3 +1,5 @@
+using namespace std;
+
 struct Options {
     int retries = 1;
     bool verbose = false;

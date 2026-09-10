@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 std::vector<std::string> solve(
     const std::multimap<int, std::string>& values,
     int key) {

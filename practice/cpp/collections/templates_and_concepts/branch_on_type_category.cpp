@@ -1,6 +1,8 @@
 #include <string>
 #include <type_traits>
 
+using namespace std;
+
 template <class T>
 std::string describe(T value) {
     // Finish: return decimal text for integral values and the value itself for other supported types

@@ -2,6 +2,8 @@
 #include <functional>
 #include <vector>
 
+using namespace std;
+
 struct Sum {
     Sum() = default;
     Sum(const Sum&) = delete;

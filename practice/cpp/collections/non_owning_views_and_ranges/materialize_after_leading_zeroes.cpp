@@ -3,6 +3,8 @@
 #include <ranges>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(const std::vector<int>& values) {
     std::vector<int> result;
     // Finish: copy all values after discarding only the leading zeroes

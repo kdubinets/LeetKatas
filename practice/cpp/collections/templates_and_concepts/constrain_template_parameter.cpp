@@ -1,5 +1,7 @@
 #include <concepts>
 
+using namespace std;
+
 template <class T>
 concept Arithmetic = std::integral<T> || std::floating_point<T>;
 

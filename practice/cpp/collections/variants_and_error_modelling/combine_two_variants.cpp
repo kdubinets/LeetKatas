@@ -2,6 +2,8 @@
 #include <type_traits>
 #include <variant>
 
+using namespace std;
+
 using Value = std::variant<int, std::string>;
 
 std::string solve(const Value& left, const Value& right) {

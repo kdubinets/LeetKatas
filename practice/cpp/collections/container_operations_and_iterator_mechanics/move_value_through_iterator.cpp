@@ -1,6 +1,8 @@
 #include <concepts>
 #include <iterator>
 
+using namespace std;
+
 template <std::input_iterator Iterator>
 requires std::constructible_from<std::iter_value_t<Iterator>,
                                  std::iter_rvalue_reference_t<Iterator>>

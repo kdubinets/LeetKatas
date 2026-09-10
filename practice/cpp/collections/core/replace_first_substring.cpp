@@ -1,5 +1,7 @@
 #include <string>
 
+using namespace std;
+
 bool solve(std::string& text,
            const std::string& target,
            const std::string& replacement) {

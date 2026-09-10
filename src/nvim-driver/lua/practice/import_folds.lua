@@ -6,7 +6,7 @@ local spacer_namespace = vim.api.nvim_create_namespace("practice_import_fold_spa
 -- to change.
 local language_rules = {
   c = { "^%s*#%s*include%s+" },
-  cpp = { "^%s*#%s*include%s+" },
+  cpp = { "^%s*#%s*include%s+", "^%s*using%s+namespace%s+std%s*;%s*$" },
   cuda = { "^%s*#%s*include%s+" },
   objc = { "^%s*#%s*import%s+", "^%s*#%s*include%s+" },
   objcpp = { "^%s*#%s*import%s+", "^%s*#%s*include%s+" },
@@ -23,6 +23,12 @@ local language_rules = {
   c_sharp = { "^%s*using%s+" },
   ruby = { "^%s*require%s*[%(\"']", "^%s*require_relative%s*[%(\"']" },
   swift = { "^%s*import%s+" },
+}
+
+-- A C++ using-directive belongs to the folded preamble but is not itself an
+-- import, so keep the fold label's include count accurate.
+local import_count_rules = {
+  cpp = { "^%s*#%s*include%s+" },
 }
 
 local function matches(line, patterns)
@@ -72,8 +78,9 @@ function M.close(buffer, window)
   if not first then return nil end
 
   local import_count = 0
+  local count_patterns = import_count_rules[vim.bo[buffer].filetype] or patterns
   for index = first, last do
-    if matches(vim.api.nvim_buf_get_lines(buffer, index - 1, index, false)[1], patterns) then
+    if matches(vim.api.nvim_buf_get_lines(buffer, index - 1, index, false)[1], count_patterns) then
       import_count = import_count + 1
     end
   end

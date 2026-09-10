@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <string>
 
+using namespace std;
+
 std::size_t count_anagram_windows(const std::string& text, const std::string& pattern) {
     if (pattern.empty() || pattern.size() > text.size()) {
         return 0;

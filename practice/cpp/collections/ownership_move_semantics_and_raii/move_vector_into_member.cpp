@@ -1,6 +1,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 struct Batch {
     std::vector<int> values;
 };

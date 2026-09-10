@@ -1,6 +1,8 @@
 #include <string>
 #include <string_view>
 
+using namespace std;
+
 struct Name {
     std::string value;
 };

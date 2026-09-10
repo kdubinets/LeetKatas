@@ -3,6 +3,8 @@
 #include <system_error>
 #include <variant>
 
+using namespace std;
+
 using Result = std::variant<std::uintmax_t, std::error_code>;
 
 Result solve(const std::filesystem::path& path) {

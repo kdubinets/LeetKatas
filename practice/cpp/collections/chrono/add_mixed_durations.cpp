@@ -1,5 +1,7 @@
 #include <chrono>
 
+using namespace std;
+
 std::chrono::milliseconds solve(
     std::chrono::seconds whole,
     std::chrono::milliseconds extra) {

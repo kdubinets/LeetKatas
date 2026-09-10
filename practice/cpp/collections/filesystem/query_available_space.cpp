@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <system_error>
 
+using namespace std;
+
 std::uintmax_t solve(
     const std::filesystem::path& value,
     std::error_code& error) {

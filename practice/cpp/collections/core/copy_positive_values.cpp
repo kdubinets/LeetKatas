@@ -2,6 +2,8 @@
 #include <iterator>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(const std::vector<int>& values) {
     std::vector<int> result;
     // Finish: copy the positive input values into result in their original order

@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <system_error>
 
+using namespace std;
+
 std::error_code solve(
     const std::filesystem::path& source,
     const std::filesystem::path& destination) {

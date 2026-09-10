@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 std::string solve(const std::vector<std::string>& values,
                   const std::string& delimiter) {
     std::string result;

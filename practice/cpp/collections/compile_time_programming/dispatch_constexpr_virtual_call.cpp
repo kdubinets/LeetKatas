@@ -1,3 +1,5 @@
+using namespace std;
+
 class Base {
 public:
     virtual constexpr int value() const = 0;

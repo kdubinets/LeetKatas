@@ -1,5 +1,7 @@
 #include <utility>
 
+using namespace std;
+
 template <class Function, class... Args>
 void for_each_argument(Function&& function, Args&&... args) {
     // Finish: call the function once for every argument from left to right

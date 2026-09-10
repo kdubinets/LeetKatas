@@ -1,5 +1,7 @@
 #include <string>
 
+using namespace std;
+
 struct Converter {
     // Finish: define a const member that converts a value to a caller-selected result type
 };

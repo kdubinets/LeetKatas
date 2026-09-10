@@ -1,6 +1,8 @@
 #include <cstddef>
 #include <vector>
 
+using namespace std;
+
 struct RangeAddition {
     std::size_t first;
     std::size_t last;

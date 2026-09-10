@@ -1,3 +1,5 @@
+using namespace std;
+
 consteval int checked_percentage(int value) {
     // Finish: return values from 0 through 100 and make other calls invalid during constant evaluation
 }

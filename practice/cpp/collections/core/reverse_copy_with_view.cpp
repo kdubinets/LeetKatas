@@ -3,6 +3,8 @@
 #include <ranges>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(const std::vector<int>& values) {
     std::vector<int> result;
     result.reserve(values.size());

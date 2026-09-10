@@ -1,6 +1,8 @@
 #include <bit>
 #include <cstdint>
 
+using namespace std;
+
 int solve(std::uint32_t value) {
     // Finish: return the number of zero bits after the lowest enabled bit, using 32 when none are enabled
 }

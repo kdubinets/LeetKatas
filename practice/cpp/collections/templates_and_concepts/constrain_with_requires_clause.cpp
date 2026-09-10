@@ -2,6 +2,8 @@
 #include <type_traits>
 #include <utility>
 
+using namespace std;
+
 template <class Left, class Right>
 // Finish: define add only when both arguments have the same normalized type
 

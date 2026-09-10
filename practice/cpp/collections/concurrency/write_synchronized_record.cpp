@@ -2,6 +2,8 @@
 #include <string_view>
 #include <syncstream>
 
+using namespace std;
+
 void write_record(std::ostream& output,
                   std::string_view label,
                   int value) {

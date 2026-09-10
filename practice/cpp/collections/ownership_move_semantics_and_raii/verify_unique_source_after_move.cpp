@@ -1,6 +1,8 @@
 #include <memory>
 #include <utility>
 
+using namespace std;
+
 struct Resource {
     int id;
 };

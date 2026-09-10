@@ -1,5 +1,7 @@
 #include <functional>
 
+using namespace std;
+
 struct Counter {
     int value;
 

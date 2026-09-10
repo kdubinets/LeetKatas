@@ -1,6 +1,8 @@
 #include <cstddef>
 #include <vector>
 
+using namespace std;
+
 void merge_sorted_into_first(
     std::vector<int>& left,
     std::size_t left_count,

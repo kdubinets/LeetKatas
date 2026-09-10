@@ -4,6 +4,8 @@
 #include <iterator>
 #include <span>
 
+using namespace std;
+
 struct FormatResult {
     std::size_t written;
     std::size_t required;

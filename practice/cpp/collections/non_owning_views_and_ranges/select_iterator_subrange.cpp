@@ -2,6 +2,8 @@
 #include <ranges>
 #include <vector>
 
+using namespace std;
+
 using Iterator = std::vector<int>::const_iterator;
 
 std::ranges::subrange<Iterator> solve(const std::vector<int>& values,

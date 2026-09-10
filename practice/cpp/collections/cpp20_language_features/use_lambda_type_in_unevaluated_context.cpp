@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 template <class Predicate>
 struct Filter {
     Predicate predicate{};

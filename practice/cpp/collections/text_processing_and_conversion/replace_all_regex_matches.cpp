@@ -1,6 +1,8 @@
 #include <regex>
 #include <string>
 
+using namespace std;
+
 std::string solve(
     const std::string& text,
     const std::regex& pattern,

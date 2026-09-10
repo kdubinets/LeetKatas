@@ -115,6 +115,9 @@ end
 
 assert_import_fold("cpp", { "#include <vector>", "", "#include <string>", "int solve();" }, 1, 3)
 assert_import_fold("cpp", { "#include <vector>", "", "int solve();" }, 1, 2)
+assert_import_fold("cpp", {
+  "#include <vector>", "#include <string>", "", "using namespace std;", "", "int solve();"
+}, 1, 5)
 assert_import_fold("python", { "#!/usr/bin/env python3", "import os", "from pathlib import Path", "def solve():" }, 2, 3)
 assert_import_fold("rust", { "use std::collections::HashMap;", "", "use std::fmt;", "fn solve() {}" }, 1, 3)
 

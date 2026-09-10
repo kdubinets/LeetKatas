@@ -2,6 +2,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 std::pair<std::vector<int>, std::vector<std::string>> solve(
     const std::vector<std::pair<int, std::string>>& values) {
     std::pair<std::vector<int>, std::vector<std::string>> result;

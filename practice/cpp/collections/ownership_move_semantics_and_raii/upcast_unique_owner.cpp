@@ -1,5 +1,7 @@
 #include <memory>
 
+using namespace std;
+
 struct Base {
     explicit Base(int identifier) : id(identifier) {}
     virtual ~Base() = default;

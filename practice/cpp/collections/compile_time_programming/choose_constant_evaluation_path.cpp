@@ -1,5 +1,7 @@
 #include <type_traits>
 
+using namespace std;
+
 int runtime_value() {
     return 2;
 }

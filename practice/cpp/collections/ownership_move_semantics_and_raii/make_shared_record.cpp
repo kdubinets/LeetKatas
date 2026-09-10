@@ -1,5 +1,7 @@
 #include <memory>
 
+using namespace std;
+
 struct Record {
     explicit Record(int identifier) : id(identifier) {}
     int id;

@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <vector>
 
+using namespace std;
+
 std::size_t minimum_length_sum_at_least_target(
     const std::vector<int>& positive_values,
     long long target) {

@@ -1,3 +1,5 @@
+using namespace std;
+
 struct FlagReset {
     bool& flag;
 

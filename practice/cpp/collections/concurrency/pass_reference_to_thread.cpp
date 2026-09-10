@@ -1,6 +1,8 @@
 #include <functional>
 #include <thread>
 
+using namespace std;
+
 void increment(int& value) {
     ++value;
 }

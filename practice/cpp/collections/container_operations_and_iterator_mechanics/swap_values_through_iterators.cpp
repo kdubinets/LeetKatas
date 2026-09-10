@@ -1,5 +1,7 @@
 #include <iterator>
 
+using namespace std;
+
 template <class Iterator>
 requires std::indirectly_swappable<Iterator, Iterator>
 void solve(Iterator left, Iterator right) {

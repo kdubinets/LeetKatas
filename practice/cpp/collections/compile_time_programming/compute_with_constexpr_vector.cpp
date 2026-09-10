@@ -1,5 +1,7 @@
 #include <vector>
 
+using namespace std;
+
 consteval int compute_total() {
     // Finish: build dynamic integer storage containing 2, 3, and 5, then return their total
 }

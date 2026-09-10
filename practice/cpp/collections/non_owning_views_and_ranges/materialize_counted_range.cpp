@@ -4,6 +4,8 @@
 #include <ranges>
 #include <vector>
 
+using namespace std;
+
 std::vector<int> solve(const std::vector<int>& values,
                        std::size_t start,
                        std::size_t count) {

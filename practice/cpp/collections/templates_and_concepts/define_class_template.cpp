@@ -1,5 +1,7 @@
 #include <string>
 
+using namespace std;
+
 // Finish: define a holder whose stored value has the selected template type
 
 int main() {

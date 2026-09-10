@@ -1,6 +1,8 @@
 #include <cstdint>
 #include <limits>
 
+using namespace std;
+
 std::uint32_t solve(
     std::uint32_t value,
     std::uint32_t replacement,
