@@ -57,6 +57,14 @@ local function find_feedback_buffer()
   end
 end
 
+local function find_follow_up_buffer()
+  for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "practice-follow-up" then
+      return buffer
+    end
+  end
+end
+
 local function find_stats_buffer()
   for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "practice-stats" then
@@ -367,30 +375,48 @@ assert(practice.get_state().timing.phase == "feedback",
 assert(practice.get_state().result.proposed_rating == "good",
   "follow-up chat changed the proposed rating")
 feedback = buffer_text(feedback_buffer)
-assert(feedback:find("Follow-up chat  [t collapse]", 1, true),
-  "follow-up chat section was not opened")
-assert(feedback:find("t Chat", 1, true),
+assert(not feedback:find("Follow-up chat", 1, true),
+  "follow-up chat was inserted into the feedback pane")
+assert(feedback:find("t Open chat", 1, true),
   "chat shortcut was not shown after the conversation appeared")
-assert(feedback:find("You", 1, true)
-  and feedback:find("Why does this satisfy the exercise?", 1, true),
+local follow_up_buffer = find_follow_up_buffer()
+assert(follow_up_buffer, "follow-up chat popup was not opened")
+local follow_up = buffer_text(follow_up_buffer)
+assert(follow_up:find("Reviewer chat", 1, true), "follow-up popup heading is missing")
+assert(follow_up:find("You", 1, true)
+  and follow_up:find("Why does this satisfy the exercise?", 1, true),
   "learner question is missing")
-assert(feedback:find("The answer follows from the exercise requirement", 1, true),
+assert(follow_up:find("The answer follows from the exercise requirement", 1, true),
   "reviewer answer is missing")
-assert(feedback:find("gpt%-5%.6%-luna"), "follow-up model is missing")
+assert(follow_up:find("gpt%-5%.6%-luna"), "follow-up model is missing")
 assert(next(vim.api.nvim_get_hl(0, { name = "PracticeQuestion" })) ~= nil,
   "question highlight is missing")
 assert(vim.api.nvim_get_hl(0, { name = "PracticeQuestionLabel" }).bold == true,
   "question header is not bold")
 assert(vim.api.nvim_get_hl(0, { name = "PracticeAnswerLabel" }).bold == true,
   "answer header is not bold")
+assert(vim.fn.maparg("?", "n", false, true).buffer == 1,
+  "follow-up popup is missing its ask mapping")
+assert(vim.fn.maparg("q", "n", false, true).buffer == 1,
+  "follow-up popup is missing its close mapping")
+vim.api.nvim_set_current_buf(feedback_buffer)
 press("t")
-feedback = buffer_text(feedback_buffer)
-assert(feedback:find("Follow-up chat  [t expand]", 1, true)
-  and not feedback:find("Why does this satisfy the exercise?", 1, true),
-  "follow-up chat did not collapse")
-press("t")
-assert(buffer_text(feedback_buffer):find("Why does this satisfy the exercise?", 1, true),
-  "follow-up chat did not re-expand")
+assert(vim.api.nvim_get_current_buf() == follow_up_buffer,
+  "chat shortcut did not focus the follow-up popup")
+press("q")
+vim.api.nvim_set_current_buf(feedback_buffer)
+local original_ui_input = vim.ui.input
+vim.ui.input = function(_, done)
+  assert(vim.api.nvim_get_current_buf() == follow_up_buffer,
+    "ask shortcut did not reopen the chat before prompting for a question")
+  done(nil)
+end
+press("?")
+vim.ui.input = original_ui_input
+assert(vim.api.nvim_get_current_buf() == follow_up_buffer,
+  "chat popup was not visible while the question prompt was open")
+press("q")
+vim.api.nvim_set_current_buf(feedback_buffer)
 
 press("d")
 feedback = buffer_text(feedback_buffer)

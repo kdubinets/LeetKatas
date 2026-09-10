@@ -42,6 +42,8 @@ local state = {
   progress_events = {},
   progress_event_count = 0,
   follow_up_pending = false,
+  follow_up_process = nil,
+  follow_up_request_id = 0,
   compiler_chat_pending = false,
   compiler_result = nil,
   evaluation_process = nil,
@@ -272,7 +274,10 @@ local function delete_working_copy()
   remove_evaluation_rating_mappings()
   state.progress_events = {}
   state.progress_event_count = 0
+  state.follow_up_request_id = state.follow_up_request_id + 1
   state.follow_up_pending = false
+  if state.follow_up_process then state.follow_up_process:kill(15) end
+  state.follow_up_process = nil
 end
 
 local function reset_session()
@@ -890,14 +895,25 @@ function M.ask(question)
       vim.log.levels.WARN)
     return
   end
-  if state.follow_up_pending then
-    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
+  if question == nil then
+    ui.open_follow_up_chat(true, true)
+    if state.follow_up_pending then
+      ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
+      return
+    end
+    -- Let the floating chat draw before the input provider claims focus.  In
+    -- particular, custom vim.ui.input providers otherwise make the chat look
+    -- as though it opens only after the question has been submitted.
+    vim.schedule(function()
+      if state.status ~= "reviewing" or state.follow_up_pending then return end
+      vim.ui.input({ prompt = "Ask reviewer: " }, function(value)
+        if value ~= nil then M.ask(value) end
+      end)
+    end)
     return
   end
-  if question == nil then
-    vim.ui.input({ prompt = "Ask reviewer: " }, function(value)
-      if value ~= nil then M.ask(value) end
-    end)
+  if state.follow_up_pending then
+    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
     return
   end
   question = vim.trim(tostring(question))
@@ -914,10 +930,12 @@ function M.ask(question)
   }
   table.insert(turns, turn)
   state.follow_up_pending = true
+  state.follow_up_request_id = state.follow_up_request_id + 1
+  local request_id = state.follow_up_request_id
   set_timing_phase(nil)
   ui.refresh_feedback("chat")
 
-  process.run(config.python, script_path("review_follow_up.py"), {
+  state.follow_up_process = process.run(config.python, script_path("review_follow_up.py"), {
     evidence = {
       starter_source = table.concat(vim.fn.readfile(state.exercise.source_path), "\n"),
       submitted_source = state.result.submitted_source,
@@ -933,7 +951,9 @@ function M.ask(question)
     question = question,
     reviewer = config.follow_up_reviewer,
   }, function(error_message, response)
+    if request_id ~= state.follow_up_request_id then return end
     state.follow_up_pending = false
+    state.follow_up_process = nil
     if error_message then
       turn.status = "failed"
       turn.failure = error_message
@@ -1047,13 +1067,17 @@ function M.rate(rating, stay)
     ui.notify("A rating can be recorded only while reviewing feedback", vim.log.levels.WARN)
     return
   end
-  if state.follow_up_pending then
-    ui.notify("Wait for the current follow-up response", vim.log.levels.WARN)
-    return
-  end
   if not RATINGS[rating] then
     ui.notify("Unknown rating: " .. tostring(rating), vim.log.levels.ERROR)
     return
+  end
+
+  if state.follow_up_pending then
+    state.follow_up_request_id = state.follow_up_request_id + 1
+    state.follow_up_pending = false
+    if state.follow_up_process then state.follow_up_process:kill(15) end
+    state.follow_up_process = nil
+    ui.notify("Follow-up cancelled; recording rating")
   end
 
   set_timing_phase(nil)

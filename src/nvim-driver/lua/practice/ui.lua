@@ -13,6 +13,8 @@ local feedback_contexts = {}
 local feedback_result = nil
 local feedback_callbacks = nil
 local expanded = { review = false, compiler = false, reference = false, chat = true }
+local follow_up_buffer = nil
+local follow_up_window = nil
 local compiler_result, compiler_callbacks = nil, nil
 local stats_buffer = nil
 local stats_window = nil
@@ -445,14 +447,21 @@ local function add_issues(render, title, issues)
   blank(render)
 end
 
-local function add_follow_up_chat(render, result)
+local function build_follow_up_chat(result)
+  local render = { lines = {}, contexts = {}, highlights = {}, positions = {} }
   local follow_up = type(result.follow_up) == "table" and result.follow_up or nil
   local turns = follow_up and type(follow_up.turns) == "table" and follow_up.turns or {}
-  if #turns == 0 then return end
 
-  local suffix = expanded.chat and "  [t collapse]" or "  [t expand]"
-  add_heading(render, "Follow-up chat", "chat", suffix)
-  if not expanded.chat then return end
+  add_line(render, "Reviewer chat", { section = "Reviewer chat", logical_section = "chat" },
+    "PracticeHeading")
+  add_line(render, "? Ask another question   q Close",
+    { section = "Reviewer chat", logical_section = "chat" }, "PracticeHint")
+  if #turns == 0 then
+    blank(render)
+    add_line(render, "Ask a question to begin the conversation.",
+      { section = "Reviewer chat", logical_section = "chat" }, "PracticeHint")
+    return render
+  end
 
   for _, turn in ipairs(turns) do
     add_line(render, "You", { section = "Follow-up chat", logical_section = "chat" },
@@ -477,6 +486,7 @@ local function add_follow_up_chat(render, result)
     end
     blank(render)
   end
+  return render
 end
 
 local function add_reference(render, result)
@@ -581,12 +591,10 @@ local function build_feedback(result)
   table.insert(details, "r Reference")
   local follow_up = type(result.follow_up) == "table" and result.follow_up or nil
   if follow_up and type(follow_up.turns) == "table" and #follow_up.turns > 0 then
-    table.insert(details, "t Chat")
+    table.insert(details, "t Open chat")
   end
   add_line(render, "Details   " .. table.concat(details, "   "),
     { section = "Actions", logical_section = "actions" }, "PracticeAction")
-
-  add_follow_up_chat(render, result)
 
   local review_suffix = expanded.review and "  [d collapse]" or "  [d expand]"
   add_heading(render, "Detailed review", "review", review_suffix)
@@ -714,6 +722,33 @@ local function set_feedback_lines(render)
   vim.bo[feedback_buffer].readonly = true
 end
 
+local function set_follow_up_lines(render)
+  if not valid_buffer(follow_up_buffer) then return end
+  vim.bo[follow_up_buffer].modifiable = true
+  vim.bo[follow_up_buffer].readonly = false
+  vim.api.nvim_buf_set_lines(follow_up_buffer, 0, -1, false, render.lines)
+  vim.bo[follow_up_buffer].filetype = "practice-follow-up"
+  vim.bo[follow_up_buffer].buftype = "nofile"
+  vim.bo[follow_up_buffer].bufhidden = "hide"
+  vim.bo[follow_up_buffer].swapfile = false
+  vim.api.nvim_buf_clear_namespace(follow_up_buffer, feedback_namespace, 0, -1)
+  for _, mark in ipairs(render.highlights) do
+    vim.api.nvim_buf_add_highlight(follow_up_buffer, feedback_namespace,
+      mark[4], mark[1], mark[2], mark[3])
+  end
+  vim.bo[follow_up_buffer].modifiable = false
+  vim.bo[follow_up_buffer].readonly = true
+end
+
+local function close_follow_up_chat(delete_buffer)
+  if valid_window(follow_up_window) then vim.api.nvim_win_close(follow_up_window, true) end
+  follow_up_window = nil
+  if delete_buffer and valid_buffer(follow_up_buffer) then
+    vim.api.nvim_buf_delete(follow_up_buffer, { force = true })
+    follow_up_buffer = nil
+  end
+end
+
 local function ensure_feedback(source_window, focus_feedback)
   if valid_window(feedback_window) and valid_buffer(feedback_buffer) then
     if focus_feedback then vim.api.nvim_set_current_win(feedback_window) end
@@ -764,6 +799,50 @@ local function callback(name, ...)
   if fn then fn(...) end
 end
 
+function M.open_follow_up_chat(focus, allow_empty)
+  if not feedback_result then return end
+  local follow_up = type(feedback_result.follow_up) == "table" and feedback_result.follow_up or nil
+  if (not follow_up or type(follow_up.turns) ~= "table" or #follow_up.turns == 0) and not allow_empty then
+    M.notify("No follow-up conversation yet", vim.log.levels.INFO)
+    return
+  end
+  if not valid_buffer(follow_up_buffer) then
+    follow_up_buffer = vim.api.nvim_create_buf(false, true)
+  end
+  set_follow_up_lines(build_follow_up_chat(feedback_result))
+  if not valid_window(follow_up_window) then
+    local width = math.min(math.max(52, math.floor(vim.o.columns * 0.65)), vim.o.columns - 4)
+    local height = math.min(math.max(10, math.floor(vim.o.lines * 0.65)), vim.o.lines - 4)
+    follow_up_window = vim.api.nvim_open_win(follow_up_buffer, focus ~= false, {
+      relative = "editor",
+      anchor = "NW",
+      row = math.max(1, math.floor((vim.o.lines - height) / 2)),
+      col = math.max(1, math.floor((vim.o.columns - width) / 2)),
+      width = width,
+      height = height,
+      style = "minimal",
+      border = "rounded",
+      title = " Reviewer chat ",
+      title_pos = "center",
+      zindex = 100,
+    })
+    vim.wo[follow_up_window].number = false
+    vim.wo[follow_up_window].relativenumber = false
+    vim.wo[follow_up_window].signcolumn = "no"
+    vim.wo[follow_up_window].wrap = true
+    vim.wo[follow_up_window].linebreak = true
+    vim.wo[follow_up_window].breakindent = true
+  elseif focus ~= false then
+    vim.api.nvim_set_current_win(follow_up_window)
+  end
+  local options = { buffer = follow_up_buffer, silent = true, nowait = true }
+  vim.keymap.set("n", "?", function() callback("ask") end,
+    vim.tbl_extend("force", options, { desc = "Ask the reviewer a follow-up question" }))
+  vim.keymap.set("n", "q", function() close_follow_up_chat(false) end,
+    vim.tbl_extend("force", options, { desc = "Close reviewer chat" }))
+  return follow_up_buffer, follow_up_window
+end
+
 local function install_feedback_mappings()
   local options = { buffer = feedback_buffer, silent = true, nowait = true }
   vim.keymap.set("n", "a", function() callback("accept") end,
@@ -785,8 +864,8 @@ local function install_feedback_mappings()
     vim.tbl_extend("force", options, { desc = "Toggle compiler details" }))
   vim.keymap.set("n", "r", function() toggle("reference") end,
     vim.tbl_extend("force", options, { desc = "Toggle exercise reference" }))
-  vim.keymap.set("n", "t", function() toggle("chat") end,
-    vim.tbl_extend("force", options, { desc = "Toggle follow-up chat" }))
+  vim.keymap.set("n", "t", function() M.open_follow_up_chat(true) end,
+    vim.tbl_extend("force", options, { desc = "Open follow-up chat" }))
   vim.keymap.set("n", "?", function() callback("ask") end,
     vim.tbl_extend("force", options, { desc = "Ask the reviewer a follow-up question" }))
   vim.keymap.set("n", "<CR>", function()
@@ -863,6 +942,7 @@ function M.confirm_discard(action)
 end
 
 function M.close_feedback()
+  close_follow_up_chat(true)
   if valid_window(feedback_window) then vim.api.nvim_win_close(feedback_window, true) end
   if valid_buffer(feedback_buffer) then vim.api.nvim_buf_delete(feedback_buffer, { force = true }) end
   feedback_window, feedback_buffer = nil, nil
@@ -1062,6 +1142,7 @@ end
 
 function M.refresh_feedback(cursor_section)
   render_feedback(cursor_section)
+  if cursor_section == "chat" then M.open_follow_up_chat(true) end
 end
 
 function M.update_progress(elapsed_seconds, events, reference)

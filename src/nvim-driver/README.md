@@ -474,10 +474,14 @@ freeze the editor.
 
 While feedback is open, `?`, `:PracticeAsk [question]`, or `<Space>f` asks the
 reviewer a follow-up question. Omitting the command argument opens an input
-prompt. Questions and answers appear with distinct styling in a Follow-up chat
-section; `t` collapses or expands the conversation. Follow-up requests are
+prompt. Questions and answers appear with distinct styling in a dedicated
+Reviewer chat popup, so the original feedback stays unchanged. Once a
+conversation exists, `t` opens and focuses that popup; use `?` there to ask
+another question and `q` to close it. Follow-up requests are
 asynchronous, retain a bounded conversation history, and do not change the
-original verdict or proposed rating.
+original verdict or proposed rating. Closing the popup does not cancel a
+pending answer: reopen it with `t` at any time. Recording a rating while an
+answer is pending cancels that request and completes the exercise normally.
 
 Follow-up chat uses `reviewer.follow_up_model` and
 `reviewer.follow_up_reasoning_effort` when configured, otherwise it inherits
