@@ -13,5 +13,6 @@ std::vector<long long> apply_closed_range_additions(
     std::size_t size,
     const std::vector<RangeAddition>& updates) {
     // Pattern: difference array. Record each closed update at its start and immediately after its end, then materialize one running total.
-    // Finish: return size values after applying every update; every update is an in-bounds inclusive range
+
+    // Finish: return a vector of length size; each element equals the sum of delta from every update covering its index, or zero if none cover it; each range includes both first and last; indices are zero-based and every range satisfies first <= last < size
 }

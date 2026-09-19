@@ -4,7 +4,11 @@ Answer Inclusive Range Sums
 
 # Description
 
-Use one-past prefix sums to answer every inclusive `[first, second]` query over `values`. Every supplied index pair is valid and ordered. Build the prefix representation once, then use the difference between the prefix after `second` and the prefix at `first` for each answer.
+Return one sum per query, in query order. Each pair `{first, last}` requests the sum of elements in `values` from index `first` through `last`, including both endpoints. Every range satisfies `first <= last < values.size()`. An empty query list produces an empty result.
+
+The supplied pattern is one-past prefix sums: each prefix position represents the total before that position, and an inclusive range sum is the difference between its two boundary prefixes.
+
+This exercise covers answering inclusive range queries from a one-past prefix-sum representation.
 
 # Solution
 

@@ -4,7 +4,11 @@ Maximum Two-Endpoint Container Area
 
 # Description
 
-Use converging two pointers to return the greatest area formed by two distinct nonnegative `heights` positions. The area uses their distance and the smaller endpoint height. When fewer than two positions exist, return zero; after measuring a pair, move only the limiting endpoint.
+Return the maximum area among pairs of indices `i < j` in nonnegative `heights`. The area is `(j - i)` times the smaller of `heights[i]` and `heights[j]`. Return zero when fewer than two elements exist.
+
+The supplied pattern is converging two pointers: after a pair is measured, its smaller-height endpoint is dominated; either endpoint may be discarded when heights are equal.
+
+This exercise covers discarding the dominated endpoint while measuring converging two-pointer container pairs.
 
 # Solution
 

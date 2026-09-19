@@ -1,5 +1,4 @@
 local M = {}
-local spacer_namespace = vim.api.nvim_create_namespace("practice_import_fold_spacer")
 
 -- Each entry describes the contiguous import preamble for a filetype.  Add a
 -- filetype here when a new exercise language is introduced; no UI code needs
@@ -61,6 +60,8 @@ local function find_import_section(lines, patterns)
 
   local finish = start_line
   for index = start_line + 1, #lines do
+    -- A hint is a separate section, even when it follows the imports.
+    if lines[index]:match("^%s*//%s*Pattern:") then break end
     if matches(lines[index], patterns) or ignorable_between_imports(lines[index]) then
       finish = index
     else
@@ -70,7 +71,7 @@ local function find_import_section(lines, patterns)
   return start_line, finish
 end
 
-function M.close(buffer, window)
+function M.section(buffer)
   local patterns = language_rules[vim.bo[buffer].filetype]
   if not patterns then return nil end
 
@@ -84,49 +85,15 @@ function M.close(buffer, window)
       import_count = import_count + 1
     end
   end
-  vim.b[buffer].practice_import_fold_count = import_count
-  vim.api.nvim_buf_clear_namespace(buffer, spacer_namespace, 0, -1)
+  return first, last, import_count
+end
 
-  vim.api.nvim_win_call(window, function()
-    vim.wo.foldmethod = "manual"
-    vim.wo.foldenable = true
-    vim.wo.foldlevel = 0
-    vim.wo.foldtext = "v:lua.PracticeImportFoldText()"
-    vim.cmd("silent! normal! zE")
-    vim.cmd(string.format("silent! %d,%dfold", first, last))
-    local cursor = vim.api.nvim_win_get_cursor(window)
-    vim.api.nvim_win_set_cursor(window, { first, 0 })
-    vim.cmd("silent! normal! zc")
-    vim.api.nvim_win_set_cursor(window, cursor)
-  end)
-
-  -- A one-import preamble needs its following blank line to form a fold.
-  -- Restore that visual separation without changing the submitted source.
-  if last < vim.api.nvim_buf_line_count(buffer) then
-    vim.api.nvim_buf_set_extmark(buffer, spacer_namespace, last, 0, {
-      virt_lines = { { { "", "Normal" } } },
-      virt_lines_above = true,
-    })
-  end
-  return import_count
+function M.close(buffer, window)
+  return require("practice.source_folds").close(buffer, window, "imports")
 end
 
 function M.toggle(buffer, window)
-  local patterns = language_rules[vim.bo[buffer].filetype]
-  if not patterns then return nil end
-  local first = find_import_section(vim.api.nvim_buf_get_lines(buffer, 0, -1, false), patterns)
-  if not first then return nil end
-
-  if vim.api.nvim_win_call(window, function() return vim.fn.foldclosed(first) == first end) then
-    vim.api.nvim_win_call(window, function()
-      local cursor = vim.api.nvim_win_get_cursor(window)
-      vim.api.nvim_win_set_cursor(window, { first, 0 })
-      vim.cmd("silent! normal! zo")
-      vim.api.nvim_win_set_cursor(window, cursor)
-    end)
-    return vim.b[buffer].practice_import_fold_count or 0, true
-  end
-  return M.close(buffer, window), false
+  return require("practice.source_folds").toggle(buffer, window, "imports")
 end
 
 function M.foldtext()

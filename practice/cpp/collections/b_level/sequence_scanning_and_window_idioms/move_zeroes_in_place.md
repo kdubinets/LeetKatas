@@ -4,7 +4,11 @@ Move Zeroes to the End In Place
 
 # Description
 
-Use read/write pointers to move every zero in `values` to its end while preserving the relative order of its nonzero values. Mutate `values` in place. The completed prefix must always contain the nonzero values encountered so far in order.
+Rearrange `values` in place so all nonzero values retain their original order and are followed by all zeroes. Keep the vector's size unchanged. Empty input stays empty.
+
+The supplied pattern is read/write pointers whose written prefix contains the nonzero values encountered so far in their original order.
+
+This exercise covers stable in-place compaction of selected values with read/write pointers.
 
 # Solution
 

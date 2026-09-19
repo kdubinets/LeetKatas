@@ -4,7 +4,11 @@ Count All-Distinct Fixed Windows
 
 # Description
 
-Use a fixed-size frequency window to count contiguous windows of `width` integers that contain no repeated value. Return zero when `width` is zero or exceeds `values.size()`. The invariant is that the frequency state represents exactly the current window.
+Return the number of contiguous groups of exactly `width` elements in `values` containing no repeated value. Overlapping groups count separately. The supplied guard returns zero when `width` is zero or exceeds `values.size()`.
+
+The supplied pattern is a fixed-size frequency window whose counts represent exactly the current group of elements.
+
+This exercise covers maintaining fixed-window frequency state while counting windows with distinct values.
 
 # Solution
 

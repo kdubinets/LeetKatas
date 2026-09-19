@@ -1,0 +1,1 @@
+{"language":{"name":"C++","version":"C++20"},"libraries":[{"name":"C++ standard library","version":"C++20"}],"restrictions":["No third-party libraries","Trees are finite, acyclic, and caller-owned","Functions do not allocate, delete, or mutate tree nodes","Specified arithmetic is representable in declared types"]}

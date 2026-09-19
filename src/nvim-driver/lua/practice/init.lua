@@ -2,6 +2,7 @@ local session = require("practice.session")
 local log = require("practice.log")
 local sync = require("practice.sync")
 local statusline = require("practice.statusline")
+local source_folds = require("practice.source_folds")
 
 local M = {}
 
@@ -10,7 +11,7 @@ local NOTE_KINDS = { "follow-up", "research", "exercise-fix" }
 local PRACTICE_KEYS = {
   "<leader>s", "<leader>b", "<leader>c", "<leader>a", "<leader>R", "<leader>r", "<leader>1",
   "<leader>2", "<leader>3", "<leader>4", "<leader>n", "<leader>m", "<leader>d", "<leader>D",
-  "<leader>f", "<leader>g", "<leader>i", "<leader>o", "<leader>t", "<leader>q",
+  "<leader>f", "<leader>g", "<leader>h", "<leader>i", "<leader>o", "<leader>t", "<leader>q",
 }
 
 local function map(lhs, rhs, description)
@@ -27,7 +28,8 @@ function M.refresh_keymaps()
   clear_practice_maps("n")
   clear_practice_maps("x")
 
-  local status = session.get_state().status
+  local state = session.get_state()
+  local status = state.status
   map("<leader>o", M.open_notes, "Notes")
   map("<leader>t", M.stats, "Statistics")
 
@@ -48,6 +50,9 @@ function M.refresh_keymaps()
       silent = true, desc = "Add note",
     })
     map("<leader>i", M.fold_imports, "Toggle imports")
+    if source_folds.has_hint(state.source_buffer) then
+      map("<leader>h", M.toggle_hint, "Toggle hint")
+    end
     map("<leader>q", M.quit, "End practice")
     return
   end
@@ -67,6 +72,9 @@ function M.refresh_keymaps()
     map("<leader>D", M.delete, "Delete exercise")
     map("<leader>m", M.note, "Add note")
     map("<leader>i", M.fold_imports, "Toggle imports")
+    if source_folds.has_hint(state.source_buffer) then
+      map("<leader>h", M.toggle_hint, "Toggle hint")
+    end
     map("<leader>q", M.quit, "End practice")
     return
   end
@@ -124,6 +132,9 @@ function M.setup(options)
   })
   vim.api.nvim_create_user_command("PracticeCompile", session.compile, {
     desc = "Compile without submitting for review",
+  })
+  vim.api.nvim_create_user_command("PracticeHint", session.toggle_hint, {
+    desc = "Reveal or hide the current exercise's pattern hint",
   })
   vim.api.nvim_create_user_command("PracticeAccept", session.accept, {
     desc = "Accept the proposed practice rating",
@@ -288,6 +299,10 @@ end
 
 function M.fold_imports()
   session.fold_imports()
+end
+
+function M.toggle_hint()
+  session.toggle_hint()
 end
 
 function M.stats(directory)

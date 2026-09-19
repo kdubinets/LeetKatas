@@ -4,7 +4,11 @@ Manual First-Not-Less Binary Search
 
 # Description
 
-Use a half-open manual lower-bound loop to return the first index in ascending `values` whose value is not less than `target`. Return `values.size()` when every value is smaller. The candidate interval must retain the insertion position, not only existing values equal to the target.
+Return the first zero-based index where `values[i] >= target`, or `values.size()` if no such index exists. The input is sorted in nondecreasing order. For empty input, the result is zero.
+
+The supplied pattern is manual lower-bound search. The answer remains between `low` and `high`, both inclusive: values before `low` are less than `target`, and values at or after `high` are not less than `target`. The unresolved values occupy `[low, high)`; when this interval becomes empty, `low == high` is the answer, possibly the one-past-end insertion position.
+
+This exercise covers maintaining the lower-bound partition invariant in a half-open manual binary-search loop.
 
 # Solution
 

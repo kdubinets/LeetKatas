@@ -4,7 +4,11 @@ Find a Sorted Two-Sum Pair
 
 # Description
 
-Use converging two pointers to find two distinct values in ascending `values` whose sum equals `target`. Return their zero-based index pair, or an empty optional when none exists. The ordered input lets each comparison discard exactly one endpoint.
+Return any pair of distinct zero-based indices whose values sum to `target`, or an empty optional if no such pair exists. The input is sorted in nondecreasing order and may contain duplicates, so the two selected values may be equal. Fewer than two elements cannot form a pair.
+
+The supplied pattern is converging two pointers on sorted input, with each sum comparison determining which endpoint can be discarded.
+
+This exercise covers moving converging sorted-sequence pointers according to the pair-sum comparison.
 
 # Solution
 

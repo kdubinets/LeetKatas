@@ -4,7 +4,11 @@ Manual Last-Not-Greater Binary Search
 
 # Description
 
-Use a half-open manual upper-bound loop to find the last index in ascending `values` whose value is not greater than `target`. Return no result if every value is greater. First locate the one-past-last acceptable position, then handle the empty-prefix case before converting it to the returned index.
+Return the last zero-based index where `values[i] <= target`, or an empty optional if no such index exists, including for empty input. The input is sorted in nondecreasing order.
+
+The supplied pattern is manual upper-bound search: the half-open search locates the one-past-last acceptable position before that boundary is converted to an index.
+
+This exercise covers finding an upper boundary with manual binary search and safely converting it to the last acceptable index.
 
 # Solution
 

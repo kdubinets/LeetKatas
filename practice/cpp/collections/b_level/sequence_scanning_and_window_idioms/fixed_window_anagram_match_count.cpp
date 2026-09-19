@@ -10,5 +10,6 @@ std::size_t count_anagram_windows(const std::string& text, const std::string& pa
     }
 
     // Pattern: fixed-size character-frequency window. Keep its frequency state synchronized with the window's entry and exit.
-    // Finish: return how many windows are an anagram of pattern; text and pattern contain lowercase English letters
+
+    // Finish: return the number of substrings of text of length pattern.size() with exactly the same letters and letter counts as pattern; overlapping matches count separately; both strings contain only lowercase English letters
 }

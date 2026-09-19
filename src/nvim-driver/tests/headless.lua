@@ -49,6 +49,17 @@ local function buffer_starts_with(buffer, heading)
   return lines[1] == heading
 end
 
+local function focus_feedback(buffer)
+  -- Switch windows instead of replacing the buffer in the chat popup.
+  for _, window in ipairs(vim.fn.win_findbuf(buffer)) do
+    if vim.api.nvim_win_get_config(window).relative == "" then
+      vim.api.nvim_set_current_win(window)
+      return
+    end
+  end
+  error("feedback buffer is not displayed in a regular window")
+end
+
 local function find_feedback_buffer()
   for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_valid(buffer) and vim.bo[buffer].filetype == "practice-feedback" then
@@ -93,6 +104,7 @@ assert(vim.fn.exists(":PracticeDiagnostics") == 2, "PracticeDiagnostics was not 
 assert(vim.fn.exists(":PracticeNote") == 2, "PracticeNote was not registered")
 assert(vim.fn.exists(":PracticeNotes") == 2, "PracticeNotes was not registered")
 assert(vim.fn.exists(":PracticeStats") == 2, "PracticeStats was not registered")
+assert(vim.fn.exists(":PracticeHint") == 2, "PracticeHint was not registered")
 assert(vim.fn.exists(":PracticeSync") == 2, "PracticeSync was not registered")
 assert(has_normal_mapping("<Space>s"), "start mapping was not registered while idle")
 assert(not has_normal_mapping("<Space>a"), "accept mapping was shown before review")
@@ -116,7 +128,7 @@ local function assert_import_fold(filetype, lines, expected_first, expected_last
     filetype .. " imports were not folded closed")
   assert(vim.fn.foldclosedend(expected_first) == expected_last,
     filetype .. " import fold has the wrong end")
-  assert(vim.wo.foldtext == "v:lua.PracticeImportFoldText()", filetype .. " fold text was not customised")
+  assert(vim.wo.foldtext == "v:lua.PracticeSourceFoldText()", filetype .. " fold text was not customised")
   assert(import_folds.foldtext():find("hidden", 1, true), filetype .. " fold text exposes import text")
   vim.api.nvim_buf_delete(buffer, { force = true })
 end
@@ -128,6 +140,89 @@ assert_import_fold("cpp", {
 }, 1, 5)
 assert_import_fold("python", { "#!/usr/bin/env python3", "import os", "from pathlib import Path", "def solve():" }, 2, 3)
 assert_import_fold("rust", { "use std::collections::HashMap;", "", "use std::fmt;", "fn solve() {}" }, 1, 3)
+
+local source_folds = require("practice.source_folds")
+local function assert_hint_folds(lines, import_first, import_last, hint_first, hint_last, finish_line)
+  local buffer = vim.api.nvim_create_buf(false, true)
+  vim.bo[buffer].filetype = "cpp"
+  vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines)
+  vim.api.nvim_win_set_buf(0, buffer)
+  vim.api.nvim_win_set_cursor(0, { finish_line, 4 })
+  local original_text = buffer_text(buffer)
+  source_folds.initialize(buffer, 0)
+  assert(vim.fn.foldclosed(hint_first) == hint_first, "hint was not hidden by default")
+  assert(vim.fn.foldclosedend(hint_first) == hint_last, "hint fold hides more than its spacer")
+  assert(vim.fn.foldclosed(finish_line) == -1, "hint fold hides the task")
+  assert(vim.api.nvim_win_get_cursor(0)[1] == finish_line, "fold setup moved the learner's cursor")
+  assert(vim.fn.foldtextresult(hint_first) == "  Hint hidden — <Space>h to reveal",
+    "hint fold label exposes its contents or does not show the shortcut")
+  if import_first then
+    assert(vim.fn.foldclosed(import_first) == import_first, "imports were not hidden by default")
+    assert(vim.fn.foldclosedend(import_first) == import_last, "import fold absorbed the hint")
+    assert(vim.fn.foldtextresult(import_first):find("imports hidden", 1, true)
+      or vim.fn.foldtextresult(import_first):find("import hidden", 1, true),
+      "imports were labelled as a hint")
+  end
+  local count, opened = source_folds.toggle(buffer, 0, "hint")
+  assert(count == 1 and opened and vim.fn.foldclosed(hint_first) == -1, "hint did not open")
+  if import_first then
+    assert(vim.fn.foldclosed(import_first) == import_first, "revealing the hint opened imports")
+    import_folds.toggle(buffer, 0)
+    import_folds.toggle(buffer, 0)
+    assert(vim.fn.foldclosed(hint_first) == -1, "toggling imports reclosed the revealed hint")
+  end
+  source_folds.toggle(buffer, 0, "hint")
+  assert(vim.fn.foldclosed(hint_first) == hint_first, "hint did not close again")
+  if import_first then
+    import_folds.toggle(buffer, 0)
+    source_folds.toggle(buffer, 0, "hint")
+    source_folds.toggle(buffer, 0, "hint")
+    assert(vim.fn.foldclosed(import_first) == -1, "toggling the hint reclosed imports")
+    import_folds.toggle(buffer, 0)
+    assert(vim.fn.foldclosed(hint_first) == hint_first, "closing imports deleted the hidden hint")
+  end
+  assert(buffer_text(buffer) == original_text, "folding changed the submitted source")
+  -- The editor tracks folds as lines move; toggles must rediscover the marker.
+  vim.api.nvim_buf_set_lines(buffer, hint_first - 1, hint_first - 1, false, { "" })
+  local hidden_after_edit = vim.fn.foldclosed(hint_first + 1) >= 0
+  local _, opened_after_edit = source_folds.toggle(buffer, 0, "hint")
+  assert(opened_after_edit == hidden_after_edit, "hint toggle lost its state after a source edit")
+  if hidden_after_edit then
+    assert(vim.fn.foldclosed(hint_first + 1) == -1, "hint did not reopen after a source edit")
+  else
+    local fold_start = vim.fn.foldclosed(hint_first + 1)
+    assert(fold_start >= 0, "hint did not close after a source edit")
+    assert(vim.fn.foldtextresult(fold_start) == "  Hint hidden — <Space>h to reveal",
+      "edited hint fold no longer has a neutral label")
+  end
+  assert(vim.fn.foldclosed(finish_line + 1) == -1, "task became hidden after a source edit")
+  vim.api.nvim_buf_delete(buffer, { force = true })
+end
+
+assert_hint_folds({
+  "#include <vector>", "", "using namespace std;", "", "int solve() {",
+  "    // Pattern: secret technique and invariant", "", "    // Finish: return the answer", "}",
+}, 1, 4, 6, 7, 8)
+assert_hint_folds({
+  "int solve() {", "    // Pattern: secret technique", "    // Finish: return the answer", "}",
+}, nil, nil, 2, 2, 3)
+assert_hint_folds({
+  "#include <vector>", "", "using namespace std;", "",
+  "// Pattern: secret technique", "", "int solve() {", "    // Finish: return the answer", "}",
+}, 1, 4, 5, 6, 8)
+
+local hint_source_path = vim.fn.tempname() .. ".cpp"
+vim.fn.writefile({
+  "#include <vector>", "", "using namespace std;", "", "int solve() {",
+  "    // Pattern: secret technique", "", "    // Finish: return the answer", "}",
+}, hint_source_path)
+local hint_buffer, hint_window = practice_ui.open_source(hint_source_path, nil, "// Finish:", false, false)
+assert(vim.fn.foldclosed(1) == 1 and vim.fn.foldclosed(6) == 6,
+  "opening an exercise did not close imports and hint")
+assert(vim.fn.foldclosed(8) == -1 and vim.api.nvim_win_get_cursor(hint_window)[1] == 8,
+  "opening an exercise hid its task or selected the wrong line")
+vim.api.nvim_buf_delete(hint_buffer, { force = true })
+vim.fn.delete(hint_source_path)
 
 local collection = vim.fn.tempname() .. "-practice-test"
 assert(vim.fn.mkdir(collection, "p") == 1, "could not create test collection")
@@ -183,6 +278,7 @@ assert(has_normal_mapping("<Space>g"), "give-up mapping was not registered while
 assert(has_normal_mapping("<Space>n"), "skip mapping was not registered while solving")
 assert(has_normal_mapping("<Space>m"), "note mapping was not registered while solving")
 assert(has_normal_mapping("<Space>i"), "fold imports mapping was not registered while solving")
+assert(not has_normal_mapping("<Space>h"), "hint shortcut was registered for an exercise without a hint")
 assert(not has_normal_mapping("<Space>a"), "accept mapping was shown while solving")
 assert(not has_normal_mapping("<Space>r"), "retry mapping was shown while solving")
 assert(not has_normal_mapping("<Space>f"), "follow-up mapping was shown while solving")
@@ -226,6 +322,20 @@ end) == -1, "fold imports did not open the exercise preamble")
 assert(vim.b[first_state.source_buffer].practice_import_fold_count == 1,
   "fold imports did not record the import count")
 vim.api.nvim_buf_set_lines(first_state.source_buffer, 0, 2, false, {})
+vim.api.nvim_buf_set_lines(first_state.source_buffer, 0, 0, false, {
+  "// Pattern: secret technique", "",
+})
+source_folds.initialize(first_state.source_buffer, first_state.source_window)
+practice.refresh_keymaps()
+assert(has_normal_mapping("<Space>h"), "hint mapping was not registered for an exercise with a hint")
+vim.api.nvim_set_current_win(first_state.source_window)
+press("<Space>h")
+assert(vim.fn.foldclosed(1) == -1, "hint mapping did not reveal the hint")
+vim.cmd("PracticeHint")
+assert(vim.fn.foldclosed(1) == 1, "PracticeHint did not hide the hint again")
+vim.api.nvim_buf_set_lines(first_state.source_buffer, 0, 2, false, {})
+practice.refresh_keymaps()
+assert(not has_normal_mapping("<Space>h"), "hint mapping remained after its marker was removed")
 assert(buffer_text(first_state.source_buffer):find("// Finish:", 1, true), "marker is missing")
 local instruction_marks = vim.api.nvim_buf_get_extmarks(first_state.source_buffer,
   vim.api.nvim_create_namespace("practice_instruction"), 0, -1, { details = true })
@@ -319,6 +429,7 @@ assert(has_normal_mapping("<Space>f"), "follow-up mapping was not registered whi
 assert(not has_normal_mapping("<Space>c"), "submit mapping was shown while reviewing")
 assert(not has_normal_mapping("<Space>g"), "give-up mapping was shown while reviewing")
 assert(not has_normal_mapping("<Space>i"), "fold imports mapping was shown while reviewing")
+assert(not has_normal_mapping("<Space>h"), "hint mapping was shown while reviewing")
 assert(vim.fn.maparg("<Space>a", "n", false, true).desc == "Accept rating",
   "practice shortcut descriptions were not shortened")
 
@@ -355,7 +466,7 @@ assert(not feedback:find("t Chat", 1, true),
   "chat shortcut was shown before a follow-up conversation existed")
 local colored_feedback = #vim.api.nvim_buf_get_extmarks(feedback_buffer, -1, 0, -1, {}) > 0
 assert(colored_feedback, "feedback buffer did not receive color highlights")
-vim.api.nvim_set_current_buf(feedback_buffer)
+focus_feedback(feedback_buffer)
 for _, key in ipairs({ "a", "1", "2", "3", "4", "n", "m", "d", "c", "r", "t", "?", "<CR>" }) do
   assert(vim.fn.maparg(key, "n", false, true).buffer == 1,
     "missing buffer-local feedback mapping: " .. key)
@@ -399,12 +510,12 @@ assert(vim.fn.maparg("?", "n", false, true).buffer == 1,
   "follow-up popup is missing its ask mapping")
 assert(vim.fn.maparg("q", "n", false, true).buffer == 1,
   "follow-up popup is missing its close mapping")
-vim.api.nvim_set_current_buf(feedback_buffer)
+focus_feedback(feedback_buffer)
 press("t")
 assert(vim.api.nvim_get_current_buf() == follow_up_buffer,
   "chat shortcut did not focus the follow-up popup")
 press("q")
-vim.api.nvim_set_current_buf(feedback_buffer)
+focus_feedback(feedback_buffer)
 local original_ui_input = vim.ui.input
 vim.ui.input = function(_, done)
   assert(vim.api.nvim_get_current_buf() == follow_up_buffer,
@@ -416,7 +527,7 @@ vim.ui.input = original_ui_input
 assert(vim.api.nvim_get_current_buf() == follow_up_buffer,
   "chat popup was not visible while the question prompt was open")
 press("q")
-vim.api.nvim_set_current_buf(feedback_buffer)
+focus_feedback(feedback_buffer)
 
 press("d")
 feedback = buffer_text(feedback_buffer)
@@ -499,7 +610,7 @@ local cancelled_note = notes.compose(cancelled_context, "follow-up")
 vim.api.nvim_buf_delete(cancelled_note, { force = true })
 assert(vim.fn.glob(vim.env.PRACTICE_NOTES_DIRECTORY
   .. "/2000-01-02-03-04-07--cancelled*.md") == "", "cancelled note left a file")
-vim.api.nvim_set_current_buf(feedback_buffer)
+focus_feedback(feedback_buffer)
 assert(table.concat(vim.fn.readfile(original_sources[first_state.exercise.id]), "\n")
   :find("// Finish:", 1, true),
   "original exercise was modified")
@@ -542,7 +653,7 @@ for _, window in ipairs(vim.fn.win_findbuf(feedback_buffer)) do
   assert(vim.wo[window].linebreak, "feedback wrapping should respect word boundaries")
   assert(vim.wo[window].breakindent, "wrapped feedback should preserve indentation")
 end
-vim.api.nvim_set_current_buf(feedback_buffer)
+focus_feedback(feedback_buffer)
 press("c")
 assert(buffer_text(feedback_buffer):find("error:", 1, true),
   "c did not expand compiler diagnostics")

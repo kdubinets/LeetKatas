@@ -7,5 +7,6 @@ using namespace std;
 
 std::size_t longest_balanced_binary_subarray(const std::vector<int>& values) {
     // Pattern: first-occurrence prefix state. Treat zero and one as opposite balance changes, retaining the earliest prefix position for each balance.
-    // Finish: return the greatest length of a contiguous range with equally many zeroes and ones; values contain only zero or one
+
+    // Finish: return the length of the longest nonempty contiguous range in values containing equally many 0s and 1s, or zero if none exists; every input value is 0 or 1
 }

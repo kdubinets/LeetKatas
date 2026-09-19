@@ -21,6 +21,10 @@ These are Level B exercises: the learner is given the applicable interview idiom
 
 An exercise should normally require 3–8 minutes. Its source contains one `// Pattern:` comment, which names the idiom and invariant without prescribing APIs or code, followed by exactly one `// Finish:` section. This explicit pattern comment is the deliberate Level B exception to the base prompt's usual comment-minimization rule; the validator permits at most one such comment.
 
+The `Finish` comment specifies the required result or final mutated state, input preconditions, and relevant boundary behavior. It must be understandable without reading the `Pattern` comment or hidden metadata, and must not prescribe implementation steps or APIs. Keep technique guidance in `Pattern`; use plain descriptions of contiguous ranges, inclusive endpoints, sorted inputs, and absent results rather than relying on algorithm terminology to explain the task.
+
+Leave a blank line after `Pattern` as a fold spacer. The practice driver hides the pattern hint by default, separately from imports, while keeping `Finish` visible. Learners can reveal or hide the hint with `<Space>h` or `:PracticeHint`.
+
 ## Included Topics
 
 - Fixed-size rolling windows over sums and frequency state.
@@ -42,4 +46,7 @@ Exercise pairs follow `../../../CppProblemsGenerationPrompt.md` except for the d
 
 ```bash
 tools/validate_exercises.sh collections/b_level/sequence_scanning_and_window_idioms c++20
+../../.venv/bin/python tools/test_sequence_scanning_and_window_idioms.py
 ```
+
+The runtime tool substitutes the recorded solutions in temporary source, compiles with sanitizers, and compares deterministic randomized inputs with independent brute-force and standard-library references. It never completes learner files in place.

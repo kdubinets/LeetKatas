@@ -4,7 +4,11 @@ Manual Exact Binary Search
 
 # Description
 
-Use a half-open manual binary-search loop to find `target` in ascending `values`. Return its index in an optional or no result when it is absent. The candidate interval `[low, high)` must contain every still-possible matching index and must shrink on every iteration.
+Return any zero-based index where `values` equals `target`, or an empty optional if no such index exists. The input is sorted in nondecreasing order, so duplicates are permitted. Empty input has no matching index.
+
+The supplied pattern is manual binary search with a half-open candidate interval `[low, high)` containing every still-possible matching index.
+
+This exercise covers maintaining a half-open candidate interval for exact manual binary search.
 
 # Solution
 

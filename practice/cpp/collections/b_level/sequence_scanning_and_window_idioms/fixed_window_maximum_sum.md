@@ -4,7 +4,11 @@ Maximum Fixed-Window Sum
 
 # Description
 
-Use the fixed-size rolling-window pattern to return the greatest sum of any contiguous `width` values in `values`. `width` may be zero or exceed the input size, in which case return zero. Maintain the current window total as values enter and leave instead of recomputing each window.
+Return the greatest sum among all contiguous groups of exactly `width` elements in `values`. The greatest sum may be negative. The supplied guard returns zero when `width` is zero or exceeds the input size.
+
+The supplied pattern is a fixed-size rolling window whose running total equals the sum of the current group.
+
+This exercise covers maintaining a rolling numeric total for a fixed-width window.
 
 # Solution
 

@@ -1,0 +1,6 @@
+generate_k_combinations
+permute_distinct_values
+target_sum_combinations
+word_search_with_restoration
+unique_subsets_from_duplicates
+count_n_queens_with_occupancy

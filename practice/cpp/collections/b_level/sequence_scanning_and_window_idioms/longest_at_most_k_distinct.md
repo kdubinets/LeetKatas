@@ -4,7 +4,11 @@ Longest Substring With a Distinct-Byte Limit
 
 # Description
 
-Use a shrink-to-valid sliding window to return the greatest length of a substring of `text` containing at most `limit` distinct bytes. `limit` may be zero. Maintain byte counts for exactly the current window and remove a key when its count reaches zero.
+Return the length of the longest contiguous substring of `text` containing at most `limit` different byte values. Return zero when the text is empty or the limit is zero. The task concerns bytes, rather than decoded Unicode characters.
+
+The supplied pattern is a shrink-to-valid sliding window whose frequency state represents the current substring and whose distinct-byte count does not exceed the limit when its length is considered.
+
+This exercise covers restoring a distinct-byte limit by shrinking a frequency window and removing exhausted keys.
 
 # Solution
 

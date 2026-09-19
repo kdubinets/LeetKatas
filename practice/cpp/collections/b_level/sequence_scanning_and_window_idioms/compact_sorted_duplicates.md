@@ -4,7 +4,11 @@ Compact Sorted Duplicate Runs
 
 # Description
 
-Use read/write pointers to compact ascending `values` in place so its prefix contains exactly one value from each equal run. Return the new prefix length; values after that length are irrelevant. The completed prefix is the invariant that makes each read value easy to compare.
+Modify the prefix of `values` to contain each distinct input value exactly once, in sorted order, and return that prefix's length. Keep the vector's size unchanged; elements beyond the returned length are unspecified. The input is sorted in nondecreasing order. Empty input has a retained prefix of length zero.
+
+The supplied pattern is read/write pointers: the written prefix contains each distinct value encountered so far exactly once, in input order.
+
+This exercise covers maintaining a deduplicated prefix with read/write pointers over sorted runs.
 
 # Solution
 

@@ -4,7 +4,11 @@ Count Target-Sum Subarrays
 
 # Description
 
-Use a prefix-frequency scan to count contiguous subarrays of `values` whose sum equals `target`, including negative values. Before recording each current prefix sum, count how often the prefix `current - target` has already occurred; this order preserves subarray direction.
+Return the number of nonempty contiguous ranges in `values` whose elements sum to `target`. Overlapping ranges count separately, negative values are allowed, and empty input produces zero.
+
+The supplied pattern is a prefix-frequency scan: prior prefix counts describe positions strictly before the current prefix, so a matching earlier prefix identifies a nonempty target-sum range.
+
+This exercise covers counting target-sum subarrays by querying prior prefix frequencies before recording the current prefix.
 
 # Solution
 

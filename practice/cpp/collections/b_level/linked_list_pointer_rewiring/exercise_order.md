@@ -1,0 +1,6 @@
+reverse_entire_list
+remove_matching_nodes
+merge_sorted_node_chains
+stable_partition_nodes_by_sign
+swap_adjacent_node_pairs
+reverse_node_segment

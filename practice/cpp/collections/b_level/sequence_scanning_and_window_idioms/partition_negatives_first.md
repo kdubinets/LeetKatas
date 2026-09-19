@@ -4,7 +4,11 @@ Partition Negative Values First
 
 # Description
 
-Use opposing partition pointers to rearrange `values` so all negative values precede all nonnegative values, then return the index of the first nonnegative value. Mutation need not preserve order. Maintain the two completed regions at the sequence ends while the unresolved region shrinks.
+Rearrange `values` in place so all negative values precede all values greater than or equal to zero. Return the first nonnegative index, or `values.size()` if no such element exists. Either group's order may change. Empty input returns zero.
+
+The supplied pattern is opposing partition pointers whose completed left region is negative and completed right region is nonnegative.
+
+This exercise covers maintaining completed regions at opposing sequence boundaries during unstable in-place partitioning.
 
 # Solution
 

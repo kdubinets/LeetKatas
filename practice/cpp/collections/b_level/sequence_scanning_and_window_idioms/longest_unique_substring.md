@@ -4,7 +4,11 @@ Longest Unique Substring
 
 # Description
 
-Use a shrink-to-valid sliding window to return the greatest length of a substring of `text` with no repeated byte. The invariant is that every byte frequency in the current window is at most one; shrink from the left whenever adding the right byte violates it.
+Return the length of the longest contiguous substring of `text` in which every byte occurs at most once. Empty text produces zero. The task concerns bytes, rather than decoded Unicode characters.
+
+The supplied pattern is a shrink-to-valid sliding window whose byte frequencies are all at most one when its length is considered.
+
+This exercise covers restoring byte uniqueness by shrinking a sliding window after a repeated byte enters.
 
 # Solution
 

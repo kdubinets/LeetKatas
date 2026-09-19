@@ -1,6 +1,7 @@
 local process = require("practice.process")
 local ui = require("practice.ui")
 local import_folds = require("practice.import_folds")
+local source_folds = require("practice.source_folds")
 local log = require("practice.log")
 local notes = require("practice.notes")
 local sync = require("practice.sync")
@@ -504,6 +505,20 @@ function M.fold_imports()
       ui.notify("No import/include preamble found", vim.log.levels.INFO)
     end
   end
+end
+
+function M.toggle_hint()
+  if not valid_buffer(state.source_buffer) then return end
+  local found, opened = nil, nil
+  for _, window in ipairs(vim.fn.win_findbuf(state.source_buffer)) do
+    if valid_window(window) then
+      local count, window_opened = source_folds.toggle(state.source_buffer, window, "hint")
+      found = count or found
+      opened = window_opened
+    end
+  end
+  ui.notify(found and (opened and "Hint revealed" or "Hint hidden") or "No pattern hint found",
+    vim.log.levels.INFO)
 end
 
 function M.stats(directory)

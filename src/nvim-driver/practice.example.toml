@@ -34,6 +34,7 @@ enhanced_syntax_highlighting = true
 # Complete from words in the active exercise only. Ctrl+Space opens the menu.
 local_completion = false
 # Exercise import/include preambles are folded closed automatically.
+# Pattern hints are folded separately; Space+h toggles a hint when present.
 
 [statusline]
 left = ["exercise_name"]

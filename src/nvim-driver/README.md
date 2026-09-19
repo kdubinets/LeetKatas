@@ -204,6 +204,15 @@ Swift. Use Neovim's normal fold commands (for example `zo` or `za`) to reveal
 it. Support for a new exercise language is added in
 `lua/practice/import_folds.lua` without changing the exercise UI.
 
+Level B `// Pattern: ...` comments are also folded closed by default, separately
+from imports. The neutral label does not reveal the technique or invariant.
+Press `<Space>h` or run `:PracticeHint` to reveal or hide the hint; the shortcut
+is available while editing an exercise with a pattern comment. Normal `zo`/`za`
+commands also work. Toggling imports preserves the hint's open/closed state and
+vice versa. The `Finish` task remains visible. A blank line after `Pattern`
+provides a spacer for its fold; comments without a spacer use a single-line fold.
+Shared fold setup and toggling live in `lua/practice/source_folds.lua`.
+
 Exercise source uses Tree-sitter syntax highlighting by default when Neovim has
 the matching language parser installed. C++ practice still receives enhanced
 semantic highlighting when no parser is available. Set
@@ -613,6 +622,7 @@ Workflow mappings use the `p` prefix for practice:
 | `<Space>m` | `:PracticeNote` | Capture a note for the active exercise. |
 | `<Space>f` | `:PracticeAsk` | Ask the reviewer a follow-up question. |
 | `<Space>i` | — | Toggle the current exercise's import/include preamble. |
+| `<Space>h` | `:PracticeHint` | Reveal or hide the pattern hint while editing an exercise that has one. |
 | `<Space>o` | `:PracticeNotes` | Open the personal notes directory. |
 | `<Space>t` | `:PracticeStats` | Show portfolio statistics. |
 | `<Space>q` | `:PracticeQuit` | End the session. |

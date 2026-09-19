@@ -4,7 +4,11 @@ Longest Balanced Binary Subarray
 
 # Description
 
-Use first-occurrence prefix state to return the greatest length of a range in binary `values` containing equally many zeroes and ones. Treat zero and one as opposite balance changes, and retain only the earliest one-past prefix position for each balance so their distance is the matching range length.
+Return the length of the longest nonempty contiguous range in `values` containing equally many zeroes and ones, or zero if no such range exists. Every input value is zero or one; empty input produces zero.
+
+The supplied pattern is first-occurrence prefix state: zero and one contribute opposite balance changes, and the earliest position for each balance remains available to maximize the matching span.
+
+This exercise covers retaining earliest prefix-balance positions to maximize an equal-zero-one span.
 
 # Solution
 

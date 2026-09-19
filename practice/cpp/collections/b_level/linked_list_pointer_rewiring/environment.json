@@ -1,0 +1,18 @@
+{
+  "language": {
+    "name": "C++",
+    "version": "C++20"
+  },
+  "libraries": [
+    {
+      "name": "C++ standard library",
+      "version": "C++20"
+    }
+  ],
+  "restrictions": [
+    "No third-party libraries",
+    "Inputs satisfy the preconditions stated in each exercise",
+    "Caller owns all input nodes; functions may change links but must not allocate or delete list nodes or change node values",
+    "Constant auxiliary space, including the call stack"
+  ]
+}

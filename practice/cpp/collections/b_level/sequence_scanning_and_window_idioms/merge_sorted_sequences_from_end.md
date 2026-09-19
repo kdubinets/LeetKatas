@@ -4,7 +4,11 @@ Merge Sorted Sequences From the End
 
 # Description
 
-Use a backwards two-pointer merge to combine the ascending prefix of `left` and ascending `right` into `left`. `left_count` is the number of initialized values in `left`, and `left.size()` equals `left_count + right.size()`. Filling from the end preserves unread values in the left prefix.
+After the function returns, `left` must contain all original values from its first `left_count` elements and from `right`, in nondecreasing order, including duplicates. Both input sequences are sorted. The remaining original elements of `left` are output placeholders. Initially, `left.size()` equals `left_count + right.size()`, and its size must stay unchanged.
+
+The supplied pattern is a backwards two-pointer merge whose completed output suffix does not overwrite unread values in the left input prefix.
+
+This exercise covers merging sorted sequences backwards into reserved output space without overwriting unread input values.
 
 # Solution
 

@@ -1,6 +1,6 @@
 local M = {}
 local log = require("practice.log")
-local import_folds = require("practice.import_folds")
+local source_folds = require("practice.source_folds")
 local completion = require("practice.completion")
 
 local feedback_buffer = nil
@@ -1065,7 +1065,7 @@ function M.open_source(path, preferred_window, practice_marker, enhanced_syntax_
       })
     end
   end
-  import_folds.close(buffer, window)
+  source_folds.initialize(buffer, window)
   for index, line in ipairs(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)) do
     local marker_start = line:find(practice_marker, 1, true)
     if marker_start then

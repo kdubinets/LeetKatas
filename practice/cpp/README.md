@@ -21,8 +21,28 @@ cpp/
 │   │   ├── exercise_order.md
 │   │   └── 108 exercise pairs
 │   ├── b_level/
-│   │   └── sequence_scanning_and_window_idioms/
-│   │       └── 19 Level B exercise pairs plus collection metadata
+│   │   ├── sequence_scanning_and_window_idioms/
+│   │   │   └── 19 Level B exercise pairs plus collection metadata
+│   │   ├── linked_list_pointer_rewiring/
+│   │   │   └── 6 Level B exercise pairs plus collection metadata
+│   │   ├── dynamic_programming_state_idioms/
+│   │   │   └── 10 Level B exercise pairs plus collection metadata
+│   │   ├── monotonic_stack_and_deque_idioms/
+│   │   │   └── 7 Level B exercise pairs plus collection metadata
+│   │   ├── tree_traversal_and_recursive_state/
+│   │   │   └── 6 Level B exercise pairs plus collection metadata
+│   │   ├── graph_traversal_and_visitation/
+│   │   │   └── 6 Level B exercise pairs plus collection metadata
+│   │   ├── interval_merging_and_sweep_events/
+│   │   │   └── 4 Level B exercise pairs plus collection metadata
+│   │   ├── heap_frontier_and_streaming_state/
+│   │   │   └── 4 Level B exercise pairs plus collection metadata
+│   │   ├── disjoint_set_connectivity_bookkeeping/
+│   │   │   └── 3 Level B exercise pairs plus collection metadata
+│   │   ├── backtracking_and_reversible_state/
+│   │   │   └── 6 Level B exercise pairs plus collection metadata
+│   │   └── partition_and_selection_idioms/
+│   │       └── 2 Level B exercise pairs plus collection metadata
 │   ├── non_owning_views_and_ranges/
 │   │   └── 30 exercise pairs plus collection metadata
 │   ├── ownership_move_semantics_and_raii/
@@ -81,6 +101,22 @@ Fifteen focused up-to-C++20 follow-up collections are also complete:
 
 The proposed Level B [Sequence Scanning and Window Idioms](collections/b_level/sequence_scanning_and_window_idioms/collection_spec.md) collection contains 19 named, supplied interview implementation patterns. It is intentionally not yet complete: a dedicated Level B corpus audit must evaluate it against solved interview solutions before it is frozen or extended.
 
+The provisional Level B [Linked-List Pointer Rewiring](collections/b_level/linked_list_pointer_rewiring/collection_spec.md) collection contains six exercises on reversal, filtering, merging, stable partitioning, pair swapping, and segment boundaries. It was designed from general considerations, not corpus extraction, and is not complete or frozen. Recorded solutions have deterministic node-identity and topology checks in addition to compilation validation.
+
+The provisional Level B [Dynamic Programming State Idioms](collections/b_level/dynamic_programming_state_idioms/collection_spec.md) collection contains ten supplied-recurrence exercises on rolling states, update direction, sentinels, coupled states, predecessor aggregation, row rotation, and memoization. It was designed from general considerations, not corpus extraction, and is not complete or frozen.
+
+The provisional Level B [Monotonic Stack and Deque Idioms](collections/b_level/monotonic_stack_and_deque_idioms/collection_spec.md) collection contains seven exercises on unresolved indices, strict boundaries, spans, deque expiration, histogram boundaries, bounded greedy popping, and prefix candidates. It was designed from general considerations and is not corpus-audited or frozen.
+
+The provisional Level B [Tree Traversal and Recursive State](collections/b_level/tree_traversal_and_recursive_state/collection_spec.md) collection contains six exercises on postorder summaries, ancestor context, path accumulators, explicit traversal suspension, and node-result propagation. It was designed from general considerations and is not corpus-audited or frozen.
+
+The provisional Level B [Graph Traversal and Visitation](collections/b_level/graph_traversal_and_visitation/collection_spec.md) collection contains six exercises on discovery timing, components, coloring, indegrees, multi-source initialization, and active traversal state. It was designed from general considerations and is not corpus-audited or frozen.
+
+The provisional Level B [Interval Merging and Sweep Events](collections/b_level/interval_merging_and_sweep_events/collection_spec.md) collection contains four exercises on active closed intervals, insertion phases, paired interval frontiers, and equal-time event ordering. The separate [Heap Frontier and Streaming State](collections/b_level/heap_frontier_and_streaming_state/collection_spec.md) collection contains four exercises on multi-sequence frontiers, bounded retention, stale distance entries, and balanced stream halves. Both were designed from general considerations and remain provisional.
+
+The provisional Level B [Disjoint-Set Connectivity Bookkeeping](collections/b_level/disjoint_set_connectivity_bookkeeping/collection_spec.md) compact module contains three exercises on path halving, union by size, and successful-union component counts. It was designed from general considerations and is not corpus-audited or frozen.
+
+The provisional Level B [Backtracking and Reversible State](collections/b_level/backtracking_and_reversible_state/collection_spec.md) collection contains six exercises on path, marker, grid, duplicate, and coupled-constraint restoration. The compact [Partition and Selection Idioms](collections/b_level/partition_and_selection_idioms/collection_spec.md) module contains two exercises on three-way regions and quickselect range shrinking. Both were designed from general considerations and remain provisional.
+
 The core [exercise order](collections/core/exercise_order.md) records the canonical
 1-to-108 progression as one exercise basename per line. The
 [exercise manifest](collections/core/exercise_manifest.md) records generation
@@ -114,6 +150,27 @@ tools/validate_exercises.sh collections/compile_time_programming c++20
 tools/validate_exercises.sh collections/stream_and_file_io c++20
 tools/validate_exercises.sh collections/container_operations_and_iterator_mechanics c++20
 tools/validate_exercises.sh collections/b_level/sequence_scanning_and_window_idioms c++20
+../../.venv/bin/python tools/test_sequence_scanning_and_window_idioms.py
+tools/validate_exercises.sh collections/b_level/linked_list_pointer_rewiring c++20
+../../.venv/bin/python tools/test_linked_list_pointer_rewiring.py
+tools/validate_exercises.sh collections/b_level/dynamic_programming_state_idioms c++20
+../../.venv/bin/python tools/test_dynamic_programming_state_idioms.py
+tools/validate_exercises.sh collections/b_level/monotonic_stack_and_deque_idioms c++20
+../../.venv/bin/python tools/test_monotonic_stack_and_deque_idioms.py
+tools/validate_exercises.sh collections/b_level/tree_traversal_and_recursive_state c++20
+../../.venv/bin/python tools/test_tree_traversal_and_recursive_state.py
+tools/validate_exercises.sh collections/b_level/graph_traversal_and_visitation c++20
+../../.venv/bin/python tools/test_graph_traversal_and_visitation.py
+tools/validate_exercises.sh collections/b_level/interval_merging_and_sweep_events c++20
+../../.venv/bin/python tools/test_interval_merging_and_sweep_events.py
+tools/validate_exercises.sh collections/b_level/heap_frontier_and_streaming_state c++20
+../../.venv/bin/python tools/test_heap_frontier_and_streaming_state.py
+tools/validate_exercises.sh collections/b_level/disjoint_set_connectivity_bookkeeping c++20
+../../.venv/bin/python tools/test_disjoint_set_connectivity_bookkeeping.py
+tools/validate_exercises.sh collections/b_level/backtracking_and_reversible_state c++20
+../../.venv/bin/python tools/test_backtracking_and_reversible_state.py
+tools/validate_exercises.sh collections/b_level/partition_and_selection_idioms c++20
+../../.venv/bin/python tools/test_partition_and_selection_idioms.py
 ```
 
 The validator compiles temporary completed forms through a pipe; it does not modify learner files or leave generated solutions in the repository.

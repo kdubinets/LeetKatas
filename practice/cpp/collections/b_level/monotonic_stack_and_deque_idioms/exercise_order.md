@@ -1,0 +1,7 @@
+next_greater_indices
+previous_smaller_indices
+stock_span_lengths
+sliding_window_maximum
+largest_rectangle_area
+smallest_digits_after_removal
+shortest_subarray_at_least_target

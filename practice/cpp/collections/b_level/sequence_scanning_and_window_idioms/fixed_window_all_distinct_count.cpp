@@ -10,5 +10,6 @@ std::size_t count_all_distinct_windows(const std::vector<int>& values, std::size
     }
 
     // Pattern: fixed-size frequency window. Keep counts for precisely the values in the current window.
-    // Finish: return how many contiguous windows of width values contain no repeated value
+
+    // Finish: return the number of contiguous groups of exactly width elements in values with no repeated value; overlapping groups count separately
 }

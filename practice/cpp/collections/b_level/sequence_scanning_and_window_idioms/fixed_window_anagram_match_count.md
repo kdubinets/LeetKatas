@@ -4,7 +4,11 @@ Count Fixed-Window Anagram Matches
 
 # Description
 
-Use a fixed-size character-frequency window to count substrings of `text` that are anagrams of `pattern`. Both strings contain lowercase English letters; an empty `pattern` has zero matches. Keep the window frequency state equal to the current substring while it slides.
+Return the number of substrings of `text` of length `pattern.size()` containing exactly the same letters, with the same counts, as `pattern`. Overlapping matches count separately. Both strings contain only lowercase English letters. The supplied guard returns zero for an empty pattern or one longer than the text.
+
+The supplied pattern is a fixed-size character-frequency window whose counts represent exactly the current substring.
+
+This exercise covers maintaining a fixed-width character-frequency window and comparing it with a target frequency state.
 
 # Solution
 
