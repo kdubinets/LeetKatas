@@ -112,7 +112,10 @@ retain_conversation_history = false
 collection = "collections/core"
 notes_directory = "notes"
 review_archive_ttl_days = 45
-new_problems_per_day = 3
+
+[[practice.new_problem_limits]]
+per_day = 2
+collections = ["collections/b_level"]
 
 [reviewer]
 provider = "openai"
@@ -146,7 +149,9 @@ separator = " | "
             self.assertEqual(config["practice"]["collection"], str(directory / "collections/core"))
             self.assertEqual(config["practice"]["notes_directory"], str(directory / "notes"))
             self.assertEqual(config["practice"]["review_archive_ttl_days"], 45)
-            self.assertEqual(config["practice"]["new_problems_per_day"], 3)
+            self.assertEqual(config["practice"]["new_problem_limits"], [{
+                "per_day": 2, "collections": [str(directory / "collections/b_level")],
+            }])
             self.assertEqual(config["reviewer"]["model"], "gpt-5.6-luna")
             self.assertEqual(config["reviewer"]["provider"], "openai")
             self.assertEqual(config["reviewer"]["follow_up_provider"], "codex")
@@ -191,6 +196,22 @@ separator = " | "
 
             path.write_text("[practice]\nnew_problems_per_day = -1\n")
             with self.assertRaisesRegex(ConfigError, "new_problems_per_day"):
+                load_config(path)
+
+            path.write_text("""[[practice.new_problem_limits]]
+per_day = -1
+collections = ["core"]
+""")
+            with self.assertRaisesRegex(ConfigError, "new_problem_limits"):
+                load_config(path)
+
+            path.write_text("""[practice]
+new_problems_per_day = 1
+[[practice.new_problem_limits]]
+per_day = 1
+collections = ["core"]
+""")
+            with self.assertRaisesRegex(ConfigError, "cannot both be set"):
                 load_config(path)
 
             path.write_text('[statusline]\nleft = ["not_a_real_item"]\n')
@@ -1317,6 +1338,43 @@ class SchedulerIntegrationTests(unittest.TestCase):
             self.assertIsNone(response["exercise"])
             self.assertTrue(response["new_limit_reached"])
             self.assertIn("next_new_available", response)
+
+    def test_collection_group_limits_are_independent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            level_a = root / "first_group"
+            level_b = root / "second_group"
+            level_a.mkdir()
+            level_b.mkdir(parents=True)
+            database = root / "practice.sqlite3"
+            self.create_pair(level_a, "introduced_a")
+            self.create_pair(level_a, "unseen_a")
+            self.create_pair(level_b, "introduced_b")
+            self.create_pair(level_b, "unseen_b")
+            record_rating(
+                self.record_request(level_a, database, "introduced_a", "good"), self.NOW
+            )
+
+            request = {
+                "exercise_directories": [str(level_a), str(level_b)],
+                "database_path": str(database),
+                "source_extension": ".cpp",
+                "metadata_extension": ".md",
+                "new_problem_limits": [
+                    {"collections": [str(level_a)], "per_day": 1},
+                    {"collections": [str(level_b)], "per_day": 1},
+                ],
+            }
+            response = select_exercise(request, self.NOW + timedelta(minutes=1))
+            self.assertEqual(response["exercise"]["collection_directory"], str(level_b.resolve()))
+
+            record_rating(
+                self.record_request(level_b, database, response["exercise"]["id"], "good"),
+                self.NOW + timedelta(minutes=2),
+            )
+            response = select_exercise(request, self.NOW + timedelta(minutes=3))
+            self.assertIsNone(response["exercise"])
+            self.assertTrue(response["new_limit_reached"])
 
     def test_returns_next_due_when_collection_is_complete(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

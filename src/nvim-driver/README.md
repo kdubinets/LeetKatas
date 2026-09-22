@@ -6,8 +6,9 @@ This project is a small, personal coding-practice environment built around
 Neovim. Its purpose is to make short implementation-fluency exercises quick to
 start, solve, review, rate, and repeat without leaving the editor.
 
-The initial exercise collection is the C++20 core collection in
-`practice/cpp/collections/core`. Each exercise currently consists of:
+The default exercise portfolio combines the C++20 Level A core collection with
+the Level B interview-idiom collections under `practice/cpp/collections/b_level`.
+Each exercise consists of:
 
 - A learner source file containing one `// Finish: ...` marker.
 - A Markdown metadata file with the same basename containing the exercise name,
@@ -156,17 +157,33 @@ starting point.
 
 ```toml
 [practice]
-collections = [
-  "~/work/LeetKatas/practice/cpp/collections/core",
-  "~/work/LeetKatas/practice/cpp/collections/chrono",
-]
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
 # notes_directory = "~/.local/share/leetkatas/notes"
 review_archive_ttl_days = 30
-# Optional: cap first-time exercises across this portfolio each local calendar day.
-# Due reviews are never limited; 0 means review-only practice.
-# new_problems_per_day = 3
+# Due reviews are never limited. Each group has its own daily new-card limit;
+# collections not listed in a group are unlimited. Groups must not overlap.
+[[practice.new_problem_limits]]
+per_day = 5
+collections = [
+  "~/work/LeetKatas/practice/cpp/collections/core",
+]
+
+[[practice.new_problem_limits]]
+per_day = 2
+collections = [
+  "~/work/LeetKatas/practice/cpp/collections/b_level/sequence_scanning_and_window_idioms",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/linked_list_pointer_rewiring",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/dynamic_programming_state_idioms",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/monotonic_stack_and_deque_idioms",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/tree_traversal_and_recursive_state",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/graph_traversal_and_visitation",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/interval_merging_and_sweep_events",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/heap_frontier_and_streaming_state",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/disjoint_set_connectivity_bookkeeping",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/backtracking_and_reversible_state",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/partition_and_selection_idioms",
+]
 
 [reviewer]
 # "codex" (the default) uses the local Codex CLI. "openai" calls the
@@ -234,9 +251,9 @@ status line.
 Available items are:
 
 - `exercise_name`, `exercise_id`, `collection`, and `language` for exercise context.
-- `new_exercise` labels an unseen active exercise as `New`; when
-  `new_problems_per_day` is set, it shows its in-progress daily position, such
-  as `New 2/3 today`.
+- `new_exercise` labels an unseen active exercise as `New`; with the legacy
+  portfolio-wide `new_problems_per_day` setting, it shows its in-progress daily
+  position, such as `New 2/3 today`.
 - `time_today`, `reviews_today`, `new_today`, and `new_left` for today's work and
   remaining unseen exercises. `time_today` includes the active exercise timer.
 - `due_now`, `due_later_today`, and `tomorrow_due` for the current workload.
@@ -260,8 +277,11 @@ separator = " | "
 ```
 
 Relative paths are resolved from the directory containing the configuration
-file. The default portfolio is a user preference and belongs here; each
-collection's `environment.json` remains separate because it describes the
+file. When `collections` is omitted, the union of collections in
+`new_problem_limits` is the portfolio. Configure `collections` explicitly to
+include uncapped collections alongside the groups. Without either setting, the
+built-in portfolio combines Level A core with every Level B idiom collection.
+Each collection's `environment.json` remains separate because it describes the
 language and libraries against which submissions are evaluated.
 
 Supported environment overrides include `PRACTICE_COLLECTION`,
@@ -275,9 +295,11 @@ Supported environment overrides include `PRACTICE_COLLECTION`,
 directory to `src/nvim-driver/practice` has the highest precedence for the
 collection. Review artifacts are retained for 30 days by default; set
 `review_archive_ttl_days` to `0` to disable archiving or up to `3650` days to
-change retention. Set `new_problems_per_day` to a non-negative integer to limit
-first-time exercises introduced across the configured portfolio per local
-calendar day. Due reviews continue to take priority and are not limited.
+change retention. Use one or more `[[practice.new_problem_limits]]` groups to
+cap first-time exercises from their listed collections per local calendar day.
+Due reviews continue to take priority and are not limited. The older
+portfolio-wide `new_problems_per_day` setting remains supported but cannot be
+combined with groups.
 
 ### Diagnostics and logs
 
@@ -734,7 +756,7 @@ PRACTICE_AUTOSTART=0 PRACTICE_DATABASE=/tmp/leetkatas-headless.sqlite3 \
 
 ## Current Behavior
 
-A session launched against the core C++ collection repeatedly completes this
+A session launched against the configured C++ portfolio repeatedly completes this
 loop without modifying the collection:
 
 ```text

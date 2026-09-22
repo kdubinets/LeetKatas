@@ -56,7 +56,7 @@ def collection_directories(request: dict[str, Any]) -> list[str]:
 
 
 def max_new_problems_per_day(request: dict[str, Any]) -> int | None:
-    """Return an optional portfolio-wide cap on first-time introductions."""
+    """Return the optional legacy portfolio-wide cap on new introductions."""
     value = request.get("new_problems_per_day")
     if value is None:
         return None
@@ -65,10 +65,41 @@ def max_new_problems_per_day(request: dict[str, Any]) -> int | None:
     return value
 
 
+def new_problem_limits(request: dict[str, Any]) -> list[dict[str, Any]]:
+    """Validate generic daily introduction caps for disjoint collection groups."""
+    limits = request.get("new_problem_limits")
+    if limits is None:
+        return []
+    if not isinstance(limits, list) or not limits:
+        raise RequestError("new_problem_limits must be a non-empty list")
+    memberships: set[str] = set()
+    normalized = []
+    for index, limit in enumerate(limits, start=1):
+        if not isinstance(limit, dict) or set(limit) != {"collections", "per_day"}:
+            raise RequestError(f"new_problem_limits[{index}] must contain collections and per_day")
+        collections = limit["collections"]
+        per_day = limit["per_day"]
+        if (not isinstance(collections, list) or not collections
+                or any(type(item) is not str or not item for item in collections)):
+            raise RequestError(
+                f"new_problem_limits[{index}].collections must be a non-empty list of strings"
+            )
+        if type(per_day) is not int or per_day < 0:
+            raise RequestError(f"new_problem_limits[{index}].per_day must be a non-negative integer")
+        paths = {str(Path(item).resolve()) for item in collections}
+        if len(paths) != len(collections) or memberships.intersection(paths):
+            raise RequestError("new_problem_limits collections must not overlap")
+        memberships.update(paths)
+        normalized.append({"collections": paths, "per_day": per_day})
+    return normalized
+
+
 def introductions_today(
     store: PracticeStore, collection_keys: list[str], now: datetime
 ) -> int:
     """Count cards whose first recorded review falls on the local current day."""
+    if not collection_keys:
+        return 0
     placeholders = ", ".join("?" for _ in collection_keys)
     connection = store.connect()
     try:
@@ -215,6 +246,9 @@ def select_exercise(
     source_extension = required_string(request, "source_extension")
     metadata_extension = required_string(request, "metadata_extension")
     daily_new_limit = max_new_problems_per_day(request)
+    grouped_new_limits = new_problem_limits(request)
+    if daily_new_limit is not None and grouped_new_limits:
+        raise RequestError("new_problems_per_day and new_problem_limits cannot both be set")
     previous_id = request.get("previous_exercise_id")
     previous = request.get("previous_exercise")
     if previous_id is not None and not isinstance(previous_id, str):
@@ -259,14 +293,30 @@ def select_exercise(
                        if exercise_id != previous_id] or options
         selected_candidate, selected_id = random.SystemRandom().choice(options)
     else:
-        limit_reached = (
-            daily_new_limit is not None
-            and introductions_today(store, [candidate["collection_key"] for candidate in candidates], now)
-            >= daily_new_limit
-        )
-        available = ([] if limit_reached else [
-            (index, candidate) for index, candidate in enumerate(candidates) if candidate["unseen"]
-        ])
+        limit_reached_by_path: dict[str, bool] = {}
+        if grouped_new_limits:
+            for limit in grouped_new_limits:
+                group = [candidate for candidate in candidates
+                         if candidate["path"] in limit["collections"]]
+                reached = introductions_today(
+                    store, [candidate["collection_key"] for candidate in group], now
+                ) >= limit["per_day"]
+                for candidate in group:
+                    limit_reached_by_path[candidate["path"]] = reached
+        else:
+            portfolio_limit_reached = (
+                daily_new_limit is not None
+                and introductions_today(
+                    store, [candidate["collection_key"] for candidate in candidates], now
+                ) >= daily_new_limit
+            )
+            limit_reached_by_path = {
+                candidate["path"]: portfolio_limit_reached for candidate in candidates
+            }
+        available = [
+            (index, candidate) for index, candidate in enumerate(candidates)
+            if candidate["unseen"] and not limit_reached_by_path.get(candidate["path"], False)
+        ]
         if available:
             _, selected_candidate = min(
                 available, key=lambda item: (len(item[1]["scheduled"]), item[0])
@@ -296,10 +346,12 @@ def select_exercise(
         "exercise": None,
         "next_due": min(remaining_due).isoformat() if remaining_due else None,
     }
-    if daily_new_limit is not None and not due_options and any(candidate["unseen"] for candidate in candidates):
-        response["new_limit_reached"] = introductions_today(
-            store, [candidate["collection_key"] for candidate in candidates], now
-        ) >= daily_new_limit
+    if ((daily_new_limit is not None or grouped_new_limits)
+            and not due_options and any(candidate["unseen"] for candidate in candidates)):
+        response["new_limit_reached"] = not any(
+            candidate["unseen"] and not limit_reached_by_path.get(candidate["path"], False)
+            for candidate in candidates
+        )
         if response["new_limit_reached"]:
             next_new_available = next_new_problem_time(now)
             response["next_new_available"] = next_new_available.isoformat()

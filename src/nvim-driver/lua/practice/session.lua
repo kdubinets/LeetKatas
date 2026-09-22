@@ -368,6 +368,7 @@ local function select_next()
     source_extension = config.source_extension,
     metadata_extension = config.metadata_extension,
     new_problems_per_day = config.new_problems_per_day,
+    new_problem_limits = config.new_problem_limits,
     previous_exercise = state.collection and state.previous_id and {
       collection_directory = state.collection,
       exercise_id = state.previous_id,

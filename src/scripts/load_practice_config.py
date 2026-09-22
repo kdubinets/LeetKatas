@@ -27,6 +27,7 @@ SCHEMA: dict[str, dict[str, type]] = {
         "notes_directory": str,
         "review_archive_ttl_days": int,
         "new_problems_per_day": int,
+        "new_problem_limits": list,
     },
     "problem_solving": {
         "collection": str,
@@ -179,6 +180,39 @@ def load_config(path: Path) -> dict[str, dict[str, Any]]:
         raise ConfigError("practice.review_archive_ttl_days must be between 0 and 3650")
     if "new_problems_per_day" in practice and practice["new_problems_per_day"] < 0:
         raise ConfigError("practice.new_problems_per_day must be a non-negative integer")
+    if "new_problems_per_day" in practice and "new_problem_limits" in practice:
+        raise ConfigError("practice.new_problems_per_day and practice.new_problem_limits cannot both be set")
+    if "new_problem_limits" in practice:
+        memberships: set[str] = set()
+        limits = practice["new_problem_limits"]
+        if not limits:
+            raise ConfigError("practice.new_problem_limits must not be empty")
+        for index, limit in enumerate(limits, start=1):
+            if not isinstance(limit, dict) or set(limit) != {"collections", "per_day"}:
+                raise ConfigError(
+                    f"practice.new_problem_limits[{index}] must contain collections and per_day"
+                )
+            collections = limit["collections"]
+            per_day = limit["per_day"]
+            if (not isinstance(collections, list) or not collections
+                    or any(type(item) is not str or not item for item in collections)):
+                raise ConfigError(
+                    f"practice.new_problem_limits[{index}].collections must be a non-empty list of strings"
+                )
+            if type(per_day) is not int or per_day < 0:
+                raise ConfigError(
+                    f"practice.new_problem_limits[{index}].per_day must be a non-negative integer"
+                )
+            resolved = []
+            for item in collections:
+                configured = Path(item).expanduser()
+                if not configured.is_absolute():
+                    configured = path.parent / configured
+                resolved.append(str(configured.resolve()))
+            if len(set(resolved)) != len(resolved) or memberships.intersection(resolved):
+                raise ConfigError("practice.new_problem_limits collections must not overlap")
+            memberships.update(resolved)
+            limit["collections"] = resolved
     problem_solving = value.get("problem_solving", {})
     if (language := problem_solving.get("implementation_language")) is not None and language != "cpp":
         raise ConfigError("problem_solving.implementation_language currently supports only cpp")

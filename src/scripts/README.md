@@ -44,6 +44,9 @@ directory containing the configuration file.
   "metadata_extension": ".md",
   "previous_exercise_id": "optional-basename",
   "new_problems_per_day": "optional non-negative integer cap",
+  "new_problem_limits": [{
+    "collections": ["/path/to/collection"], "per_day": 2
+  }],
   "database_path": "optional-database-override"
 }
 ```
@@ -59,11 +62,13 @@ retain random unseen selection. The
 previous exercise is excluded when an alternative of the same scheduling class
 is available. When every exercise has scheduling state and none is due, the
 command returns `exercise: null` and the UTC `next_due` timestamp.
-When `new_problems_per_day` is set, it caps first-time introductions across the
-requested portfolio for the current local calendar day; due reviews are never
-limited. A capped response returns `new_limit_reached: true`, the local
-midnight reset time in `next_new_available`, and the earliest of that reset or
-a future due review in `next_available`.
+`new_problem_limits` defines any number of disjoint collection groups, each
+with an independent cap on first-time introductions for the current local day;
+collections outside every group are unlimited. Due reviews are never limited.
+The legacy portfolio-wide `new_problems_per_day` cap cannot be combined with
+groups. A capped response returns `new_limit_reached: true`, the local midnight
+reset time in `next_new_available`, and the earliest of that reset or a future
+due review in `next_available`.
 
 `evaluate_exercise.py` accepts source and metadata paths, an optional structured
 `target_environment`, and a command array. One or more arguments must contain

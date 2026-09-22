@@ -25,6 +25,25 @@ local selected_python = vim.env.PRACTICE_PYTHON
   or (vim.fn.executable(repository_dir .. "/.venv/bin/python") == 1
     and repository_dir .. "/.venv/bin/python" or "python3")
 
+-- A no-config session practises the foundational Level A collection together
+-- with every available Level B idiom collection.  Keep this list explicit:
+-- collection roots are independent scheduling units, while b_level itself is
+-- only a directory of collections and contains no exercise pairs.
+local default_practice_directories = {
+  repository_dir .. "/practice/cpp/collections/core",
+  repository_dir .. "/practice/cpp/collections/b_level/sequence_scanning_and_window_idioms",
+  repository_dir .. "/practice/cpp/collections/b_level/linked_list_pointer_rewiring",
+  repository_dir .. "/practice/cpp/collections/b_level/dynamic_programming_state_idioms",
+  repository_dir .. "/practice/cpp/collections/b_level/monotonic_stack_and_deque_idioms",
+  repository_dir .. "/practice/cpp/collections/b_level/tree_traversal_and_recursive_state",
+  repository_dir .. "/practice/cpp/collections/b_level/graph_traversal_and_visitation",
+  repository_dir .. "/practice/cpp/collections/b_level/interval_merging_and_sweep_events",
+  repository_dir .. "/practice/cpp/collections/b_level/heap_frontier_and_streaming_state",
+  repository_dir .. "/practice/cpp/collections/b_level/disjoint_set_connectivity_bookkeeping",
+  repository_dir .. "/practice/cpp/collections/b_level/backtracking_and_reversible_state",
+  repository_dir .. "/practice/cpp/collections/b_level/partition_and_selection_idioms",
+}
+
 local function load_user_config()
   -- An empty Lua table is encoded as JSON [], so mark this one as an object.
   local request = vim.empty_dict()
@@ -50,6 +69,19 @@ local editor_config = user_config.editor or {}
 local evaluation_config = user_config.evaluation or {}
 local sync_config = user_config.sync or {}
 local statusline_config = user_config.statusline or {}
+
+-- A limit group is also a concise portfolio declaration.  An explicit
+-- collections list remains available when the learner wants uncapped
+-- collections alongside capped groups.
+local grouped_directories = nil
+if type(practice_config.new_problem_limits) == "table" then
+  grouped_directories = {}
+  for _, limit in ipairs(practice_config.new_problem_limits) do
+    for _, directory in ipairs(limit.collections) do
+      table.insert(grouped_directories, directory)
+    end
+  end
+end
 
 local function environment(name)
   local value = vim.env[name]
@@ -183,15 +215,17 @@ practice.setup({
   sync_first = vim.env.PRACTICE_SYNC_FIRST == "1",
   review_archive_ttl_days = review_archive_ttl_days,
   new_problems_per_day = practice_config.new_problems_per_day,
+  new_problem_limits = practice_config.new_problem_limits,
   notes_directory = environment("PRACTICE_NOTES_DIRECTORY") or practice_config.notes_directory
     or ((environment("XDG_DATA_HOME") or vim.fn.expand("~/.local/share"))
       .. "/leetkatas/notes"),
   default_directory = environment("PRACTICE_COLLECTION") or practice_config.collection
     or (practice_config.collections and practice_config.collections[1])
-    or repository_dir .. "/practice/cpp/collections/core",
+    or default_practice_directories[1],
   default_directories = environment("PRACTICE_COLLECTION") and { environment("PRACTICE_COLLECTION") }
     or practice_config.collections
-    or { practice_config.collection or repository_dir .. "/practice/cpp/collections/core" },
+    or (practice_config.collection and { practice_config.collection }
+      or grouped_directories or default_practice_directories),
   source_extension = environment("PRACTICE_SOURCE_EXTENSION") or ".cpp",
   metadata_extension = environment("PRACTICE_METADATA_EXTENSION") or ".md",
   practice_marker = environment("PRACTICE_MARKER") or "// Finish:",

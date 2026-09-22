@@ -1,14 +1,31 @@
 [practice]
-collections = [
-  "~/work/LeetKatas/practice/cpp/collections/core",
-  "~/work/LeetKatas/practice/cpp/collections/chrono",
-]
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
 # notes_directory = "~/.local/share/leetkatas/notes"
 review_archive_ttl_days = 30
-# Optional. Due reviews are never limited; 0 makes the day review-only.
-# new_problems_per_day = 3
+# Due reviews are never limited. Each group has its own daily new-card limit;
+# collections not listed in a group are unlimited. Groups must not overlap.
+[[practice.new_problem_limits]]
+per_day = 5
+collections = [
+  "~/work/LeetKatas/practice/cpp/collections/core",
+]
+
+[[practice.new_problem_limits]]
+per_day = 2
+collections = [
+  "~/work/LeetKatas/practice/cpp/collections/b_level/sequence_scanning_and_window_idioms",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/linked_list_pointer_rewiring",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/dynamic_programming_state_idioms",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/monotonic_stack_and_deque_idioms",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/tree_traversal_and_recursive_state",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/graph_traversal_and_visitation",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/interval_merging_and_sweep_events",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/heap_frontier_and_streaming_state",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/disjoint_set_connectivity_bookkeeping",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/backtracking_and_reversible_state",
+  "~/work/LeetKatas/practice/cpp/collections/b_level/partition_and_selection_idioms",
+]
 
 [statusline]
 left = ["exercise_name", "new_exercise"]
