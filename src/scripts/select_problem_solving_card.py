@@ -34,7 +34,8 @@ def select_problem(
     store = ProblemSolvingStore(problem_solving_database_path(request))
     cards = store.cards_for_collection(collection_key)
     bookmarked = store.open_bookmark_ids(collection_key)
-    active_ids = [problem_id for problem_id in ordered_ids if problem_id not in bookmarked]
+    suspended = store.suspensions(collection_key)
+    active_ids = [problem_id for problem_id in ordered_ids if problem_id not in bookmarked and problem_id not in suspended]
     due_ids = [
         problem_id
         for problem_id in active_ids

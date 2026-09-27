@@ -318,7 +318,7 @@ class ProblemSolvingWorkflowTests(unittest.TestCase):
                 count = connection.execute(
                     "SELECT count(*) FROM problem_solving_reviews"
                 ).fetchone()[0]
-            self.assertEqual(version, "4")
+            self.assertEqual(version, "5")
             self.assertEqual(count, 1)
             self.assertIn("selected_at", columns)
             self.assertIn("revealed_at", columns)

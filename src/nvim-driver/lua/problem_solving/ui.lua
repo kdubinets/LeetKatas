@@ -260,6 +260,41 @@ function M.open_bookmarks(bookmarks, reopen)
   return buffer
 end
 
+function M.open_suspended(items, restore)
+  local lines = { "# Suspended problems", "", "Enter: preview brief | u: restore | q: close", "" }
+  for index, item in ipairs(items) do
+    table.insert(lines, string.format("%d. %s — %s [%s]", index, item.problem_id,
+      item.title, item.suspended_at:sub(1, 10)))
+  end
+  if #items == 0 then table.insert(lines, "No problems are suspended.") end
+  local buffer = open_auxiliary("Suspended problems", "problem-solving-suspended", lines)
+  vim.b[buffer].problem_solving_suspended = items
+  local function selected()
+    local line = vim.api.nvim_win_get_cursor(0)[1]
+    local index = tonumber((vim.api.nvim_buf_get_lines(buffer, line - 1, line, false)[1] or ""):match("^(%d+)%."))
+    return index and items[index] or nil
+  end
+  vim.keymap.set("n", "u", function()
+    local item = selected()
+    if item then restore(item.problem_id) end
+  end, { buffer = buffer, silent = true, desc = "Restore suspended problem" })
+  vim.keymap.set("n", "<CR>", function()
+    local item = selected()
+    if not item then return end
+    local preview = vim.api.nvim_create_buf(false, true)
+    vim.bo[preview].bufhidden = "wipe"
+    vim.bo[preview].filetype = "markdown"
+    vim.api.nvim_buf_set_lines(preview, 0, -1, false, vim.fn.readfile(item.brief_path))
+    vim.bo[preview].modifiable = false
+    vim.api.nvim_open_win(preview, true, { relative = "editor", style = "minimal", border = "rounded",
+      width = math.max(20, math.floor(vim.o.columns * 0.8)), height = math.max(5, math.floor(vim.o.lines * 0.7)),
+      row = 2, col = math.floor(vim.o.columns * 0.1) })
+    vim.keymap.set("n", "q", function() vim.api.nvim_buf_delete(preview, { force = true }) end,
+      { buffer = preview, silent = true, desc = "Close brief preview" })
+  end, { buffer = buffer, silent = true, desc = "Preview suspended brief" })
+  return buffer
+end
+
 local function stats_lines(stats, width)
   local today, collection, reviews, forecast = stats.today, stats.collection_state, stats.reviews,
     stats.forecast
@@ -300,6 +335,7 @@ local function stats_lines(stats, width)
     string.format("%d relearning", collection.relearning),
     string.format("%d unseen", collection.unseen),
     string.format("%d open-thinking bookmarks", collection.open_bookmarks),
+    string.format("%d suspended problems", collection.suspended or 0),
   }
   if width >= 70 then
     append_columns(lines, today_lines, collection_lines, width)

@@ -36,6 +36,7 @@ class FakeProblemSupabase:
             "problem_solving_review_events": [],
             "problem_solving_bookmark_events": [],
             "problem_solving_artifact_events": [],
+            "problem_solving_suspension_events": [],
         }
         self.next_sequence = {table: 1 for table in self.events}
         for table, values in (events or {}).items():

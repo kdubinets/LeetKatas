@@ -6,6 +6,7 @@ local statusline = require("problem_solving.statusline")
 
 local M = {}
 local config, stats_pending = nil, false
+local suspension_pending = false
 local rating_values = {
   again = "fail", hard = "acceptable", good = "good", easy = "excellent",
   fail = "fail", acceptable = "acceptable", excellent = "excellent",
@@ -132,7 +133,7 @@ local function select_next()
       set_status("complete")
       state.next_due = response.next_due ~= vim.NIL and response.next_due or nil
       local message = state.next_due and "No problems are due. Next review: " .. state.next_due
-        or "No unbookmarked problems are currently available."
+        or "No active problems are currently available."
       ui.notify(message)
       return
     end
@@ -187,8 +188,8 @@ function M.start(directory)
     ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   state.operation = state.operation + 1
@@ -199,8 +200,8 @@ function M.start(directory)
 end
 
 function M.hint()
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if state.status ~= "solving" then
@@ -215,8 +216,8 @@ function M.hint()
 end
 
 function M.reveal()
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if state.status ~= "solving" then
@@ -239,8 +240,8 @@ function M.reveal()
 end
 
 function M.bookmark(note)
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if state.status ~= "solving" and state.status ~= "revealed" and state.status ~= "discussing" then
@@ -290,8 +291,8 @@ function M.note(note)
 end
 
 function M.bookmarks()
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if not state.collection then
@@ -310,8 +311,8 @@ function M.bookmarks()
 end
 
 function M.reopen(problem_id)
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if not state.collection or type(problem_id) ~= "string" or problem_id == "" then return end
@@ -330,8 +331,8 @@ function M.reopen(problem_id)
 end
 
 function M.unbookmark()
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if not state.problem or not state.bookmarked then
@@ -352,8 +353,8 @@ end
 
 function M.rate(rating)
   local internal = rating_values[(rating or ""):lower()]
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if state.status ~= "revealed" and state.status ~= "discussing" then
@@ -407,8 +408,8 @@ function M.ask(question)
     ui.notify("Conversation is available only while a problem is active", vim.log.levels.WARN)
     return
   end
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if question == nil then
@@ -469,9 +470,86 @@ function M.ask(question)
     end)
 end
 
+local suspension_ids = {}
+
+local function suspension_body(action, problem_id)
+  return { collection_directory = state.collection or config.default_directory,
+    database_path = config.database_path, action = action, problem_id = problem_id }
+end
+
+function M.suspend()
+  if suspension_pending or state.conversation_pending
+    or (state.status ~= "solving" and state.status ~= "revealed" and state.status ~= "discussing")
+    or require("problem_solving.implementation_session").active() then
+    ui.notify("Suspend is available while a problem is active and no operation is pending", vim.log.levels.WARN)
+    return
+  end
+  local problem_id = state.problem.id
+  suspension_pending = true
+  local previous_status = state.status
+  timing_phase(nil)
+  set_status("recording")
+  request("problem_solving_suspension.py", suspension_body("suspend", problem_id), function(error_message)
+    suspension_pending = false
+    if error_message then
+      set_status(previous_status)
+      timing_phase(previous_status == "solving" and "solve" or "discussion")
+      ui.notify("Could not suspend problem: " .. error_message, vim.log.levels.ERROR)
+      return
+    end
+    ui.notify("Suspended " .. problem_id .. ". Restore with :ProblemSolvingUnsuspend " .. problem_id)
+    sync.trigger(state.collection)
+    select_next()
+  end)
+end
+
+function M.unsuspend(problem_id, refresh)
+  if suspension_pending then return end
+  suspension_pending = true
+  process.run(config.python, script("problem_solving_suspension.py"), suspension_body("restore", problem_id),
+    function(error_message)
+      suspension_pending = false
+      if error_message then
+        ui.notify("Could not restore problem: " .. error_message, vim.log.levels.ERROR)
+        return
+      end
+      suspension_ids[problem_id] = nil
+      ui.notify("Restored " .. problem_id)
+      statusline.invalidate(state.collection or config.default_directory)
+      sync.trigger(state.collection or config.default_directory)
+      if refresh then M.suspended() end
+    end)
+end
+
+function M.suspended()
+  process.run(config.python, script("problem_solving_suspension.py"), suspension_body("list"),
+    function(error_message, response)
+      if error_message or type(response.suspended) ~= "table" then
+        ui.notify("Could not list suspended problems: " .. tostring(error_message), vim.log.levels.ERROR)
+        return
+      end
+      suspension_ids = {}
+      for _, item in ipairs(response.suspended) do suspension_ids[item.problem_id] = true end
+      ui.open_suspended(response.suspended, function(problem_id) M.unsuspend(problem_id, true) end)
+    end)
+end
+
+function M.complete_suspended(lead)
+  -- Completion is synchronous because Neovim expects results immediately.
+  local result = vim.system({ config.python, script("problem_solving_suspension.py") },
+    { stdin = vim.json.encode(suspension_body("list")), text = true }):wait(3000)
+  local ok, response = pcall(vim.json.decode, result.stdout or "")
+  if result.code == 0 and ok and type(response.suspended) == "table" then
+    suspension_ids = {}
+    for _, item in ipairs(response.suspended) do suspension_ids[item.problem_id] = true end
+  end
+  return vim.tbl_filter(function(value) return vim.startswith(value, lead) end,
+    vim.tbl_keys(suspension_ids))
+end
+
 function M.next()
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   if state.status ~= "solving" and state.status ~= "revealed" and state.status ~= "discussing" then
@@ -505,8 +583,8 @@ function M.quit()
     ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
-  if state.conversation_pending then
-    ui.notify("Wait for the current conversation response", vim.log.levels.WARN)
+  if state.conversation_pending or suspension_pending then
+    ui.notify("Wait for the current problem-solving operation", vim.log.levels.WARN)
     return
   end
   state.operation = state.operation + 1

@@ -161,6 +161,22 @@ Hard, Good, and Easy after reveal.
 Use `:ProblemSolvingBookmarks` to reopen the open-thinking queue and
 `:ProblemSolvingDiagnostics` for local state and synchronization status.
 
+Use `:ProblemSolvingSuspend` or `<Space>s` while a problem is active to suspend
+it and open the next problem without a rating. Suspension is reversible and
+preserves its schedule, review history, bookmarks, notes, conversations, and
+implementation drafts. Suspended problems are excluded from automatic selection,
+active progress, due forecasts, and the open-thinking queue. Statistics show a
+separate suspended count; historical activity remains visible.
+
+Use `:ProblemSolvingSuspended` to review suspended problems in the active or
+configured collection. Press `Enter` on an entry to preview its brief, `q` to
+close the preview or list, and `u` to restore an entry. Alternatively, use
+`:ProblemSolvingUnsuspend {problem_id}` with completion. Restoration preserves
+the original schedule: overdue problems become eligible immediately and unseen
+problems remain unseen. Bookmarks become visible again. Suspension and restoration
+synchronize alongside reviews and bookmarks; existing Supabase installations must
+rerun `src/scripts/supabase_setup.sql` to add the new event table and permissions.
+
 `:ProblemSolvingStats [directory]` or `<Space>t` opens a read-only dashboard
 for the active (or configured) collection. It shows today's reviews, ratings,
 and tracked solving time; collection progress and FSRS state; due work through

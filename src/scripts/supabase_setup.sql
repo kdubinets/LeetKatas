@@ -109,6 +109,25 @@ CREATE UNIQUE INDEX IF NOT EXISTS problem_solving_review_events_sequence_idx
 CREATE INDEX IF NOT EXISTS problem_solving_review_events_collection_idx
     ON public.problem_solving_review_events (collection_id, sync_sequence);
 
+CREATE TABLE IF NOT EXISTS public.problem_solving_suspension_events (
+    event_id uuid PRIMARY KEY,
+    sync_sequence bigint GENERATED ALWAYS AS IDENTITY,
+    collection_id text NOT NULL,
+    problem_id text NOT NULL,
+    revision bigint NOT NULL CHECK (revision > 0),
+    action text NOT NULL CHECK (action IN ('suspend', 'restore')),
+    event_datetime timestamptz NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS problem_solving_suspension_events_sequence_idx
+    ON public.problem_solving_suspension_events (sync_sequence);
+CREATE INDEX IF NOT EXISTS problem_solving_suspension_events_collection_idx
+    ON public.problem_solving_suspension_events (collection_id, sync_sequence);
+
+ALTER TABLE public.problem_solving_suspension_events ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.problem_solving_suspension_events FROM anon, authenticated;
+GRANT SELECT, INSERT ON public.problem_solving_suspension_events TO service_role;
+
 CREATE TABLE IF NOT EXISTS public.problem_solving_bookmark_events (
     event_id uuid PRIMARY KEY,
     sync_sequence bigint GENERATED ALWAYS AS IDENTITY,
@@ -161,7 +180,8 @@ BEGIN
     FOREACH table_name IN ARRAY ARRAY[
         'problem_solving_review_events',
         'problem_solving_bookmark_events',
-        'problem_solving_artifact_events'
+        'problem_solving_artifact_events',
+        'problem_solving_suspension_events'
     ]
     LOOP
         sequence_name := pg_get_serial_sequence(

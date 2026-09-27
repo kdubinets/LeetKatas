@@ -40,7 +40,8 @@ def problem_solving_stats(
     store = ProblemSolvingStore(problem_solving_database_path(request))
     cards = store.cards_for_collection(collection_key)
     bookmarks = store.list_bookmarks(collection_key)
-    active_ids = set(problem_ids)
+    suspended = set(store.suspensions(collection_key)) & set(problem_ids)
+    active_ids = set(problem_ids) - suspended
     bookmarked_ids = {bookmark["problem_id"] for bookmark in bookmarks}
     connection = store.connect()
     try:
@@ -140,6 +141,7 @@ def problem_solving_stats(
         "generated_at": now.isoformat(),
         "collection_state": {
             "total": len(active_ids),
+            "suspended": len(suspended),
             "unseen": len(active_ids - active_cards.keys()),
             "introduced": len(introduced),
             "due_now": due_now,

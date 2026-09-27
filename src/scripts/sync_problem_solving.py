@@ -45,6 +45,10 @@ STREAMS = {
         "bookmark_cursor",
         "sync_sequence,event_id,collection_id,problem_id,revision,action,event_datetime",
     ),
+    "suspension": (
+        "problem_solving_suspension_events", "suspension_cursor",
+        "sync_sequence,event_id,collection_id,problem_id,revision,action,event_datetime",
+    ),
     "artifact": (
         "problem_solving_artifact_events",
         "artifact_cursor",
@@ -122,13 +126,13 @@ def validate_remote_event(
             if type(duration) is not int or duration < 0:
                 raise UnavailableError(f"remote review has invalid {name}")
             event[name] = duration
-    elif stream == "bookmark":
+    elif stream in {"bookmark", "suspension"}:
         revision = value.get("revision")
         action = value.get("action")
         if type(revision) is not int or revision <= 0:
-            raise UnavailableError("remote bookmark has invalid revision")
-        if action not in {"create", "update", "remove"}:
-            raise UnavailableError("remote bookmark has invalid action")
+            raise UnavailableError("remote state event has invalid revision")
+        if action not in ({"suspend", "restore"} if stream == "suspension" else {"create", "update", "remove"}):
+            raise UnavailableError("remote state event has invalid action")
         event.update(
             revision=revision,
             action=action,
@@ -198,7 +202,7 @@ def fetch_stream(
         status, body = adapter.request(
             "GET", f"{base_url}/rest/v1/{table}?{query}", headers(key), None
         )
-        if status == 400:
+        if status in {400, 404}:
             raise UnavailableError("remote sync schema is outdated; rerun supabase_setup.sql")
         check_status(status)
         try:
@@ -351,6 +355,10 @@ def sync_problem_solving(
             "SELECT count(*) FROM problem_solving_bookmark_events WHERE collection_key=? AND remote_confirmed=0",
             (collection_key,),
         ).fetchone()[0]
+        pending_suspensions = connection.execute(
+            "SELECT count(*) FROM problem_solving_suspension_events WHERE collection_key=? AND remote_confirmed=0",
+            (collection_key,),
+        ).fetchone()[0]
         pending_artifacts = connection.execute(
             "SELECT count(*) FROM problem_solving_artifacts WHERE collection_key=? AND remote_confirmed=0",
             (collection_key,),
@@ -366,6 +374,7 @@ def sync_problem_solving(
         "private_content_sync": private_sync,
         "pending": {
             "reviews": pending_reviews, "bookmarks": pending_bookmarks,
+            "suspensions": pending_suspensions,
             "artifacts": pending_artifacts,
         },
         "last_success": metadata["last_success_at"] if metadata else None,
@@ -380,7 +389,7 @@ def sync_problem_solving(
         return {**status, "status": "unavailable", "error": "credentials unavailable"}
     base_url = base_url.rstrip("/")
     adapter = adapter or UrllibAdapter()
-    active_streams = ["review", "bookmark"] + (["artifact"] if private_sync else [])
+    active_streams = ["review", "bookmark", "suspension"] + (["artifact"] if private_sync else [])
     try:
         connection = store.connect()
         try:
@@ -404,6 +413,10 @@ def sync_problem_solving(
                     "SELECT * FROM problem_solving_bookmark_events WHERE collection_key=?",
                     (collection_id,),
                 ).fetchall(),
+                "suspension": connection.execute(
+                    "SELECT * FROM problem_solving_suspension_events WHERE collection_key=?",
+                    (collection_id,),
+                ).fetchall(),
                 "artifact": connection.execute(
                     "SELECT * FROM problem_solving_artifacts WHERE collection_key=?",
                     (collection_id,),
@@ -413,7 +426,7 @@ def sync_problem_solving(
             connection.close()
         payload_builder = {
             "review": review_payload, "bookmark": bookmark_payload,
-            "artifact": artifact_payload,
+            "artifact": artifact_payload, "suspension": bookmark_payload,
         }
         uploaded: dict[str, list[dict[str, Any]]] = {}
         remote: dict[str, list[dict[str, Any]]] = {}
@@ -480,6 +493,16 @@ def sync_problem_solving(
                 downloads["bookmark"] += 1
             for problem_id in affected_bookmarks:
                 rebuild_bookmark(connection, collection_id, problem_id)
+            for event in remote.get("suspension", []):
+                if event["event_id"] in local_ids["suspension"]:
+                    continue
+                connection.execute(
+                    "INSERT INTO problem_solving_suspension_events "
+                    "(event_id, collection_key, problem_id, revision, action, event_datetime, remote_confirmed) "
+                    "VALUES (?, ?, ?, ?, ?, ?, 1)",
+                    (event["event_id"], collection_id, event["problem_id"], event["revision"], event["action"], event["event_datetime"]),
+                )
+                downloads["suspension"] += 1
             for event in remote.get("artifact", []):
                 artifact = event["artifact_json"]
                 if artifact["revealed"] and artifact["revealed_at"] is not None:
@@ -522,7 +545,7 @@ def sync_problem_solving(
                 )
                 downloads["artifact"] += 1
             for stream in active_streams:
-                table = {"review": "problem_solving_reviews", "bookmark": "problem_solving_bookmark_events", "artifact": "problem_solving_artifacts"}[stream]
+                table = {"review": "problem_solving_reviews", "bookmark": "problem_solving_bookmark_events", "artifact": "problem_solving_artifacts", "suspension": "problem_solving_suspension_events"}[stream]
                 connection.executemany(
                     f"UPDATE {table} SET remote_confirmed=1 WHERE event_id=?",
                     ((event["event_id"],) for event in uploaded[stream]),
@@ -547,7 +570,7 @@ def sync_problem_solving(
             **status, "status": "success", "last_success": succeeded,
             "uploaded": {stream: len(uploaded[stream]) for stream in active_streams},
             "downloaded": downloads,
-            "pending": {"reviews": 0, "bookmarks": 0, "artifacts": 0},
+            "pending": {"reviews": 0, "bookmarks": 0, "artifacts": 0, "suspensions": 0},
         }
     except (UnavailableError, json.JSONDecodeError, UnicodeError) as error:
         safe = str(error)[:160] or "synchronization unavailable"

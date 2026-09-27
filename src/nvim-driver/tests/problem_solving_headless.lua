@@ -42,7 +42,7 @@ for _, command in ipairs({
   "ProblemSolvingStart", "ProblemSolvingHint", "ProblemSolvingReveal",
   "ProblemSolvingBookmark", "ProblemSolvingBookmarks", "ProblemSolvingReopen",
   "ProblemSolvingUnbookmark", "ProblemSolvingNote", "ProblemSolvingRate",
-  "ProblemSolvingAsk",
+  "ProblemSolvingAsk", "ProblemSolvingSuspend", "ProblemSolvingSuspended", "ProblemSolvingUnsuspend",
   "ProblemSolvingNext", "ProblemSolvingQuit", "ProblemSolvingStats",
   "ProblemSolvingSync", "ProblemSolvingDiagnostics",
 }) do
@@ -210,6 +210,32 @@ assert(stats and vim.fn.maparg("q", "n", false, true).buffer == 1,
 problem_solving.next()
 wait_for("solving")
 assert(problem_solving.get_state().problem.id == "problem-47", "next did not advance selection")
+assert(has_normal_mapping("<Space>s"), "suspend mapping is missing while solving")
+problem_solving.suspend()
+assert(vim.wait(10000, function()
+  local state = problem_solving.get_state()
+  return state.status == "solving" and state.problem and state.problem.id ~= "problem-47"
+end, 10), "suspend did not advance to another problem")
+local active_id = problem_solving.get_state().problem.id
+problem_solving.suspended()
+local suspension_buffer
+assert(vim.wait(10000, function()
+  suspension_buffer = find_buffer("problem_solving_suspended")
+  return suspension_buffer ~= nil
+end, 10), "suspended list did not open")
+assert(buffer_text(suspension_buffer):find("problem-47", 1, true), "suspended problem is missing")
+vim.api.nvim_win_set_cursor(0, { 5, 0 })
+local preview_mapping = vim.fn.maparg("<CR>", "n", false, true)
+preview_mapping.callback()
+assert(vim.bo.filetype == "markdown" and not vim.bo.modifiable, "brief preview is not read-only")
+assert(problem_solving.get_state().problem.id == active_id, "preview changed the active problem")
+vim.fn.maparg("q", "n", false, true).callback()
+vim.fn.maparg("u", "n", false, true).callback()
+assert(vim.wait(10000, function()
+  local buffer = find_buffer("problem_solving_suspended")
+  return buffer and buffer_text(buffer):find("No problems are suspended.", 1, true)
+end, 10), "restore did not refresh the suspended list")
+assert(problem_solving.get_state().problem.id == active_id, "restore changed the active problem")
 problem_solving.quit()
 assert(problem_solving.get_state().status == "idle", "quit did not reset the session")
 

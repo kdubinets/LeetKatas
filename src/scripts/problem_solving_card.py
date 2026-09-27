@@ -34,6 +34,8 @@ def card_action(request: dict[str, Any]) -> dict[str, Any]:
     record = json.loads(record_path.read_text(encoding="utf-8"))
     brief_path = (collection / "cards" / f"{problem_id}.brief.md").resolve()
     store = ProblemSolvingStore(problem_solving_database_path(request))
+    if problem_id in store.suspensions(collection_key):
+        raise RequestError("problem is suspended; restore it before practicing")
     if action == "hint":
         state = store.update_artifact(collection_key, problem_id, hint_requested=True)
     elif action == "clarification":

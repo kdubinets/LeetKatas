@@ -23,7 +23,7 @@ from practice_scheduler import (
 from validate_level_c_collection import CollectionValidationError, validate_collection
 
 
-PROBLEM_SOLVING_SCHEMA_VERSION = 4
+PROBLEM_SOLVING_SCHEMA_VERSION = 5
 
 
 def problem_solving_database_path(request: dict[str, Any]) -> Path:
@@ -83,6 +83,17 @@ class ProblemSolvingStore:
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS problem_solving_suspension_events (
+                event_id TEXT PRIMARY KEY,
+                collection_key TEXT NOT NULL,
+                problem_id TEXT NOT NULL,
+                revision INTEGER NOT NULL CHECK (revision > 0),
+                action TEXT NOT NULL CHECK (action IN ('suspend', 'restore')),
+                event_datetime TEXT NOT NULL,
+                remote_confirmed INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE INDEX IF NOT EXISTS problem_solving_suspension_events_collection_idx
+                ON problem_solving_suspension_events(collection_key, problem_id, revision);
             CREATE TABLE IF NOT EXISTS problem_solving_cards (
                 collection_key TEXT NOT NULL,
                 problem_id TEXT NOT NULL,
@@ -194,6 +205,10 @@ class ProblemSolvingStore:
             );
             """
         )
+        if "suspension_cursor" not in {
+            row[1] for row in connection.execute("PRAGMA table_info(problem_solving_sync_metadata)")
+        }:
+            connection.execute("ALTER TABLE problem_solving_sync_metadata ADD COLUMN suspension_cursor INTEGER NOT NULL DEFAULT 0")
         review_columns = {
             row[1]
             for row in connection.execute("PRAGMA table_info(problem_solving_reviews)")
@@ -237,7 +252,7 @@ class ProblemSolvingStore:
                 "INSERT INTO schema_metadata(key, value) VALUES (?, ?)",
                 ("problem_solving_schema_version", str(PROBLEM_SOLVING_SCHEMA_VERSION)),
             )
-        elif row["value"] in {"1", "2", "3"}:
+        elif row["value"] in {"1", "2", "3", "4"}:
             connection.execute(
                 "UPDATE schema_metadata SET value=? "
                 "WHERE key='problem_solving_schema_version'",
@@ -348,6 +363,42 @@ class ProblemSolvingStore:
             connection.close()
         return {row["problem_id"]: deserialize_card(row["card_json"]) for row in rows}
 
+    def suspensions(self, collection_key: str) -> dict[str, dict[str, Any]]:
+        """Resolve state by revision, then UTC timestamp and UUID for offline ties."""
+        connection = self.connect()
+        try:
+            rows = connection.execute(
+                "SELECT * FROM problem_solving_suspension_events WHERE collection_key=? "
+                "ORDER BY revision, event_datetime, event_id", (collection_key,)
+            ).fetchall()
+        finally:
+            connection.close()
+        latest = {row["problem_id"]: dict(row) for row in rows}
+        return {key: row for key, row in latest.items() if row["action"] == "suspend"}
+
+    def update_suspension(self, collection_key: str, problem_id: str, action: str,
+                          event_datetime: datetime | None = None) -> dict[str, Any]:
+        if action not in {"suspend", "restore"}:
+            raise SchedulerError("invalid suspension action")
+        current = ensure_utc(event_datetime).isoformat()
+        connection = self.connect()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            revision = connection.execute(
+                "SELECT coalesce(max(revision), 0) + 1 FROM problem_solving_suspension_events "
+                "WHERE collection_key=? AND problem_id=?", (collection_key, problem_id)
+            ).fetchone()[0]
+            connection.execute(
+                "INSERT INTO problem_solving_suspension_events "
+                "(event_id, collection_key, problem_id, revision, action, event_datetime) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (str(uuid.uuid4()), collection_key, problem_id, revision, action, current)
+            )
+            connection.commit()
+        finally:
+            connection.close()
+        return {"problem_id": problem_id, "suspended": action == "suspend"}
+
     def open_bookmark_ids(self, collection_key: str) -> set[str]:
         connection = self.connect()
         try:
@@ -358,7 +409,7 @@ class ProblemSolvingStore:
             ).fetchall()
         finally:
             connection.close()
-        return {row["problem_id"] for row in rows}
+        return {row["problem_id"] for row in rows} - self.suspensions(collection_key).keys()
 
     def artifact(self, collection_key: str, problem_id: str) -> dict[str, Any] | None:
         connection = self.connect()
@@ -559,6 +610,7 @@ class ProblemSolvingStore:
         return result
 
     def list_bookmarks(self, collection_key: str) -> list[dict[str, Any]]:
+        suspended = self.suspensions(collection_key)
         connection = self.connect()
         try:
             rows = connection.execute(
@@ -582,7 +634,7 @@ class ProblemSolvingStore:
                 "hint_requested": bool(row["hint_requested"]) if row["hint_requested"] is not None else False,
                 "revealed": bool(row["revealed"]) if row["revealed"] is not None else False,
             }
-            for row in rows
+            for row in rows if row["problem_id"] not in suspended
         ]
 
     def record_review(

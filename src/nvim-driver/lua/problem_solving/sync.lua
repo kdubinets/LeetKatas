@@ -7,7 +7,7 @@ local last = { configured = false, status = "disabled", pending = {} }
 
 local function pending_count(pending)
   if type(pending) ~= "table" then return 0 end
-  return (pending.reviews or 0) + (pending.bookmarks or 0) + (pending.artifacts or 0)
+  return (pending.reviews or 0) + (pending.bookmarks or 0) + (pending.artifacts or 0) + (pending.suspensions or 0)
 end
 
 local function body(action, directory)

@@ -45,6 +45,7 @@ function M.refresh_keymaps()
   end
 
   if status == "solving" or status == "revealed" or status == "discussing" then
+    map("<leader>s", session.suspend, "Suspend problem")
     map("<leader>i", implementation.open_active, "Implement")
     map("<leader>b", M.bookmark, "Bookmark")
     map("<leader>l", M.bookmarks, "Bookmarks")
@@ -133,6 +134,13 @@ function M.setup(config)
     end,
     desc = "Rate the revealed problem",
   })
+  vim.api.nvim_create_user_command("ProblemSolvingSuspend", session.suspend,
+    { desc = "Suspend the active problem and open the next" })
+  vim.api.nvim_create_user_command("ProblemSolvingSuspended", session.suspended,
+    { desc = "Review suspended problems" })
+  vim.api.nvim_create_user_command("ProblemSolvingUnsuspend", function(command)
+    session.unsuspend(command.args)
+  end, { nargs = 1, complete = session.complete_suspended, desc = "Restore a suspended problem" })
   vim.api.nvim_create_user_command("ProblemSolvingNext", session.next,
     { desc = "Open the next problem" })
   vim.api.nvim_create_user_command("ProblemSolvingQuit", session.quit,
@@ -152,7 +160,7 @@ function M.setup(config)
       vim.notify("Log: " .. log.path() .. "\nState: " .. state.status
         .. "\nSync: " .. tostring(sync_state.status)
         .. "\nPending: " .. tostring((pending.reviews or 0)
-          + (pending.bookmarks or 0) + (pending.artifacts or 0)),
+          + (pending.bookmarks or 0) + (pending.artifacts or 0) + (pending.suspensions or 0)),
         vim.log.levels.INFO, { title = "Problem Solving Diagnostics" })
     end)
   end, { desc = "Show problem-solving diagnostics" })
@@ -171,6 +179,9 @@ function M.note(note) return session.note(note) end
 function M.ask(question) return session.ask(question) end
 function M.rate(rating) return session.rate(rating) end
 function M.begin_discussion() return session.begin_discussion() end
+function M.suspend() return session.suspend() end
+function M.suspended() return session.suspended() end
+function M.unsuspend(id) return session.unsuspend(id) end
 function M.next() return session.next() end
 function M.quit() return session.quit() end
 function M.stats(directory) return session.stats(directory) end

@@ -38,6 +38,8 @@ def record_problem_rating(
             raise RequestError(f"{name} must be a non-negative integer")
         durations.append(value)
     store = ProblemSolvingStore(problem_solving_database_path(request))
+    if problem_id in store.suspensions(collection_key):
+        raise RequestError("problem is suspended; restore it before rating")
     return store.record_review(
         collection_key,
         problem_id,
