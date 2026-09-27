@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-918",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "918",
+    "title": "Maximum Sum Circular Subarray",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-sum-circular-subarray/",
+    "local_path": "problems/medium/918.md",
+    "content_sha256": "c7f1f7c9cf55ec20c99f2130c0b39af1a97e4e39831d5c5d73b0c5726e386c89"
+  },
+  "teaching": {
+    "hint": "For a range that crosses the array boundary, what shape do the unchosen positions have?",
+    "solution_outline": {
+      "decisive_insight": "A wrapping range is the complement of an ordinary interval. Maximizing its sum therefore relates to the minimum ordinary subarray sum.",
+      "approach": "Compute the total sum, maximum nonempty ordinary subarray sum, and minimum nonempty ordinary subarray sum in one pass using maximum- and minimum-ending sums. If the ordinary maximum is negative, return it; otherwise return the larger of that maximum and total minus minimum.",
+      "state_and_invariant": "The two ending states are the largest and smallest sums of nonempty ordinary subarrays ending at the current position; the recorded extrema cover all processed endings.",
+      "correctness": "Each ending interval either starts here or extends one ending previously, which proves both endpoint recurrences. Every circular range is ordinary or a complement of a middle interval. Excluding a minimum interval that touches an end merely produces an ordinary range already bounded by the ordinary maximum. Excluding the whole array gives zero, which can beat a legal answer only when every element is negative; the guard removes exactly that danger.",
+      "complexity": "O(n) time and O(1) auxiliary space.",
+      "pitfall": "Returning zero for an all-negative array illegally chooses an empty subarray."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "dynamic-programming",
+      "circular-array",
+      "complement"
+    ],
+    "prerequisites": [
+      "endpoint-dp"
+    ],
+    "common_wrong_turns": [
+      "Returning zero for an all-negative array illegally chooses an empty subarray."
+    ],
+    "source_fidelity_notes": [
+      "Retained nonemptiness and one-use-per-position; omitted the canonical false claim about existence of wrapping ranges when the whole array is a minimum."
+    ]
+  }
+}

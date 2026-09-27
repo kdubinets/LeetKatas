@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1124",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1124",
+    "title": "Longest Well-Performing Interval",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/longest-well-performing-interval/",
+    "local_path": "problems/medium/1124.md",
+    "content_sha256": "f14858b5ee42d941c64d8d07bae60b2aee9e93d6a04a8b125acaadb9f866e7fe"
+  },
+  "teaching": {
+    "hint": "Can the difference between the two day counts be represented so interval comparisons use prefix information?",
+    "solution_outline": {
+      "decisive_insight": "Encode tiring days as `+1` and others as `-1`. The unit-step prefix sequence makes the earliest occurrence of score `current-1` sufficient for the longest positive interval ending now.",
+      "approach": "Scan prefix scores, recording their first positions. If the whole prefix is positive, use its full length; otherwise compare with the earliest position at score one less than the current score.",
+      "state_and_invariant": "For each recorded score, its index is the earliest occurrence. The answer is the greatest qualifying length among processed endings.",
+      "correctness": "A positive interval ending at the current point needs an earlier smaller prefix. If the current score is nonpositive, the unit-step path from zero reaches `current-1` before any even smaller score, so its earliest position is optimal.",
+      "complexity": "Expected `O(n)` time and `O(n)` space for first prefix positions.",
+      "pitfall": "A sliding window is invalid because adding or dropping a `+1` or `-1` can change feasibility in either direction."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prefix-sum",
+      "longest-positive-interval"
+    ],
+    "prerequisites": [
+      "subarray-sums",
+      "first-occurrence-map"
+    ],
+    "common_wrong_turns": [
+      "Use a monotone sliding window",
+      "Treat exactly eight hours as tiring"
+    ],
+    "source_fidelity_notes": [
+      "The strict `>8` day threshold and strict majority are retained."
+    ]
+  }
+}

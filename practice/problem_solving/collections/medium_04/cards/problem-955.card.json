@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-955",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "955",
+    "title": "Delete Columns to Make Sorted II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/delete-columns-to-make-sorted-ii/",
+    "local_path": "problems/medium/955.md",
+    "content_sha256": "dfe7a030b6c9e7c35c74479a80c10446c2bc94c0e88f93c9eb44b8980144e4fc"
+  },
+  "teaching": {
+    "hint": "For which adjacent rows can a later column still change their lexicographic order?",
+    "solution_outline": {
+      "decisive_insight": "A prior kept column that first makes one adjacent row smaller permanently settles that pair; only unsettled pairs constrain later columns.",
+      "approach": "Scan columns left to right. Delete a column if it makes any unsettled adjacent pair decrease. Otherwise keep it and mark pairs with a strict increase as settled.",
+      "state_and_invariant": "A pair is settled exactly when the kept prefix already orders it strictly. All unsettled pairs have equal kept prefixes.",
+      "correctness": "A decreasing character in an unsettled pair would fix that pair in the wrong order, so deletion is forced. A safe column can only settle more pairs and never hurts, making keeping it optimal.",
+      "complexity": "O(nm) time and O(n) auxiliary space for n rows of length m.",
+      "pitfall": "Do not mark pairs settled until the whole column is known to be kept."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "lexicographic-greedy",
+      "column-deletion"
+    ],
+    "prerequisites": [
+      "lexicographic-order",
+      "greedy-invariant"
+    ],
+    "common_wrong_turns": [
+      "Require each column itself to be sorted",
+      "Update settled state from a column later deleted"
+    ],
+    "source_fidelity_notes": [
+      "Clarifies that deletion affects every row and only the row sequence must be sorted."
+    ]
+  }
+}

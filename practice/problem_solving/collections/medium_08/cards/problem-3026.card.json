@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3026",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3026",
+    "title": "Maximum Good Subarray Sum",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-good-subarray-sum/",
+    "local_path": "problems/medium/3026.md",
+    "content_sha256": "578de7b5f4e5ee1f39f9a147c908524a3ee9ff7ed4f3e48a37fb244d85a4e781"
+  },
+  "teaching": {
+    "hint": "For a fixed last element, what distinguishes the earlier occurrences that could start the best answer?",
+    "solution_outline": {
+      "decisive_insight": "For a fixed right endpoint, the final prefix sum is fixed; among eligible start values, only the smallest prefix sum before a start can improve the score.",
+      "approach": "Scan right endpoints with a running prefix sum. Query the smallest prior prefix stored under each of the two permitted start values, evaluate those subarray sums, then admit the current value with its prefix before that element.",
+      "state_and_invariant": "Before a query, each value maps to the minimum prefix sum immediately before its earlier occurrences. The running answer is the largest good sum already witnessed, with absence tracked separately.",
+      "correctness": "The endpoint equation permits exactly two start values. Subtracting the minimum prior prefix under either value maximizes the sum for that endpoint. All starts represented are earlier and eligible; every good subarray has an endpoint whose query considers its start, so the largest candidate is exact.",
+      "complexity": "Expected `O(n)` time and `O(n)` auxiliary space. Prefix sums can reach magnitude `10^14`.",
+      "pitfall": "Seeding the answer with zero loses valid negative maxima; zero is returned only when no good subarray exists."
+    },
+    "tags": [
+      "prefix-sums",
+      "hash-map",
+      "endpoint-constraints"
+    ],
+    "prerequisites": [
+      "prefix-sums",
+      "absolute-difference"
+    ],
+    "source_fidelity_notes": [
+      "Retained the no-answer encoding, negative sums, exact endpoint difference, and full bounds; omitted examples.",
+      "Used the sound minimum-prefix route; did not repeat the false canonical claim that lookup values up to 2*10^9 overflow signed 32-bit integers."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Seeding the answer with zero loses valid negative maxima; zero is returned only when no good subarray exists."
+    ]
+  }
+}

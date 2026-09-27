@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-430",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "430",
+    "title": "Flatten a Multilevel Doubly Linked List",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/flatten-a-multilevel-doubly-linked-list/",
+    "local_path": "problems/medium/430.md",
+    "content_sha256": "5a49793bc15278823da592322da8d42c5f0fd24f3a42f964b0f6973ee7d54755"
+  },
+  "teaching": {
+    "hint": "When a node has both a child and a next node, which should be visited first, and where can the other continuation wait?",
+    "solution_outline": {
+      "decisive_insight": "The required order is a depth-first preorder: visit a node, finish its child structure, then resume at its original next node.",
+      "approach": "Traverse with a stack of postponed next nodes. At each node, defer its original next, visit its child first when present, and connect each visited node to the next node in this order. Clear each child pointer and set matching prev links.",
+      "state_and_invariant": "The stack holds continuations in the order they must resume after child structures. The already visited nodes form a single correctly linked prefix of the final flattened order.",
+      "correctness": "Deferring next before visiting child makes every child descendant precede the original next node. Each original node is reached once through a next or child link and appended once. Reconnecting consecutive visited nodes in both directions therefore produces exactly the mandated order with no leftover child links.",
+      "complexity": "O(n) time and O(n) auxiliary space in the worst case for n total nodes; the returned list reuses the input nodes.",
+      "pitfall": "Saving the original next node after changing its pointer can lose the continuation and omit the rest of a level."
+    },
+    "accepted_alternatives": ["A recursive traversal that returns the flattened child's tail can splice each child segment before the saved next segment in O(n) time and O(depth) call-stack space."],
+    "tags": ["depth-first-search", "linked-list", "tree-traversal"],
+    "prerequisites": ["doubly-linked-list", "depth-first-traversal"],
+    "common_wrong_turns": ["Visit original next before the child", "Leave stale child pointers or mismatched prev links", "Repeatedly walk child chains to find their tails"],
+    "source_fidelity_notes": ["The platform's array serialization and images were omitted; the recursive child-before-next order, original-node reuse, pointer cleanup, empty input, and node limit were stated directly."]
+  }
+}

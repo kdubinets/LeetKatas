@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2905",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2905",
+    "title": "Find Indices With Index and Value Difference II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-indices-with-index-and-value-difference-ii/",
+    "local_path": "problems/medium/2905.md",
+    "content_sha256": "82b165804352b8b8dcf9b2dcfc91a030d524faebed49333a817ce6e51b036349"
+  },
+  "teaching": {
+    "hint": "For a fixed later index, which earlier indices are eligible, and which values among them are most useful for a large absolute difference?",
+    "solution_outline": {
+      "decisive_insight": "For each later index j, eligible partners form a growing prefix. Its minimum and maximum values suffice to test whether any partner differs enough from nums[j].",
+      "approach": "Scan j in increasing order, extending the eligible prefix through j-indexDifference. Track the indices of its smallest and largest values. Test those two candidate pairs against valueDifference, returning the first valid pair.",
+      "state_and_invariant": "Before testing j, the tracked minimum and maximum are exactly the extremes among indices at most j-indexDifference. Every tracked index therefore satisfies the distance condition with j.",
+      "correctness": "Any pair can be ordered with its earlier index first, so a scan over later j loses none. For a fixed j, the largest absolute value difference over its eligible prefix is attained by that prefix's minimum or maximum. If neither qualifies, no eligible partner does; if one qualifies, both conditions hold by construction.",
+      "complexity": "O(n) time and O(1) auxiliary space for n up to 100,000.",
+      "pitfall": "When indexDifference and valueDifference are zero, pairing an index with itself is valid; excluding equal indices can produce a false no-solution result."
+    },
+    "accepted_alternatives": [],
+    "tags": ["prefix-extrema", "array-scanning", "delayed-eligibility"],
+    "prerequisites": ["prefix-minimum", "absolute-difference"],
+    "common_wrong_turns": ["Track only the minimum and miss a large prefix maximum", "Require i and j to differ", "Use quadratic pair enumeration"],
+    "source_fidelity_notes": ["Examples were omitted; symmetric absolute conditions, any-answer rule, equal-index allowance, no-solution output, and bounds were retained."]
+  }
+}

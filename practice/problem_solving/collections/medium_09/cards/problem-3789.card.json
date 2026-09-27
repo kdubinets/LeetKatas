@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3789",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3789",
+    "title": "Minimum Cost to Acquire Required Items",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-cost-to-acquire-required-items/",
+    "local_path": "problems/medium/3789.md",
+    "content_sha256": "ab3c60ffeb63488bbed083b10095c9344ebcb932ec96aabe7ee0a9833b7740cd"
+  },
+  "teaching": {
+    "hint": "After fixing one item count, where can the expression for the remaining cost change?",
+    "solution_outline": {
+      "decisive_insight": "Fixing the count of combined items leaves independent deficits; their cost is a piecewise-linear function with breakpoints when each requirement becomes saturated.",
+      "approach": "Evaluate total cost with zero combined items, with min(need1,need2) combined items, and with max(need1,need2) combined items. For each choice, cover any remaining deficits by the corresponding single-type items and choose the cheapest total.",
+      "state_and_invariant": "For a chosen combined count b, the exact least cost is b*costBoth plus each positive remaining requirement times its single cost.",
+      "correctness": "The cost function is linear between zero and the smaller demand, and between the two demands. Each interval therefore has a minimum at an endpoint. Beyond the larger demand, extra combined items only add positive cost. The three tested endpoints consequently contain a global optimum, including deliberate overbuying for the smaller side.",
+      "complexity": "`O(1)` time and auxiliary space. Costs can reach `10^15` and need corresponding integer range.",
+      "pitfall": "Limiting combined purchases to the smaller demand misses cases where they are cheaper even for supplying only the larger requirement."
+    },
+    "tags": [
+      "piecewise-linear",
+      "breakpoint-search",
+      "overbuying"
+    ],
+    "prerequisites": [
+      "linear-functions",
+      "integer-arithmetic"
+    ],
+    "source_fidelity_notes": [
+      "Made extra units and unlimited supply explicit; retained zero demands, positive costs, and large count bounds."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Limiting combined purchases to the smaller demand misses cases where they are cheaper even for supplying only the larger requirement."
+    ]
+  }
+}

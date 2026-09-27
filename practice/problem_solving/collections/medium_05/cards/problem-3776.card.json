@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3776",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3776",
+    "title": "Minimum Moves to Balance Circular Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-moves-to-balance-circular-array/",
+    "local_path": "problems/medium/3776.md",
+    "content_sha256": "7e8738cc71c505b617b2dbbc2cb30f24d2a283b3f45f500ac387ea0e013ab5e1"
+  },
+  "teaching": {
+    "hint": "With only one deficit, how much does it cost to bring one unit from each other position?",
+    "solution_outline": {
+      "decisive_insight": "Conservation decides feasibility; every unit supplied to the sole deficit costs at least its circular distance, and those costs can be attained independently.",
+      "approach": "If the total balance is negative, report impossibility. Otherwise gather enough surplus units from increasing circular distances around the deficit, charging distance per unit; avoid counting the opposite position twice.",
+      "state_and_invariant": "The remaining deficit is the number of units still needed; processed positions contain all sources closer than the current distance, and cost equals selected units’ distances.",
+      "correctness": "Any feasible plan moves the needed units across at least their shortest circular distances. Selecting nearest available units minimizes that lower bound, and routing along a shortest arc attains it.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space; 64-bit arithmetic is needed for totals and move counts.",
+      "pitfall": "On an even cycle, the position opposite the deficit appears in both outward directions and must be counted once."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "circular-transport",
+      "distance-greedy"
+    ],
+    "prerequisites": [
+      "conservation",
+      "cycle-distance"
+    ],
+    "common_wrong_turns": [
+      "Use linear instead of wraparound distance",
+      "Accumulate move count in 32-bit arithmetic"
+    ],
+    "source_fidelity_notes": [
+      "The at-most-one-negative guarantee is central and retained."
+    ]
+  }
+}

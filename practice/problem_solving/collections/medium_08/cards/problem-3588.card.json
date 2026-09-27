@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3588",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3588",
+    "title": "Find Maximum Area of a Triangle",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-maximum-area-of-a-triangle/",
+    "local_path": "problems/medium/3588.md",
+    "content_sha256": "c20bc22b8edadd319e6d3b1013c2d397dbacf90690eca437bb53523bf64ce6ef"
+  },
+  "teaching": {
+    "hint": "If one side is fixed on a vertical line, which coordinates determine its base length and its height?",
+    "solution_outline": {
+      "decisive_insight": "For one coordinate line, its extreme points maximize the base and a global perpendicular extreme maximizes height independently.",
+      "approach": "Group points by x and by y, keeping each group’s opposite-coordinate minimum and maximum. Keep global extrema too. For each vertical or horizontal base line, multiply its largest span by its greatest perpendicular distance to an extreme; take the largest positive product.",
+      "state_and_invariant": "Each group stores its largest available base length, while global extrema supply the farthest possible perpendicular vertex for that line.",
+      "correctness": "Any valid triangle has an axis-parallel side on some processed line. Its base and height are bounded by the computed extrema. The two group extremes and a farthest perpendicular point attain their product; if positive, that point is off the line and distinct from the base vertices. Thus the maximum positive product is exactly the optimal doubled area, and absence of a positive product proves no valid triangle.",
+      "complexity": "Expected O(n) time and O(n) auxiliary space with hash grouping, or O(n log n) time with sorted groups.",
+      "pitfall": "The longest base overall need not win: its available height depends on its coordinate line."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "geometry",
+      "grouped-extrema",
+      "independent-factors"
+    ],
+    "prerequisites": [
+      "triangle-area",
+      "min-max-summary"
+    ],
+    "common_wrong_turns": [
+      "The longest base overall need not win: its available height depends on its coordinate line."
+    ],
+    "source_fidelity_notes": [
+      "Removed the figure; retained side orientation, distinct points, doubled area, and positive-area/-1 rules."
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-963",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "963",
+    "title": "Minimum Area Rectangle II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-area-rectangle-ii/",
+    "local_path": "problems/medium/963.md",
+    "content_sha256": "c720f9d87b3cb50a357b161ce6d127de1a81b1f38e09754cbb256cc14ca7b176"
+  },
+  "teaching": {
+    "hint": "What relationship do the two diagonals of every rectangle share, regardless of its orientation?",
+    "solution_outline": {
+      "decisive_insight": "Four distinct points form a rectangle exactly when two point pairs used as diagonals have the same midpoint and squared length. Coordinate sums represent the midpoint exactly.",
+      "approach": "Group every pair of points by the sum of its endpoint coordinates and its squared distance. Compare pairs within each group as candidate diagonals; compute their rectangle areas from adjacent side lengths and keep the smallest.",
+      "state_and_invariant": "Every pair in one group shares an exact doubled midpoint and diagonal length. Any two distinct pairs in that group are disjoint diagonals of one rectangle.",
+      "correctness": "Equal-midpoint diagonals bisect each other and define a parallelogram; equal lengths make that parallelogram a rectangle. Every rectangle contributes its unique diagonal pair to one group, so considering all pairs within groups visits every valid rectangle. Taking the least area gives the answer, or zero if no group yields a pair.",
+      "complexity": "O(n^2 log n + n^3) time with ordered grouping and O(n^2) auxiliary space for n at most 50. Squared lengths and area comparisons require wide integers.",
+      "pitfall": "Grouping only by diagonal length admits nonrectangles, and using floating-point midpoint keys can split mathematically equal midpoints."
+    },
+    "accepted_alternatives": ["Choose an anchor corner and two perpendicular side vectors, then look up the fourth corner; this gives O(n^3) time with exact integer dot products and a point set."],
+    "tags": ["computational-geometry", "pair-grouping", "rectangle-invariant"],
+    "prerequisites": ["distance-squared", "parallelogram-diagonals"],
+    "common_wrong_turns": ["Assume rectangle sides are axis-aligned", "Use only equal diagonal length without midpoint equality", "Stop at the first rectangle in a group"],
+    "source_fidelity_notes": ["Diagram examples were shortened to one rotated rectangle; arbitrary orientation, unique points, no-solution zero, coordinate bounds, and numerical tolerance were retained."]
+  }
+}

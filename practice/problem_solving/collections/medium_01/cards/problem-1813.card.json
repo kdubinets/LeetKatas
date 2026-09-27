@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-1813",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1813",
+    "title": "Sentence Similarity III",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/sentence-similarity-iii/",
+    "local_path": "problems/medium/1813.md",
+    "content_sha256": "fb018e0529adebae798cc62c7282046a9628b84e63e313cbcfb2e4f3fecf167d"
+  },
+  "teaching": {
+    "hint": "What parts of the shorter sentence must stay at the two ends of the longer one?",
+    "solution_outline": {
+      "decisive_insight": "Inserting a single block of words leaves the original words as a matching prefix and matching suffix of the longer sentence.",
+      "approach": "Split each sentence into words and identify the shorter one. Match words from the front, then from the back without reusing words of the shorter sentence. The sentences are similar exactly when these matches cover every word of the shorter sentence.",
+      "state_and_invariant": "The front and back match lengths cover disjoint words of the shorter sentence; each matched word equals its aligned word at the same end of the longer sentence. Any unmatched middle in the longer sentence is the one inserted block.",
+      "correctness": "A valid single insertion necessarily preserves a prefix and suffix, so their maximum matching lengths cover all original words. Conversely, when the front and back matches cover the shorter sentence, the words between those matches in the longer sentence form one contiguous inserted block. Thus the test is both necessary and sufficient.",
+      "complexity": "O(a + b) time and O(a + b) space to split and scan sentences of a and b characters.",
+      "pitfall": "Matching characters instead of complete words wrongly permits an insertion inside a word."
+    },
+    "accepted_alternatives": ["Trying every word-boundary insertion position and checking the resulting prefix and suffix is correct in quadratic time at these small limits."],
+    "tags": ["two-pointers", "prefix-suffix", "sequence-matching"],
+    "prerequisites": ["word-tokenization", "sequence-indexing"],
+    "common_wrong_turns": ["Allow several separate inserted blocks", "Permit insertion inside a word", "Treat a matching interior subsequence as sufficient"],
+    "source_fidelity_notes": ["Source examples were omitted; insertion at either end, empty insertion, whole-word boundaries, single spaces, and letter case were made explicit."]
+  }
+}

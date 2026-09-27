@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-380",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "380",
+    "title": "Insert Delete GetRandom O(1)",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/insert-delete-getrandom-o1/",
+    "local_path": "problems/medium/380.md",
+    "content_sha256": "21b0d2284724a68a830e24af59b1e6c1ae30281a8f33690a03b68c5b56e65f7c"
+  },
+  "teaching": {
+    "hint": "What must stay true about the stored members so that every one has the same chance of being selected after insertions and removals?",
+    "solution_outline": {
+      "decisive_insight": "A hash index and dense value array support complementary operations; replacing a removed element with the last preserves density.",
+      "approach": "Keep an array of current values and a map from value to array index. Insert by appending; remove by moving the final value into the removed slot; sample a uniform array index.",
+      "state_and_invariant": "The array contains each set member exactly once and the map points to its current position.",
+      "correctness": "Each update preserves the bijection. A uniform index selects each of the equally represented members with identical probability.",
+      "complexity": "Average O(1) time per operation and O(s) auxiliary space for s stored values.",
+      "pitfall": "Removing an interior array entry by shifting later entries costs linear time."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "data-structure-design",
+      "randomized-set"
+    ],
+    "prerequisites": [
+      "hash-map",
+      "dynamic-array"
+    ],
+    "common_wrong_turns": [
+      "Choose randomly from hash-table iteration order",
+      "Leave a hole after deletion"
+    ],
+    "source_fidelity_notes": [
+      "The average-time and equal-probability requirements are retained."
+    ]
+  }
+}

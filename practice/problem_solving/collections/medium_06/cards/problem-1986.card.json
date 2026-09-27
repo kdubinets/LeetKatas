@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-1986",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1986",
+    "title": "Minimum Number of Work Sessions to Finish the Tasks",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-number-of-work-sessions-to-finish-the-tasks/",
+    "local_path": "problems/medium/1986.md",
+    "content_sha256": "17e0f3d85ec3d51305d6ea7372bb8ba27a22dd327634ab5f2dcff55611f65037"
+  },
+  "teaching": {
+    "hint": "If you choose the tasks in one session, what remains of the problem?",
+    "solution_outline": {
+      "decisive_insight": "Order within a session is irrelevant; the task indices form a small set that must be partitioned into capacity-valid subsets.",
+      "approach": "Represent completed tasks by a bitmask. Precompute duration sums for subsets, then for each nonempty mask try every nonempty valid submask as one session plus the optimal count for the remaining tasks.",
+      "state_and_invariant": "The DP value for a mask is the minimum sessions needed for exactly its task indices. A chosen valid submask is disjoint from its remainder and consumes one session.",
+      "correctness": "Every feasible schedule partitions its tasks into valid session subsets. The recurrence tries each possible first subset and optimally handles the rest, so it matches the best such partition.",
+      "complexity": "`O(3^n)` time and `O(2^n)` space for `n<=14`.",
+      "pitfall": "Packing each session greedily by input order need not minimize the number of sessions."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "subset-dp",
+      "partitioning",
+      "capacity"
+    ],
+    "prerequisites": [
+      "bitmask",
+      "optimal-substructure"
+    ],
+    "common_wrong_turns": [
+      "Splitting a task between sessions",
+      "Treating equal-duration tasks as the same index",
+      "Assuming greedy bin packing is exact"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained task indivisibility, arbitrary order, and the small task-count bound."
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-2250",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2250",
+    "title": "Count Number of Rectangles Containing Each Point",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-number-of-rectangles-containing-each-point/",
+    "local_path": "problems/medium/2250.md",
+    "content_sha256": "105d0e1f8b41a26985a9d7599c958a50c2e7aeeabc2799b7e08d624b414a3e15"
+  },
+  "teaching": {
+    "hint": "Do both coordinate dimensions have equally large possible ranges?",
+    "solution_outline": {
+      "decisive_insight": "Containment requires two threshold inequalities, but the height dimension has only 100 values and can be partitioned directly.",
+      "approach": "Group rectangle lengths by exact height and sort each group. For point (x,y), inspect height groups y through 100 and binary-search each sorted length list for the number of lengths at least x; sum the counts.",
+      "state_and_invariant": "Each rectangle appears in exactly one height bucket, whose sorted lengths permit exact inclusive threshold counts.",
+      "correctness": "A rectangle contains the point exactly when its height is at least y and its length is at least x. The chosen buckets cover precisely the first condition, and each binary search counts precisely the second. Since the buckets partition rectangles, every containing rectangle contributes once and no other rectangle contributes.",
+      "complexity": "O(R log R + 100Q log(R+1)) time and O(R) auxiliary space, excluding returned counts.",
+      "pitfall": "A strict threshold excludes points on rectangle edges, which the statement includes."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bucketing",
+      "binary-search",
+      "geometry"
+    ],
+    "prerequisites": [
+      "sorted-threshold-count"
+    ],
+    "common_wrong_turns": [
+      "A strict threshold excludes points on rectangle edges, which the statement includes."
+    ],
+    "source_fidelity_notes": [
+      "Retained common origin, inclusive containment, asymmetric coordinate bounds, uniqueness, and input answer order."
+    ]
+  }
+}

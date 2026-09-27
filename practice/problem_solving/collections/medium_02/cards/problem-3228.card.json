@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3228",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3228",
+    "title": "Maximum Number of Operations to Move Ones to the End",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-number-of-operations-to-move-ones-to-the-end/",
+    "local_path": "problems/medium/3228.md",
+    "content_sha256": "a8c25980123b8b8703c9562fc06b601661119b97d93c871d2d5af8561a15ac85"
+  },
+  "teaching": {
+    "hint": "When a one moves, does it cross one zero or one entire zero run, and can it ever cross that same run again?",
+    "solution_outline": {
+      "decisive_insight": "Each one can cross each original zero block to its right exactly once in a complete sequence. A move crosses a whole block, so block width does not affect the operation count.",
+      "approach": "Scan the original string left to right, counting ones seen. Whenever a zero block begins after a one, add the number of preceding ones to the answer.",
+      "state_and_invariant": "At each position, the ones count equals the number of ones to the left. The accumulated answer counts every pair of an earlier one and a zero block begun so far exactly once.",
+      "correctness": "A move carries one across a complete zero block and only moves right, so it cannot cross the same block twice. Every one originally left of a block can eventually cross it as operations continue; no move can cross a block to its left. Thus each eligible one/block pair contributes exactly one move, and scanning block starts counts all such pairs.",
+      "complexity": "O(n) time and O(1) auxiliary space for a string of length n; the answer can be quadratic in n.",
+      "pitfall": "Counting every zero separately overcounts moves across a wide zero run; counting only zero blocks undercounts when several ones wait to cross one block."
+    },
+    "accepted_alternatives": ["Scan from right to left, counting zero blocks seen and adding that count for each one; this is also O(n) time and O(1) space."],
+    "tags": ["greedy-counting", "run-length", "invariant"],
+    "prerequisites": ["binary-string", "contiguous-run"],
+    "common_wrong_turns": ["Simulate potentially quadratic many operations", "Count zero characters instead of blocks", "Assume each one can move only once"],
+    "source_fidelity_notes": ["The source's move trace was replaced by a wide-zero-run example; full-run movement, repeatability, maximum count, and length bound were retained."]
+  }
+}

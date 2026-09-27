@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3233",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3233",
+    "title": "Find the Count of Numbers Which Are Not Special",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-the-count-of-numbers-which-are-not-special/",
+    "local_path": "problems/medium/3233.md",
+    "content_sha256": "a957d8d9e81d9b5e9ad17de92f69c4d68733c1e755568f7cae87c64d35578933"
+  },
+  "teaching": {
+    "hint": "How do divisors pair up, and when can a divisor be its own partner?",
+    "solution_outline": {
+      "decisive_insight": "Exactly two proper divisors means exactly three total divisors; these numbers are precisely squares of primes.",
+      "approach": "Sieve primes up to the exact integer square root of r. Count those whose squares lie in [l,r], then subtract this count from r-l+1.",
+      "state_and_invariant": "Each inspected prime contributes one special number exactly when its square lies in the requested inclusive range.",
+      "correctness": "Divisors pair as d and x/d, so three total divisors require a self-paired square root m. A composite m supplies an additional divisor of m², so m must be prime. Conversely, a prime square has exactly divisors 1,p,p². Thus prime-square enumeration is both necessary and sufficient, and subtracting from the interval size counts precisely nonspecial values.",
+      "complexity": "O(sqrt(r) log log sqrt(r)) time and O(sqrt(r)) auxiliary sieve space.",
+      "pitfall": "Not every square is special: a composite root creates extra divisors; one itself has no proper divisors."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "divisor-classification",
+      "prime-sieve",
+      "domain-reduction"
+    ],
+    "prerequisites": [
+      "divisor-pairing",
+      "primality"
+    ],
+    "common_wrong_turns": [
+      "Not every square is special: a composite root creates extra divisors; one itself has no proper divisors."
+    ],
+    "source_fidelity_notes": [
+      "Retained proper-divisor exclusion of x, inclusive endpoints, positive range, and nonspecial rather than special output."
+    ]
+  }
+}

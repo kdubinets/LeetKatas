@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "problem-1401",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1401",
+    "title": "Circle and Rectangle Overlapping",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/circle-and-rectangle-overlapping/",
+    "local_path": "problems/medium/1401.md",
+    "content_sha256": "d65e24b7e7935c3a2baf2019e03052059245ea024d7c59500c12209eb01a081c"
+  },
+  "teaching": {
+    "hint": "Could a circle enter the middle of a rectangle edge without containing any corner?",
+    "solution_outline": {
+      "decisive_insight": "Intersection exists exactly when the nearest rectangle point to the center lies within the radius; its coordinates can be optimized independently.",
+      "approach": "Clamp each center coordinate into its corresponding rectangle interval. Compare the sum of squared coordinate offsets with the squared radius, including equality.",
+      "state_and_invariant": "The clamped coordinates minimize each nonnegative squared offset among all legal rectangle coordinates, so their pair minimizes total squared distance.",
+      "correctness": "The rectangle is a Cartesian product of two intervals and squared distance is the sum of independent axis terms. Each closest interval coordinate therefore gives the global closest point. If its distance is at most the radius, that point belongs to both shapes; otherwise every rectangle point is outside the disk.",
+      "complexity": "O(1) time and O(1) space.",
+      "pitfall": "Testing only rectangle corners misses intersection through an edge or when the center is inside the rectangle."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "geometry",
+      "projection"
+    ],
+    "prerequisites": [
+      "squared-distance"
+    ],
+    "common_wrong_turns": [
+      "Testing only rectangle corners misses intersection through an edge or when the center is inside the rectangle."
+    ],
+    "source_fidelity_notes": [
+      "Made filled-disk and inclusive-boundary semantics explicit from the source examples; omitted the incorrect always-nearest-corner edge case."
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1190",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1190",
+    "title": "Reverse Substrings Between Each Pair of Parentheses",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/reverse-substrings-between-each-pair-of-parentheses/",
+    "local_path": "problems/medium/1190.md",
+    "content_sha256": "12c05b889808a6f591cacc69f4e243cea3a9c4fa7344b46c57f4d71434f9b243"
+  },
+  "teaching": {
+    "hint": "When an inner pair closes, what text should the surrounding pair hold?",
+    "solution_outline": {
+      "decisive_insight": "Nested groups finish in last-opened, first-closed order; each group’s resolved text can be transformed before becoming part of its parent.",
+      "approach": "Scan left to right, keeping a partial string for each open nesting level. Opening a pair starts a new partial result; closing it reverses its resolved contents and appends them to the parent; letters append to the current level.",
+      "state_and_invariant": "Each active level stores exactly the resolved text encountered in that pair so far, with all deeper closed groups already transformed and merged.",
+      "correctness": "Balanced parentheses guarantee every close matches the current deepest group. Reversing that completed group performs the required inner-first step, and induction over closes shows the outer result is correct with all parentheses removed.",
+      "complexity": "O(n×d) time in the worst case for nesting depth d≤n because characters may be recopied at each outer reversal; O(n) auxiliary space.",
+      "pitfall": "Reversing text at an opening parenthesis or reversing outer content before inner content changes the specified order."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "nested-strings",
+      "stack-accumulator"
+    ],
+    "prerequisites": [
+      "balanced-parentheses",
+      "string-reversal"
+    ],
+    "common_wrong_turns": [
+      "Leave parentheses in the output",
+      "Reverse an outer group before resolving its children",
+      "Ignore letters outside parentheses"
+    ],
+    "source_fidelity_notes": [
+      "Retained a compact nested example to disambiguate inner-first reversal."
+    ]
+  }
+}

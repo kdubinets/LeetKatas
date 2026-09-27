@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1690",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1690",
+    "title": "Stone Game VII",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/stone-game-vii/",
+    "local_path": "problems/medium/1690.md",
+    "content_sha256": "45824ae955a2cff6f7af8317807f0954662c06383c716edf1bab9738e7e9b7a7"
+  },
+  "teaching": {
+    "hint": "How can one position represent the objective of whichever player is about to move?",
+    "solution_outline": {
+      "decisive_insight": "The current mover’s best score difference on an interval subtracts the next mover’s best difference after either endpoint choice.",
+      "approach": "Use interval dynamic programming, with range sums for the immediate reward. For each interval, compare removing its left or right end and subtract the continuation value of the remaining interval.",
+      "state_and_invariant": "A state for interval [i,j] is the maximum current-mover score minus opponent score from that position. A one-stone interval has value zero.",
+      "correctness": "Every legal first move is one of the two endpoints. The immediate remaining sum is gained by the mover; the opponent’s optimal future difference must be subtracted. Taking the better option gives the optimal differential by induction on interval length.",
+      "complexity": "O(n²) time and O(n²) space with constant-time range sums.",
+      "pitfall": "Adding the continuation value instead of subtracting it assumes both players share the same objective."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "game-theory",
+      "interval-dp"
+    ],
+    "prerequisites": [
+      "prefix-sum",
+      "optimal-substructure"
+    ],
+    "common_wrong_turns": [
+      "Score the removed stone rather than the remaining stones",
+      "Treat Bob as maximizing Alice’s advantage"
+    ],
+    "source_fidelity_notes": [
+      "Condensed the long move-by-move example; explicitly retained last-removal zero reward."
+    ]
+  }
+}

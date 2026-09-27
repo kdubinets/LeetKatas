@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-372",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "372",
+    "title": "Super Pow",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/super-pow/",
+    "local_path": "problems/medium/372.md",
+    "content_sha256": "7bfe6cd59ec763ca170fe2e7220c9cfc6e164c0e2f584c445a512c05b0db0c54"
+  },
+  "teaching": {
+    "hint": "How does appending one decimal digit change a power whose exponent was the previous digit prefix?",
+    "solution_outline": {
+      "decisive_insight": "If the prior exponent is x and the next digit is d, the new exponent is 10x+d, so the new residue is the old residue to the tenth power times a to the d-th power.",
+      "approach": "Process exponent digits left to right, keeping the current power residue modulo 1337. Apply the digit identity with small modular powers for each update.",
+      "state_and_invariant": "After each digit, the stored residue equals a raised to the value of the processed decimal prefix modulo 1337.",
+      "correctness": "The identity a^(10x+d)=(a^x)^10 a^d and modular multiplication preserve the invariant. After all digits, the prefix is b.",
+      "complexity": "O(len(b)) time with constant-size per-digit modular powers and O(1) auxiliary space.",
+      "pitfall": "Reducing the exponent by Euler’s totient without checking coprimality is unsound because 1337 is composite."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "modular-exponentiation",
+      "digit-stream"
+    ],
+    "prerequisites": [
+      "positional-notation",
+      "modular-arithmetic"
+    ],
+    "common_wrong_turns": [
+      "Construct the enormous exponent in a machine integer",
+      "Apply a coprime-only exponent reduction to arbitrary a"
+    ],
+    "source_fidelity_notes": [
+      "Retained the source's positive-exponent rule and digit bounds; omitted the canonical discussion of a zero exponent, which is outside that stated input contract."
+    ]
+  }
+}

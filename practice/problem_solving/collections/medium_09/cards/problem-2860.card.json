@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2860",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2860",
+    "title": "Happy Students",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/happy-students/",
+    "local_path": "problems/medium/2860.md",
+    "content_sha256": "6f1f37fed8f54220054cdd00b91dfac7c1d028f60766b3811cbe45d0dd2491af"
+  },
+  "teaching": {
+    "hint": "If the selected size is fixed, which students still have a choice about belonging to the group?",
+    "solution_outline": {
+      "decisive_insight": "Fixing the group size forces every threshold below it to be selected and every threshold above it to be excluded; any equal threshold makes that size impossible.",
+      "approach": "Sort the thresholds and inspect every possible selected count. For an interior count, require the largest selected threshold to be below the count and the smallest excluded threshold above it. Check empty and full groups using only the existing side.",
+      "state_and_invariant": "The first k sorted entries are the only possible selected group of size k. Both boundary inequalities certify all members of its selected and excluded sides.",
+      "correctness": "For a fixed size, membership is forced by the two strict conditions, so there is at most one valid subset. Sorted boundary checks are necessary and imply the condition for every threshold on their side. Enumerating all sizes counts every valid forced subset once, including endpoints.",
+      "complexity": "`O(n log n)` time and `O(1)` storage beyond an in-place sort, with typical `O(log n)` sorting stack.",
+      "pitfall": "Having exactly k thresholds below k is insufficient if any threshold equals k; keep both strict checks."
+    },
+    "tags": [
+      "sorting",
+      "forced-membership",
+      "threshold-counting"
+    ],
+    "prerequisites": [
+      "sorting",
+      "strict-inequalities"
+    ],
+    "source_fidelity_notes": [
+      "Retained strict conditions, distinct-index subset counting, empty/full choices, and threshold bounds.",
+      "Used both sound sorted boundary conditions; omitted the canonical false simplification to a below-threshold count alone."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Having exactly k thresholds below k is insufficient if any threshold equals k; keep both strict checks."
+    ]
+  }
+}

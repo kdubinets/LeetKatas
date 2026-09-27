@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-785",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "785",
+    "title": "Is Graph Bipartite?",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/is-graph-bipartite/",
+    "local_path": "problems/medium/785.md",
+    "content_sha256": "328b364722c99c6c0fba0dc2b9ee8230b09af06870f3c180fd9958bdeec18377"
+  },
+  "teaching": {
+    "hint": "Once one node is assigned to a set, how much freedom remains for its connected neighbors?",
+    "solution_outline": {
+      "decisive_insight": "An initial set choice forces alternating assignments along paths; inconsistent path parities obstruct every valid partition.",
+      "approach": "From each still-unassigned node, traverse its component and assign every new neighbor the opposite side. Reject an edge joining already assigned equal sides; accept if every component finishes without a conflict.",
+      "state_and_invariant": "Assigned nodes alternate sides along discovery-tree edges. Every processed edge satisfies the partition condition unless a conflict has already been reported.",
+      "correctness": "A conflict between equal-side nodes closes an even-length discovery-tree path with one edge, yielding an odd cycle that cannot alternate two sides. If no conflict occurs, every node is assigned and every edge has opposite endpoints, so the assignments directly witness a valid partition. Components can be oriented independently because no edge joins them.",
+      "complexity": "`O(n+m)` time and `O(n)` auxiliary space, where m is the number of edges.",
+      "pitfall": "One traversal from node zero can miss a non-bipartite disconnected component."
+    },
+    "tags": [
+      "graph",
+      "bipartite",
+      "odd-cycle"
+    ],
+    "prerequisites": [
+      "graph-traversal",
+      "parity"
+    ],
+    "source_fidelity_notes": [
+      "Removed diagrams and examples; retained undirected symmetry, disconnected input, and no self/parallel edges."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "One traversal from node zero can miss a non-bipartite disconnected component."
+    ]
+  }
+}

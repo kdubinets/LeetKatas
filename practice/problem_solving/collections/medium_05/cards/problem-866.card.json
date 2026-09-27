@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-866",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "866",
+    "title": "Prime Palindrome",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/prime-palindrome/",
+    "local_path": "problems/medium/866.md",
+    "content_sha256": "5aab8a491497ee2ac2e65b6daed65bfcfcb4eb82e158b6e0c80da7eeb0821a2c"
+  },
+  "teaching": {
+    "hint": "Which decimal palindromes could never be prime, and how might the remaining candidates be visited in increasing order?",
+    "solution_outline": {
+      "decisive_insight": "Every even-digit palindrome is divisible by 11, except 11 itself can be prime; odd-digit palindromes can be generated from their leading half.",
+      "approach": "Handle small one-digit answers and 11, then enumerate odd-length palindromes in increasing order from their leading halves. For each candidate at least `n`, test primality and return the first prime.",
+      "state_and_invariant": "The generated candidates are exactly the odd-length palindromes in increasing order; all excluded even-length values except 11 are composite.",
+      "correctness": "Every possible prime palindrome is either handled in the small cases or visited by the generator, so the first qualifying prime is the minimum.",
+      "complexity": "Up to answer value `V`, there are `O(√V)` generated candidates; trial division takes at most `O(√V)` per candidate, giving a conservative `O(V)` bound and `O(log V)` digit storage.",
+      "pitfall": "Skipping 11 along with other even-length palindromes loses a valid answer."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "palindrome-generation",
+      "prime-search"
+    ],
+    "prerequisites": [
+      "decimal-place-value",
+      "primality-testing"
+    ],
+    "common_wrong_turns": [
+      "Test every integer from n upward",
+      "Assume all even-length palindromes are composite"
+    ],
+    "source_fidelity_notes": [
+      "The existence and answer-range guarantee is preserved."
+    ]
+  }
+}

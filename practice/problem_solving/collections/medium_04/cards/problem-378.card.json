@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-378",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "378",
+    "title": "Kth Smallest Element in a Sorted Matrix",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/kth-smallest-element-in-a-sorted-matrix/",
+    "local_path": "problems/medium/378.md",
+    "content_sha256": "143d4cbd97fcc902b05eea4e38809fd8c6ffa63ed722301c7da1fc32fd2e6b0e"
+  },
+  "teaching": {
+    "hint": "For a proposed value, can the two sorted directions help count how many entries do not exceed it?",
+    "solution_outline": {
+      "decisive_insight": "The count of values at most a threshold can be found by a monotone staircase, allowing a search for the first threshold whose rank reaches k.",
+      "approach": "Search the value range from the smallest to largest matrix entries. At each trial, sweep a staircase boundary through rows and columns to count entries no larger than the trial value.",
+      "state_and_invariant": "The staircase count is exact and nondecreasing with the trial value; the search keeps a threshold below rank k and one at or above it.",
+      "correctness": "The first value with at least k entries below or equal is precisely the kth entry, including duplicates. The staircase visits at most two sides of the matrix per count.",
+      "complexity": "O(n log V) time for numeric range V and O(1) auxiliary space; compute midpoints in wide arithmetic.",
+      "pitfall": "Counting distinct values instead of entries gives the wrong rank when duplicates occur."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "sorted-matrix-rank",
+      "answer-space-search"
+    ],
+    "prerequisites": [
+      "binary-search",
+      "monotone-counting"
+    ],
+    "common_wrong_turns": [
+      "Flatten and sort using quadratic extra storage",
+      "Use a 32-bit sum for extreme midpoint values"
+    ],
+    "source_fidelity_notes": [
+      "The nondecreasing row and column rules, duplicate ranking, and memory requirement are explicit."
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-438",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "438",
+    "title": "Find All Anagrams in a String",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-all-anagrams-in-a-string/",
+    "local_path": "problems/medium/438.md",
+    "content_sha256": "9ea83cc501e44f96ee7654bb25b5ee48112145751f14891c38c3cdc6b37566fe"
+  },
+  "teaching": {
+    "hint": "What must remain unchanged when one possible match shifts by a single position?",
+    "solution_outline": {
+      "decisive_insight": "Only windows of length |p| can match; anagram equality is equality of per-letter counts that change at just the entering and leaving letters.",
+      "approach": "Count the pattern letters, then slide a fixed-size window over s while updating its counts. Record each full window with equal counts. Optionally retain the number of disagreeing letter counts to check equality without rescanning the alphabet.",
+      "state_and_invariant": "The window frequencies equal the current substring’s multiplicities, and any disagreement counter equals the number of letters whose frequencies differ from p.",
+      "correctness": "Equal length and multiplicities are necessary and sufficient for an anagram. Each shift removes precisely its outgoing letter and adds precisely its incoming one, preserving the count state. Every possible length-|p| start is checked once, so all and only matching starts are returned.",
+      "complexity": "`O(|s|+|p|)` time and `O(1)` auxiliary space for the fixed 26-letter alphabet, excluding output.",
+      "pitfall": "A set of present letters cannot distinguish repeated-letter multiplicities; overlapping matches must not skip ahead by the pattern length."
+    },
+    "tags": [
+      "sliding-window",
+      "frequency-counting",
+      "anagram"
+    ],
+    "prerequisites": [
+      "character-counts",
+      "window-invariant"
+    ],
+    "source_fidelity_notes": [
+      "Clarified multiplicity and overlapping start positions; retained any-order output and both length bounds.",
+      "Omitted the canonical erroneous estimate for rebuilding each window from scratch."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "A set of present letters cannot distinguish repeated-letter multiplicities; overlapping matches must not skip ahead by the pattern length."
+    ]
+  }
+}

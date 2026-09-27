@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2216",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2216",
+    "title": "Minimum Deletions to Make Array Beautiful",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-deletions-to-make-array-beautiful/",
+    "local_path": "problems/medium/2216.md",
+    "content_sha256": "b45bccdc8f77b71dce28f12da348ca977ed4f6c354565b69139c1a72bce9417f"
+  },
+  "teaching": {
+    "hint": "As you scan the original order, what information determines the next kept element’s role?",
+    "solution_outline": {
+      "decisive_insight": "The constraint is on adjacent pairs in the retained sequence; a kept-count parity and the open pair’s first value suffice.",
+      "approach": "Scan left to right. Keep each candidate opener; keep a closer when it differs from the opener, otherwise delete it. At the end, delete any unmatched opener.",
+      "state_and_invariant": "Every completed retained pair is valid. When a candidate equals the open value, keeping it cannot close that pair; the first different candidate closes it at the earliest possible position.",
+      "correctness": "For each pair, choosing the earliest possible different closer leaves at least as much suffix for later pairs as any alternative. A trailing unmatched opener cannot remain in an even-length result.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space.",
+      "pitfall": "Original-index parity is irrelevant after deletions; an unmatched final opener still costs one deletion."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "greedy-scan",
+      "survivor-state"
+    ],
+    "prerequisites": [
+      "subsequence-order",
+      "greedy-exchange"
+    ],
+    "common_wrong_turns": [
+      "Checking original instead of surviving indices",
+      "Forgetting the final odd-length cleanup"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained deletion order, empty-array validity, and survivor-index semantics."
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1654",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1654",
+    "title": "Minimum Jumps to Reach Home",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-jumps-to-reach-home/",
+    "local_path": "problems/medium/1654.md",
+    "content_sha256": "018e3080328011f8371c40c95e90dc641714506025e1b6793c448c80f3236232"
+  },
+  "teaching": {
+    "hint": "Would reaching the same position after a forward jump and after a backward jump leave the same next moves?",
+    "solution_outline": {
+      "decisive_insight": "Position alone is insufficient state: whether the previous jump went backward changes the legal next transitions.",
+      "approach": "Search states consisting of position and last-jump direction in increasing jump count. Discard forbidden or negative positions and cap the positive search at a bound derived from the largest relevant coordinate plus one possible overshoot and return.",
+      "state_and_invariant": "A state is visited once per direction flag, and its recorded level is the smallest jump count reaching it.",
+      "correctness": "Every legal jump from every relevant state is considered, while illegal consecutive backward jumps are excluded. A shortest path need not travel beyond the derived bound in an obstacle-free suffix, so breadth-first levels find the minimum or establish impossibility.",
+      "complexity": "O(U+f) time and space, where U=max(x,max forbidden)+a+b≤6000 and f is the number of forbidden positions.",
+      "pitfall": "Marking only positions as visited can discard a later arrival with a different legal next move."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "constrained-bfs",
+      "state-augmentation"
+    ],
+    "prerequisites": [
+      "breadth-first-search",
+      "shortest-path"
+    ],
+    "common_wrong_turns": [
+      "Forbid overshooting the target",
+      "Ignore the previous-jump direction in visited state"
+    ],
+    "source_fidelity_notes": [
+      "The no-consecutive-backward rule, overshoot permission, position bounds, and x=0 case are retained."
+    ]
+  }
+}

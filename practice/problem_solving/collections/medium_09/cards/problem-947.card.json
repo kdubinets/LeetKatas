@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-947",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "947",
+    "title": "Most Stones Removed with Same Row or Column",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/most-stones-removed-with-same-row-or-column/",
+    "local_path": "problems/medium/947.md",
+    "content_sha256": "edee5aa9f176027b740621d9c348a2daec262bf4775c44167eee0e6645867d19"
+  },
+  "teaching": {
+    "hint": "How much can a chain of shared-row or shared-column relationships allow you to remove, even when its endpoints do not directly share a coordinate?",
+    "solution_outline": {
+      "decisive_insight": "Connected groups cannot lose their last stone, but a spanning-tree removal order lets every other stone go. Coordinate labels recover these groups without enumerating every pair.",
+      "approach": "Treat each used row and each used column as separate labels. For every stone, join its row label to its column label in a disjoint-set structure. Count the resulting components among used labels and subtract that count from the number of stones.",
+      "state_and_invariant": "The disjoint-set partition represents connectivity through processed stones. Row and column labels occupy separate namespaces; labels are created only when a stone uses them.",
+      "correctness": "In the stone graph, no component can lose its last stone because no stone outside it shares a row or column. Root a spanning tree of a component and remove descendants before parents; each removed stone still has its adjacent parent, so all but the root can be removed legally. Stone adjacency is exactly passage through a shared coordinate label, and every used-label component contains a stone. Thus label components and stone components correspond, and summing one mandatory survivor per component gives the maximum removals.",
+      "complexity": "Expected `O(n \u03b1(n))` time with hashing and a balanced, path-compressed disjoint-set structure; `O(n)` auxiliary space for at most two labels per stone.",
+      "pitfall": "A row number and an equal column number are different labels; merging their namespaces invents connections between unrelated stones."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "connectivity",
+      "disjoint-set",
+      "component-survivors"
+    ],
+    "prerequisites": [
+      "graph-components",
+      "spanning-tree"
+    ],
+    "common_wrong_turns": [
+      "A row number and an equal column number are different labels; merging their namespaces invents connections between unrelated stones."
+    ],
+    "source_fidelity_notes": [
+      "Retained sequential legality, shared-coordinate relationships, distinct occupied points, and all bounds; omitted removal traces."
+    ]
+  }
+}

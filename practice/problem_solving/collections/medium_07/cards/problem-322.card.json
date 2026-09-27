@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "problem-322",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "322",
+    "title": "Coin Change",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/coin-change/",
+    "local_path": "problems/medium/322.md",
+    "content_sha256": "ba9d55db9ae2beb0ca3ec741838f25222b15e5bcd43bdccca21c8411b14af56b"
+  },
+  "teaching": {
+    "hint": "If you remove one coin from a complete combination, what smaller question remains?",
+    "solution_outline": {
+      "decisive_insight": "The final coin leaves a smaller total with the same available denominations; positivity orders these dependencies.",
+      "approach": "For totals from zero through amount, store the minimum coin count. Initialize zero to zero and other totals unreachable; try each denomination that fits as a final coin added to its predecessor optimum. Return the target optimum or -1.",
+      "state_and_invariant": "After a total is processed, its entry is the minimum count among all combinations forming it; later totals cannot change it.",
+      "correctness": "Every nonempty combination has a final coin and an attainable smaller remainder. Induction supplies the best count for each remainder, and considering all final denominations covers every optimum. Conversely each reachable transition appends an available coin, so its candidate count is attainable.",
+      "complexity": "O((amount+1) * |coins|) time and O(amount+1) auxiliary space; the table includes the zero-amount base case.",
+      "pitfall": "Choosing the largest fitting denomination greedily does not always minimize the number of coins."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "dynamic-programming",
+      "unbounded-knapsack"
+    ],
+    "prerequisites": [
+      "optimal-substructure"
+    ],
+    "common_wrong_turns": [
+      "Choosing the largest fitting denomination greedily does not always minimize the number of coins."
+    ],
+    "source_fidelity_notes": [
+      "Retained unlimited reuse, exact amount, impossible result, and large denomination bounds."
+    ]
+  }
+}

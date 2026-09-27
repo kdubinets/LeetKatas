@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-494",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "494",
+    "title": "Target Sum",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/target-sum/",
+    "local_path": "problems/medium/494.md",
+    "content_sha256": "f7717c3d9046c26e7836a5167f2b918d93a1762a436bfee96c699ae3ebfe12a8"
+  },
+  "teaching": {
+    "hint": "If you know the sum of values assigned plus, what is the sum assigned minus?",
+    "solution_outline": {
+      "decisive_insight": "Writing S for the total and P for the positive-signed subtotal gives 2P-S=target, a bijection between sign assignments and indexed subsets of one required sum.",
+      "approach": "Reject when |target|>S or S+target is odd. Otherwise count subsets summing to (S+target)/2 using 0/1 sum DP, processing each index once with descending totals.",
+      "state_and_invariant": "After an index is processed, each count equals the number of subsets of processed indices with that sum; downward updates use counts from before the current index.",
+      "correctness": "Each assignment identifies exactly its plus-index subset and satisfies the equation precisely at the required sum. Every subset either excludes the current index or includes it with its value removed from the remaining total; these disjoint choices form the DP update. A zero doubles each count because both sign choices are distinct. Thus the final count equals exactly all valid assignments.",
+      "complexity": "O(n(S+1)) time and O(S+1) auxiliary space, with S<=1000; the +1 includes the zero-sum state.",
+      "pitfall": "Ascending 0/1 updates reuse an index; discarding zeros loses valid distinct sign assignments."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "subset-sum",
+      "algebraic-reduction",
+      "counting-dp"
+    ],
+    "prerequisites": [
+      "indexed-subsets",
+      "zero-one-update-order"
+    ],
+    "common_wrong_turns": [
+      "Ascending 0/1 updates reuse an index; discarding zeros loses valid distinct sign assignments."
+    ],
+    "source_fidelity_notes": [
+      "Explicitly retained independent index choices and zero signs; preserved total bound and negative targets."
+    ]
+  }
+}

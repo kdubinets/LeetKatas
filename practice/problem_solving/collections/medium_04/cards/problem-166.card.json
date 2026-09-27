@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-166",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "166",
+    "title": "Fraction to Recurring Decimal",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/fraction-to-recurring-decimal/",
+    "local_path": "problems/medium/166.md",
+    "content_sha256": "6e8a39370dab1403a1bc0bcd1ccca27694d91a3d9461f74d145dee56b024dd96"
+  },
+  "teaching": {
+    "hint": "What determines the next decimal digit after a long-division step?",
+    "solution_outline": {
+      "decisive_insight": "The current remainder completely determines all future digits, so its first recurrence locates the repeating cycle.",
+      "approach": "Emit sign and integer part, then perform decimal long division. Record where each nonzero remainder first occurs in the output; on repetition, parenthesize the digits from that position onward.",
+      "state_and_invariant": "Before each fractional digit, the remainder and output position identify the exact unfinished division state; recorded remainders are the first occurrences of past states.",
+      "correctness": "A zero remainder proves termination. A repeated nonzero remainder recreates the same future digit sequence, and its first position marks exactly the repeating suffix.",
+      "complexity": "O(L) time and O(L) auxiliary space for L produced digits, bounded by the output-length guarantee; wide arithmetic handles signed 32-bit extremes.",
+      "pitfall": "Negating the minimum signed 32-bit integer before widening overflows."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "cycle-detection",
+      "long-division"
+    ],
+    "prerequisites": [
+      "remainders",
+      "decimal-representation"
+    ],
+    "common_wrong_turns": [
+      "Parenthesize from the first repeated digit rather than remainder",
+      "Emit a decimal point for an exact integer"
+    ],
+    "source_fidelity_notes": [
+      "The exact finite-versus-repeating output rule and signed boundary cases are explicit."
+    ]
+  }
+}

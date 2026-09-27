@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1362",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1362",
+    "title": "Closest Divisors",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/closest-divisors/",
+    "local_path": "problems/medium/1362.md",
+    "content_sha256": "23404c5071ffcb4018137727a371faab2f29e1db255e274681221650da11dac2"
+  },
+  "teaching": {
+    "hint": "Where must the smaller member of a fixed-product pair lie, and how does its choice affect the gap?",
+    "solution_outline": {
+      "decisive_insight": "For a fixed positive product P, restrict the smaller factor to at most sqrt(P); its gap P/a-a decreases as a increases.",
+      "approach": "For each permitted product, search downward from its integer square root until a divisor is found. Pair it with the quotient and choose the smaller gap between the two products.",
+      "state_and_invariant": "The first divisor encountered is the largest divisor no greater than the square root; all larger candidate smaller factors have already been ruled out.",
+      "correctness": "Every positive factor pair can be oriented with its smaller factor at most sqrt(P). On that domain, increasing a reduces P/a while increasing a itself, so the gap strictly decreases. The first divisor below the root therefore gives the optimal pair for P. Comparing the two allowed products is exhaustive.",
+      "complexity": "`O(sqrt(num))` time and `O(1)` auxiliary space.",
+      "pitfall": "Testing divisors of num itself solves a different problem; preserve the two allowed products and exact square-root boundary."
+    },
+    "tags": [
+      "factor-pairs",
+      "monotone-objective",
+      "square-root-search"
+    ],
+    "prerequisites": [
+      "divisibility",
+      "integer-square-root"
+    ],
+    "source_fidelity_notes": [
+      "Specified positive factors as used throughout the canonical explanation and examples; retained either-product choice, any-order output, and bounds."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Testing divisors of num itself solves a different problem; preserve the two allowed products and exact square-root boundary."
+    ]
+  }
+}

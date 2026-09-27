@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3341",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3341",
+    "title": "Find Minimum Time to Reach Last Room I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-minimum-time-to-reach-last-room-i/",
+    "local_path": "problems/medium/3341.md",
+    "content_sha256": "2c02b14cc4a306cefd581e7cb8a9237085393f9e2ddcaf0cc4c258b71565a336"
+  },
+  "teaching": {
+    "hint": "Can arriving at a room earlier ever make a later route through it worse, given that waiting is allowed?",
+    "solution_outline": {
+      "decisive_insight": "The earliest arrival at a room dominates later arrivals because one may wait; a move to a neighbor at time `t` arrives at `max(t, opening)+1`.",
+      "approach": "Maintain earliest known arrival times and expand the room with smallest current arrival time, relaxing each side-adjacent neighbor using its opening time.",
+      "state_and_invariant": "A finalized room has its true earliest arrival; pending estimates are costs of legal routes found so far.",
+      "correctness": "The transition is nondecreasing in departure time and never travels backward in time. The usual earliest-frontier argument therefore finalizes rooms in optimal arrival order.",
+      "complexity": "`O(nm log(nm))` time and `O(nm)` auxiliary space.",
+      "pitfall": "Plain BFS minimizes step count but can choose a route delayed by a late-opening room."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "time-dependent-shortest-path",
+      "grid-routing"
+    ],
+    "prerequisites": [
+      "dijkstra",
+      "monotone-arrival"
+    ],
+    "common_wrong_turns": [
+      "Use BFS by number of moves",
+      "Add the opening time instead of waiting until it"
+    ],
+    "source_fidelity_notes": [
+      "Clarifies that entry waits before the one-second move, matching source examples."
+    ]
+  }
+}

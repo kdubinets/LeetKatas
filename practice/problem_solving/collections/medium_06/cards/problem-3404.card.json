@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-3404",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3404",
+    "title": "Count Special Subsequences",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-special-subsequences/",
+    "local_path": "problems/medium/3404.md",
+    "content_sha256": "d31d26f39546c560e326e4f64d83309c5bf5b2d9a40e26dc2e4d9c5dc762bfca"
+  },
+  "teaching": {
+    "hint": "Can the four-value equality be expressed as a relationship between a left pair and a right pair?",
+    "solution_outline": {
+      "decisive_insight": "Positivity lets the cross-product equation become equality of two ratios; a sweep can count eligible left ratios before comparing right pairs.",
+      "approach": "Sweep the third index `r`. Add every newly eligible `(p,q)` pair with `q=r-2` and `p<=q-2` to a frequency table keyed by reduced `nums[p]/nums[q]`. For each `s>=r+2`, add the frequency of `nums[s]/nums[r]`.",
+      "state_and_invariant": "Before querying each `r`, the table holds exactly the left pairs with legal internal gap and `q<=r-2`, each once.",
+      "correctness": "Every legal quadruple has unique middle-right index `r`; its left pair is present then and its right ratio matches exactly when the product equality holds. The sweep counts it once.",
+      "complexity": "`O(n² log V)` time for ratio reduction and `O(V²)` space for bounded ratio keys, with `V=1000`.",
+      "pitfall": "The ratios are `nums[p]/nums[q]` and `nums[s]/nums[r]`; reversing the latter counts the wrong tuples."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "ratio-counting",
+      "offline-sweep",
+      "quadruples"
+    ],
+    "prerequisites": [
+      "gcd",
+      "frequency-table"
+    ],
+    "common_wrong_turns": [
+      "Ignoring the required unused indices",
+      "Using floating-point ratios as exact keys",
+      "Accumulating in 32 bits"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; explicitly retained index spacing, index-distinct counting, positivity, and wide result."
+    ]
+  }
+}

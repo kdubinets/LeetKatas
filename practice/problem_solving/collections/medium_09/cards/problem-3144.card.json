@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3144",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3144",
+    "title": "Minimum Substring Partition of Equal Character Frequency",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-substring-partition-of-equal-character-frequency/",
+    "local_path": "problems/medium/3144.md",
+    "content_sha256": "ebecf05c10ab46c0765efa68d480220ecefb44fc47aa2d6908f3790148daba31"
+  },
+  "teaching": {
+    "hint": "Does extending a valid piece keep it valid, and what summarizes its frequency equality?",
+    "solution_outline": {
+      "decisive_insight": "Balanced pieces are not monotone under extension. Exact final-cut optimization is available, with balance certified by length equaling maximum positive frequency times distinct-letter count.",
+      "approach": "For each prefix end, extend candidate last pieces backward while maintaining letter counts, distinct letters, and greatest count. For each balanced last piece, combine one piece with the optimum for its preceding prefix and retain the smallest total.",
+      "state_and_invariant": "The prefix state gives its minimum balanced-piece count. Candidate-piece counters describe exactly the current suffix; equality length=maxCount*distinct holds exactly when all present counts equal maxCount.",
+      "correctness": "Every partition has one final piece and an independently optimal earlier prefix. Trying every balanced final piece covers all possibilities and creates only valid partitions. Its counts sum to its length and are all at most maxCount; equality with maxCount*distinct holds iff every present count attains that maximum. Induction over prefix length gives the minimum.",
+      "complexity": "`O(n^2)` time and `O(n)` auxiliary space with a fixed-size count array.",
+      "pitfall": "A longest balanced prefix need not leave the best remainder; zero-frequency letters must be excluded from the equality condition."
+    },
+    "tags": [
+      "partition-dp",
+      "frequency-certificate",
+      "nonmonotone-predicate"
+    ],
+    "prerequisites": [
+      "prefix-dp",
+      "character-counts"
+    ],
+    "source_fidelity_notes": [
+      "Clarified balance for present letters and exact contiguous covering; retained lowercase alphabet and n bound.",
+      "Used backward candidate extension; avoided canonical claims about removing characters from the wrong end and fixed-alphabet maximum recomputation."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "A longest balanced prefix need not leave the best remainder; zero-frequency letters must be excluded from the equality condition."
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-873",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "873",
+    "title": "Length of Longest Fibonacci Subsequence",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/length-of-longest-fibonacci-subsequence/",
+    "local_path": "problems/medium/873.md",
+    "content_sha256": "7505b8e62ec5a02351955753217bb6745d1cdb1e91fffa54108f444fd3bb9ac9"
+  },
+  "teaching": {
+    "hint": "How much of a chosen subsequence's recent history determines which value could extend it?",
+    "solution_outline": {
+      "decisive_insight": "The next required value depends on the last two chosen values, so a state keyed by a pair is sufficient; strict increase makes a predecessor value's index unique.",
+      "approach": "For each ordered index pair, store the longest valid chain ending in those two elements. Look up the value that must precede the pair, extend the earlier pair when that predecessor occurs at a smaller index, and take the maximum length of at least three.",
+      "state_and_invariant": "For i < j, the pair state is the greatest length of a recurrence-respecting sequence ending at arr[i], arr[j], with a bare pair assigned length two. A transition only reads a previously determined earlier pair.",
+      "correctness": "Any qualifying sequence ending at i,j must have predecessor value arr[j]-arr[i] before i. Strict increase gives at most one such index, so extending its optimal pair yields the optimal state for i,j. Considering all pairs covers every possible endpoint, and discarding length-two states enforces the minimum length of three.",
+      "complexity": "O(n^2) expected time for all index pairs with constant-time value lookup, and O(n^2) space for pair states, where n is at most 1,000.",
+      "pitfall": "A state keyed only by the final element forgets the other value needed to determine the next sum."
+    },
+    "accepted_alternatives": [],
+    "tags": ["dynamic-programming", "subsequence", "pair-state"],
+    "prerequisites": ["subsequence-order", "hash-map"],
+    "common_wrong_turns": ["Count a two-element pair as a valid Fibonacci-like subsequence", "Use a predecessor that occurs after the first pair element", "Enumerate every subsequence"],
+    "source_fidelity_notes": ["Examples were omitted; strict increase, subsequence ordering, minimum length three, no-solution result, and value and length bounds were retained."]
+  }
+}

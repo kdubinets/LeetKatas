@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2576",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2576",
+    "title": "Find the Maximum Number of Marked Indices",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-the-maximum-number-of-marked-indices/",
+    "local_path": "problems/medium/2576.md",
+    "content_sha256": "69df65c2606a6dcae3683422a8f65dbd57ed704ae8aa6f7bc9ffa9ee06feed20"
+  },
+  "teaching": {
+    "hint": "If a pairing is possible, can its smaller members be replaced by even smaller available values?",
+    "solution_outline": {
+      "decisive_insight": "A feasible k-pair matching can be transformed into the k smallest values paired in sorted order with the k largest values.",
+      "approach": "Sort values. Scan candidate small values from the beginning and partner values from the upper half starting at ceil(n/2). Pair the smallest unpaired candidate with the first partner meeting its doubled threshold; discard partners that are too small. Return twice the pair count.",
+      "state_and_invariant": "Chosen pairs are disjoint. The next candidate is the smallest unpaired lower-half value, and skipped partners cannot serve it or any larger candidate.",
+      "correctness": "Uncrossing sorted small/large matches preserves threshold feasibility. Replacing the smaller members by the k smallest inputs and partners by the k largest only eases every inequality; these sets are disjoint for k<=floor(n/2). Thus the two halves contain an optimal matching. A too-small partner can serve no remaining candidate; taking the smallest feasible partner can be exchanged into an optimum without hurting later larger partners. The scan therefore attains the maximum pair count.",
+      "complexity": "O(n log n) time and O(log n) auxiliary sorting stack space for an in-place comparison sort.",
+      "pitfall": "A value must not be consumed early as a small partner if that destroys the separate low/high matching roles; count marked indices, not pairs."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "greedy-matching",
+      "sorted-halves",
+      "exchange-proof"
+    ],
+    "prerequisites": [
+      "sorting",
+      "monotone-threshold",
+      "disjoint-resources"
+    ],
+    "common_wrong_turns": [
+      "A value must not be consumed early as a small partner if that destroys the separate low/high matching roles; count marked indices, not pairs."
+    ],
+    "source_fidelity_notes": [
+      "Preserved independent index order, positive values, inequality, and one-use indices; used the sound chosen half split without repeating the canonical false floor-split claim."
+    ]
+  }
+}

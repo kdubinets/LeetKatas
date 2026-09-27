@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-162",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "162",
+    "title": "Find Peak Element",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-peak-element/",
+    "local_path": "problems/medium/162.md",
+    "content_sha256": "d110e0e14fdb5fb8a2ea355dea16c192782a769aab6ae84883428c357a05fb85"
+  },
+  "teaching": {
+    "hint": "If two adjacent values rise, what must eventually happen farther in that direction?",
+    "solution_outline": {
+      "decisive_insight": "An adjacent slope certifies a peak on one side when the retained interval has outward-decreasing boundary slopes; sortedness is unnecessary.",
+      "approach": "Keep an interval. Compare its midpoint with the next value: retain the right half after an increase, or the left half including the midpoint after a decrease. Stop when one index remains.",
+      "state_and_invariant": "The left endpoint is greater than its outside left neighbor, and the right endpoint is greater than its outside right neighbor, using negative infinity at array boundaries.",
+      "correctness": "The boundary conditions force a peak inside: an increasing walk must eventually descend before passing the right boundary, or a decreasing walk must reverse before passing the left boundary. A rising midpoint pair creates the needed new left boundary; a falling pair creates the new right boundary. Hence every retained interval preserves both conditions, and at a singleton they certify that exact index as a whole-array peak.",
+      "complexity": "O(log n) time and O(1) auxiliary space.",
+      "pitfall": "The search uses comparisons, not value differences, which may overflow; adjacent distinctness is essential to the direction certificate."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "binary-search",
+      "existence-certificate",
+      "local-structure"
+    ],
+    "prerequisites": [
+      "binary-search-invariant",
+      "boundary-certificate"
+    ],
+    "common_wrong_turns": [
+      "The search uses comparisons, not value differences, which may overflow; adjacent distinctness is essential to the direction certificate."
+    ],
+    "source_fidelity_notes": [
+      "Retained the explicit logarithmic requirement, any-answer semantics, adjacent distinctness, and outside-neighbor convention; made boundary certificates explicit in the outline."
+    ]
+  }
+}

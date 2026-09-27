@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-2654",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2654",
+    "title": "Minimum Number of Operations to Make All Array Elements Equal to 1",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-number-of-operations-to-make-all-array-elements-equal-to-1/",
+    "local_path": "problems/medium/2654.md",
+    "content_sha256": "76cce9666d619fdfec5b9e46de3c56d95cde429a8c11443d0fb47420cd2248de"
+  },
+  "teaching": {
+    "hint": "How does having even one value equal to one change the remaining task?",
+    "solution_outline": {
+      "decisive_insight": "Existing ones spread at one operation per other position. Without one, first manufacture it by folding the shortest contiguous interval with GCD one.",
+      "approach": "If there are c ones, return n-c. Otherwise enumerate interval starts and extend a running GCD to find the shortest GCD-one interval of length L. If none exists return -1; otherwise return L-1+n-1.",
+      "state_and_invariant": "Each running GCD is exactly that original interval GCD; the best length is the shortest qualifying interval found. Current values in any operation sequence depend on original contiguous intervals.",
+      "correctness": "Each write creates at most one new one, so existing c ones require at least n-c writes, attained by spreading. With no initial one, the first one must depend on a contiguous original block whose GCD is one. Combining its L or more original contributors through adjacent edges needs at least L-1 operations, followed by at least n-1 writes to create the other ones. Folding a shortest interval and then spreading achieves both bounds. If the whole-array GCD is greater than one, its common factor is invariant and prevents any one.",
+      "complexity": "O(n^2 log V) time for GCD updates with maximum value V and O(1) auxiliary space.",
+      "pitfall": "Checking only adjacent coprime pairs misses arrays whose shortest GCD-one interval has length greater than two."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "gcd",
+      "lower-bound",
+      "propagation"
+    ],
+    "prerequisites": [
+      "gcd-associativity"
+    ],
+    "common_wrong_turns": [
+      "Checking only adjacent coprime pairs misses arrays whose shortest GCD-one interval has length greater than two."
+    ],
+    "source_fidelity_notes": [
+      "Retained one-endpoint replacement, adjacency, positivity, and impossible result; did not treat operations as deleting elements."
+    ]
+  }
+}

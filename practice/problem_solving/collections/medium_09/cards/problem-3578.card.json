@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3578",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3578",
+    "title": "Count Partitions With Max-Min Difference at Most K",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-partitions-with-max-min-difference-at-most-k/",
+    "local_path": "problems/medium/3578.md",
+    "content_sha256": "3714aa18c8e1118a387a1beb51e2aa997b2e9685bd5e833c9156d01f2eeb5cab"
+  },
+  "teaching": {
+    "hint": "For a fixed last position, how are all legal starts related, and what weight does each start contribute?",
+    "solution_outline": {
+      "decisive_insight": "Legal starts at an endpoint form a suffix interval; summing the preceding prefix-partition counts over that interval gives its exact new count.",
+      "approach": "Sweep right endpoints, maintaining the earliest legal start with decreasing and increasing candidate deques for window maximum and minimum. Store partition counts for prefixes and their cumulative sums so all legal last cuts contribute in one range-sum query.",
+      "state_and_invariant": "Deque fronts are the current window’s exact extremes, and its left boundary is the earliest valid start. A prefix-count state counts exactly partitions of that prefix; cumulative states sum those weights over candidate cuts.",
+      "correctness": "Shrinking a segment never increases its max-min difference, so the legal starts are exactly those at or after the repaired boundary. Later dominating deque entries make earlier dominated ones irrelevant to future extremes. Every partition uniquely splits into a preceding-prefix partition and one legal final segment; summing their counts over the exact legal interval counts each partition once. Induction over endpoints proves the total.",
+      "complexity": "`O(n)` time because each index enters and leaves each deque once; `O(n)` auxiliary space for prefix counts and candidate deques.",
+      "pitfall": "When the earliest legal start is zero, the range sum includes the empty-prefix count of one; no negative-index prefix lookup is valid."
+    },
+    "tags": [
+      "partition-counting",
+      "monotonic-deque",
+      "dp-range-sums"
+    ],
+    "prerequisites": [
+      "prefix-dp",
+      "window-invariant"
+    ],
+    "source_fidelity_notes": [
+      "Retained nonempty contiguous coverage, inclusive max-min bound, cut-based counting, modulo, and full limits.",
+      "Made the empty-prefix contribution explicit rather than leaving prefix[-1] notation ambiguous."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "When the earliest legal start is zero, the range sum includes the empty-prefix count of one; no negative-index prefix lookup is valid."
+    ]
+  }
+}

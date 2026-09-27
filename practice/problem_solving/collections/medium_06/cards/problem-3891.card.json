@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "problem-3891",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3891",
+    "title": "Minimum Increase to Maximize Special Indices",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-increase-to-maximize-special-indices/",
+    "local_path": "problems/medium/3891.md",
+    "content_sha256": "62857f332ebdbb73962a1c50a4267b33bcc620f1261060e67637bcfa558fbb61"
+  },
+  "teaching": {
+    "hint": "How many inner positions can be peaks at once, and which choices attain that maximum?",
+    "solution_outline": {
+      "decisive_insight": "Adjacent indices cannot both be strict peaks, so the maximum peak count is the maximum independent-set size of the inner path. For any chosen nonadjacent peaks, the cheapest increases are local and independent.",
+      "approach": "For every inner index, find the increase needed to exceed its two original neighbors. If the number of inner indices is odd, sum costs at odd indices, the unique maximum set. If it is even, evaluate every single switch from odd-index peaks on the left to even-index peaks on the right using prefix and suffix cost sums.",
+      "state_and_invariant": "A chosen peak costs max(0, max(original neighbors)+1-original value); increasing an unchosen position cannot help. Each candidate switch represents one maximum-cardinality nonadjacent set, and its prefix/suffix sum is exactly that set’s minimum cost.",
+      "correctness": "At most every other inner index can be a peak, and raising alternating indices attains that count. Any final optimum therefore chooses a maximum independent set. An odd-length inner path has one such set. An even-length inner path has one unit of slack beyond the unchosen separators forced between selected peaks; placing that slack at a boundary or between peaks creates exactly one odd-to-even phase switch. The method considers every such set and pays the independent minimum cost for its peaks, so its smallest total is optimal.",
+      "complexity": "O(n) time and O(n) auxiliary space for peak costs and prefix/suffix sums; a rolling-sum form can use O(1) extra space. Accumulate costs in a wide integer.",
+      "pitfall": "For even n, checking only all odd or all even inner indices misses a cheaper maximum set whose parity changes once in the middle."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "path-independent-set",
+      "lexicographic-optimization",
+      "peak-costs"
+    ],
+    "prerequisites": [
+      "path-adjacency",
+      "prefix-sums",
+      "combinatorial-counting"
+    ],
+    "common_wrong_turns": [
+      "Minimizing cost before maximizing the number of peaks",
+      "Considering only the two alternating patterns when n is even",
+      "Increasing a nonchosen neighbor to help a chosen peak",
+      "Accumulating costs in 32 bits"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained strict two-neighbor peak rule, increase-only operations, and maximize-count-before-minimize-cost objective."
+    ]
+  }
+}

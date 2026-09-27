@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-809",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "809",
+    "title": "Expressive Words",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/expressive-words/",
+    "local_path": "problems/medium/809.md",
+    "content_sha256": "343b2c494f9c24b99fa1ff10ca86e81abc38032108bb10333f3ef755fa22392a"
+  },
+  "teaching": {
+    "hint": "Which properties of the consecutive equal-letter groups can the allowed extension change?",
+    "solution_outline": {
+      "decisive_insight": "Extensions preserve the ordered sequence of group letters; matching groups can remain equal or grow only to a target length of at least three.",
+      "approach": "Compare maximal equal-letter runs of each word and s in lockstep. Reject different group letters or counts, any target run shorter than its query run, and any increase whose target length is only two.",
+      "state_and_invariant": "After each matched run, all preceding groups have a legal independent transformation and both cursors are at the next group boundary.",
+      "correctness": "Every extension affects only one run and cannot change group order. The per-run length condition is necessary and sufficient; applying it independently to every corresponding run yields s exactly.",
+      "complexity": "O(W×|s| + total query length) time and O(1) auxiliary space, where W is the number of words.",
+      "pitfall": "Allowing a one-letter run to grow to exactly two violates the operation’s minimum resulting run length."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "run-length-comparison",
+      "transformation-feasibility"
+    ],
+    "prerequisites": [
+      "two-pointer",
+      "string-runs"
+    ],
+    "common_wrong_turns": [
+      "Compare only total string lengths",
+      "Allow growth to a final run of two",
+      "Accept when only one cursor reaches its end"
+    ],
+    "source_fidelity_notes": [
+      "Restated the extension operation precisely and kept a compact example for the length-two trap."
+    ]
+  }
+}

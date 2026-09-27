@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2925",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2925",
+    "title": "Maximum Score After Applying Operations on a Tree",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-score-after-applying-operations-on-a-tree/",
+    "local_path": "problems/medium/2925.md",
+    "content_sha256": "50744799c6aeb3fe6b007362c2783f4fb1a205b8b5babd0d815f8e1dc817c3c0"
+  },
+  "teaching": {
+    "hint": "Can it be easier to describe the values you must leave behind than those you collect?",
+    "solution_outline": {
+      "decisive_insight": "Positive values make health equivalent to retaining at least one original node on every root-to-leaf path. Maximizing collected value minimizes the retained sum.",
+      "approach": "Root the tree and process children before parents. For a leaf, its minimum retained sum is its own value. At an internal node, take the smaller of keeping that node alone and summing the child minimum retained sums. Subtract the root result from the original total.",
+      "state_and_invariant": "Each subtree state is the cheapest retained set meeting every path from its root to its leaves, assuming no ancestor already covers those paths.",
+      "correctness": "A leaf path forces its node to remain. At an internal node, keeping it covers all descendant paths and additional kept values only cost more. If it is removed, every child subtree must meet its own paths independently. These exhaustive achievable choices and induction give the exact retained minimum. Its complement is a legal maximum score; removing nodes in any order toward that final positive retained set preserves health throughout.",
+      "complexity": "O(n) time and O(n) auxiliary space using an explicit rooted order; total sums require 64 bits.",
+      "pitfall": "Applying the internal minimum formula to a leaf gives an empty child sum of zero and illegally leaves its path uncovered."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree-dp",
+      "complement",
+      "path-cover"
+    ],
+    "prerequisites": [
+      "postorder",
+      "optimal-substructure"
+    ],
+    "common_wrong_turns": [
+      "Applying the internal minimum formula to a leaf gives an empty child sum of zero and illegally leaves its path uncovered."
+    ],
+    "source_fidelity_notes": [
+      "Retained rooting at zero and positivity; leaf means no rooted children, and the mandatory condition applies to every path."
+    ]
+  }
+}

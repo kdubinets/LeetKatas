@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2830",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2830",
+    "title": "Maximize the Profit as the Salesman",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximize-the-profit-as-the-salesman/",
+    "local_path": "problems/medium/2830.md",
+    "content_sha256": "63cded2db20da73785c4477a36d3ed3ad51feb94aafcd3b348cd08662ee7980e"
+  },
+  "teaching": {
+    "hint": "If a chosen offer ends at a particular house, which earlier houses can still have been sold?",
+    "solution_outline": {
+      "decisive_insight": "An optimal plan over a house prefix either ignores offers ending there or takes exactly one and combines it with the best plan strictly before its start.",
+      "approach": "Group offers by their end house. Sweep the house positions, carrying forward the prior optimum or taking any offer ending at that position plus the optimum before its start.",
+      "state_and_invariant": "After processing the first i houses, the state is the maximum profit using only houses before i.",
+      "correctness": "An optimum for a prefix either sells no offer ending at its last house or contains one such offer; all other chosen offers must end before its start. Both exhaustive cases are evaluated and realizable.",
+      "complexity": "O(n+m) time and O(n+m) auxiliary space for n houses and m offers.",
+      "pitfall": "Intervals sharing an endpoint house overlap; combining an offer starting at s with a state that includes house s double-sells it."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "weighted-interval-scheduling",
+      "prefix-dp"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "interval-overlap"
+    ],
+    "common_wrong_turns": [
+      "Choose the offer with most gold first",
+      "Allow two inclusive intervals to share a house"
+    ],
+    "source_fidelity_notes": [
+      "Inclusive endpoints, optional unsold houses, and all size bounds remain explicit."
+    ]
+  }
+}

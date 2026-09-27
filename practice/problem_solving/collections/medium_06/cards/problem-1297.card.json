@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1297",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1297",
+    "title": "Maximum Number of Occurrences of a Substring",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-number-of-occurrences-of-a-substring/",
+    "local_path": "problems/medium/1297.md",
+    "content_sha256": "d48cd0d8e489eb1a983d247497f554eefe86c7fee85bd4384a6b4638d676160c"
+  },
+  "teaching": {
+    "hint": "If a longer substring qualifies, what can you say about occurrences of its shortest permitted prefix?",
+    "solution_outline": {
+      "decisive_insight": "Every occurrence of a valid longer substring supplies an occurrence of its valid length-`minSize` prefix, so some shortest permitted substring attains the optimum.",
+      "approach": "Examine only windows of length `minSize`. Maintain their distinct-letter count and tally each valid window by its exact text; return the largest tally.",
+      "state_and_invariant": "The moving window frequencies describe exactly the current length-`minSize` substring; each counted key records its number of starting positions seen so far.",
+      "correctness": "A valid long substring cannot occur more often than its valid shortest prefix. Every shortest qualifying window is counted once, so the maximum tally equals the requested maximum.",
+      "complexity": "`O(|s| * minSize)` time for materializing keys and `O(|s| * minSize)` worst-case storage for distinct keys; `minSize <= 26`.",
+      "pitfall": "Checking every length up to `maxSize` can multiply work unnecessarily; overlapping occurrences still count."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "substring",
+      "dominance",
+      "sliding-window"
+    ],
+    "prerequisites": [
+      "frequency-counting",
+      "substring-semantics"
+    ],
+    "common_wrong_turns": [
+      "Assuming longer valid substrings may have a higher occurrence count",
+      "Counting only nonoverlapping matches"
+    ],
+    "source_fidelity_notes": [
+      "Removed repetitive examples; retained overlapping occurrences and both length and alphabet bounds."
+    ]
+  }
+}

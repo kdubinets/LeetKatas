@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-688",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "688",
+    "title": "Knight Probability in Chessboard",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/knight-probability-in-chessboard/",
+    "local_path": "problems/medium/688.md",
+    "content_sha256": "fc0f8b27381f0846859c7367be8dac24bdd67a29bdf1dd473d3f2d20a41bb714"
+  },
+  "teaching": {
+    "hint": "After one move, what probability is at each on-board square, and what happens to probability assigned to off-board choices?",
+    "solution_outline": {
+      "decisive_insight": "The knight's future depends only on its current square and move count; survival probability can be propagated as mass over board cells rather than enumerating move sequences.",
+      "approach": "Start with probability one at the initial square. For each of k moves, distribute every on-board square's current probability equally across all eight knight offsets, keeping only on-board destinations. Sum the remaining mass after the last layer.",
+      "state_and_invariant": "After t layers, each square stores exactly the probability of being there after t moves without ever having left the board; discarded mass represents paths that already ended off-board.",
+      "correctness": "The initial layer matches the starting position. Each move independently chooses every one of eight offsets with probability one eighth, so distributing and summing mass computes every on-board arrival probability exactly. By induction, the final total is the probability of surviving all k attempted moves.",
+      "complexity": "O(k n^2) time and O(n^2) auxiliary space with two board layers; each cell has eight constant-size transitions.",
+      "pitfall": "Renormalizing among legal on-board moves is wrong: off-board choices remain possible and their probability must be lost."
+    },
+    "accepted_alternatives": ["Memoized recursion on position and moves remaining computes the same probability in O(k n^2) time and O(k n^2) space."],
+    "tags": ["probability-dp", "grid-dynamic-programming", "state-transition"],
+    "prerequisites": ["probability-addition", "knight-movement"],
+    "common_wrong_turns": ["Choose only among legal destinations", "Enumerate all eight-to-the-k move sequences", "Forget that k=0 has probability one"],
+    "source_fidelity_notes": ["The image of knight movement was replaced by exact coordinate offsets; uniform choice including off-board moves, early stopping, k=0, and bounds were retained."]
+  }
+}

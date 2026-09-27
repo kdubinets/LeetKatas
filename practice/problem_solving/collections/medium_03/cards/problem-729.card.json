@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-729",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "729",
+    "title": "My Calendar I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/my-calendar-i/",
+    "local_path": "problems/medium/729.md",
+    "content_sha256": "4421c6b02a006ce53848d8de6c09d7dddd7e36c815a034e21bdca2a9ec527040"
+  },
+  "teaching": {
+    "hint": "If accepted events never overlap and are ordered by start time, which ones could overlap a new interval?",
+    "solution_outline": {
+      "decisive_insight": "In a sorted set of disjoint intervals, only the nearest predecessor and nearest successor by start can overlap a new interval.",
+      "approach": "Maintain accepted bookings ordered by start. For each proposal, compare it with the first booking starting at or after its start and with the immediately previous booking; insert only if neither intersects it.",
+      "state_and_invariant": "All stored bookings are pairwise disjoint and ordered. The immediate predecessor has the latest end among prior starts, and the successor has the earliest start among later starts.",
+      "correctness": "Any earlier booking ends no later than the predecessor, and any later booking starts no earlier than the successor. Passing those two overlap tests therefore rules out all conflicts; inserting preserves the invariant.",
+      "complexity": "O(log B) time per booking with an ordered set and O(B) total space for B accepted bookings.",
+      "pitfall": "Treating touching endpoints as an overlap rejects valid half-open neighboring events."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "dynamic-intervals",
+      "ordered-neighbor-query"
+    ],
+    "prerequisites": [
+      "half-open-interval",
+      "ordered-set"
+    ],
+    "common_wrong_turns": [
+      "Use closed-interval overlap conditions",
+      "Insert a rejected event",
+      "Check only one side of the insertion point"
+    ],
+    "source_fidelity_notes": [
+      "Retained transactional rejection behavior and half-open boundary example."
+    ]
+  }
+}

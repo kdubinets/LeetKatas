@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-1277",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1277",
+    "title": "Count Square Submatrices with All Ones",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-square-submatrices-with-all-ones/",
+    "local_path": "problems/medium/1277.md",
+    "content_sha256": "0ba143d03f1e544f28b4ce5a8322628648c8d4ac2fad31ef8fafddc81ed9fa10"
+  },
+  "teaching": {
+    "hint": "For one bottom-right corner, how are the qualifying square sizes related to the largest qualifying size there?",
+    "solution_outline": {
+      "decisive_insight": "At a fixed bottom-right corner, feasible square sizes are exactly 1 through the largest feasible side. Thus that largest side is also the number of all-one squares ending there.",
+      "approach": "For each one-cell, find the largest all-one square ending there from the largest squares ending immediately above, left, and diagonally above-left; add that side length to the total. Zero-cells contribute zero.",
+      "state_and_invariant": "The value at a processed cell is the greatest all-one square side length with that cell as bottom-right corner. The running total counts precisely all such squares ending at processed cells.",
+      "correctness": "A side-k square can end at a one-cell exactly when its three overlapping side-(k-1) neighbor squares all exist, giving one plus their minimum largest side. Every smaller side at that corner also exists, so the cell's value counts its qualifying squares. Each square has one bottom-right corner, making the sum exact without duplicates.",
+      "complexity": "O(mn) time and O(mn) auxiliary space for an m-by-n matrix; rolling rows can reduce space to O(n).",
+      "pitfall": "Checking only top and left neighbors overcounts squares with a zero inside the diagonal overlap."
+    },
+    "accepted_alternatives": ["A rolling-row version keeps the previous and current row of side lengths, using O(n) auxiliary space and O(mn) time."],
+    "tags": ["grid-dynamic-programming", "count-by-anchor", "square-submatrix"],
+    "prerequisites": ["grid-neighbors", "dynamic-programming"],
+    "common_wrong_turns": ["Count only maximal squares", "Ignore the diagonal neighbor", "Treat rectangles as qualifying squares"],
+    "source_fidelity_notes": ["The source's detailed size breakdown was replaced by a 2-by-2 all-one case; all sizes and positions, binary values, and dimension bounds were retained."]
+  }
+}

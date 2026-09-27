@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-382",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "382",
+    "title": "Linked List Random Node",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/linked-list-random-node/",
+    "local_path": "problems/medium/382.md",
+    "content_sha256": "a9db4e7d6ec26de8d0ae06970dc4e31afa49b7317e8cff5fb119ef8377dd69b6"
+  },
+  "teaching": {
+    "hint": "Can a sample remain uniform as one more node is encountered?",
+    "solution_outline": {
+      "decisive_insight": "A one-item sample can be updated online: replace it at the `t`th node with probability `1/t`.",
+      "approach": "Store the head. For each call, scan nodes once, replacing the saved value with probability reciprocal to the number seen so far; return the final saved value.",
+      "state_and_invariant": "After visiting `t` nodes, each visited node is represented by the saved value with probability exactly `1/t`.",
+      "correctness": "The new node enters with probability `1/t`; any earlier node survives with probability `(1/(t-1))*(1-1/t)=1/t`. Induction establishes uniformity after the full list.",
+      "complexity": "`O(n)` time per call and `O(1)` auxiliary space, including for unknown list length.",
+      "pitfall": "Uniformity is over nodes, so repeated values must not be deduplicated or reweighted."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "reservoir-sampling",
+      "online-randomness"
+    ],
+    "prerequisites": [
+      "probability",
+      "linked-list-traversal"
+    ],
+    "common_wrong_turns": [
+      "Sampling distinct values instead of nodes",
+      "Using a biased replacement probability",
+      "Assuming the list length is known"
+    ],
+    "source_fidelity_notes": [
+      "Removed nondeterministic sample outputs; retained node-level uniformity and the unknown-length constant-space follow-up."
+    ]
+  }
+}

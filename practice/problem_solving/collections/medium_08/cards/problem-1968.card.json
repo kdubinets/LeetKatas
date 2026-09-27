@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1968",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1968",
+    "title": "Array With Elements Not Equal to Average of Neighbors",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/array-with-elements-not-equal-to-average-of-neighbors/",
+    "local_path": "problems/medium/1968.md",
+    "content_sha256": "f90f5be5c9132536157263370f918cbfe94185c8497780d089923920d9265999"
+  },
+  "teaching": {
+    "hint": "Can an easier condition based only on comparisons guarantee the arithmetic requirement?",
+    "solution_outline": {
+      "decisive_insight": "An element strictly above both neighbors or strictly below both cannot equal their average. A strict alternating order is therefore a sufficient construction.",
+      "approach": "Sort the values, then swap consecutive pairs starting at sorted index one. This places larger members at odd positions and smaller members at interior even positions.",
+      "state_and_invariant": "After the swaps, every interior odd position exceeds both neighbors, and every interior even position is below both neighbors. Each original value still appears exactly once.",
+      "correctness": "Distinct sorted values make both neighbor comparisons strict: each swapped odd position receives a later sorted value than either neighbor, and each interior even position receives an earlier one. Thus every constrained element is a strict extremum and cannot equal the average. Sorting and swapping preserve the input multiset.",
+      "complexity": "`O(n log n)` time; the construction uses `O(1)` additional storage beyond an in-place sort, which may use `O(log n)` stack space.",
+      "pitfall": "The distinctness promise is essential to strict extrema; merely returning the sorted array fails for arithmetic progressions."
+    },
+    "tags": [
+      "constructive",
+      "sorting",
+      "ordinal-invariant"
+    ],
+    "prerequisites": [
+      "sorting",
+      "strict-order"
+    ],
+    "source_fidelity_notes": [
+      "Retained distinct values, endpoint exemption, any-valid-output semantics, and mathematical average; removed examples and platform indexing boilerplate."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "The distinctness promise is essential to strict extrema; merely returning the sorted array fails for arithmetic progressions."
+    ]
+  }
+}

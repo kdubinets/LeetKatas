@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-636",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "636",
+    "title": "Exclusive Time of Functions",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/exclusive-time-of-functions/",
+    "local_path": "problems/medium/636.md",
+    "content_sha256": "65c48718f1ec5d3a29f7f3e2acf62d11ea9ada70bbe88bcd01e379579bb38a57"
+  },
+  "teaching": {
+    "hint": "Between two consecutive log events, which function owns the elapsed time?",
+    "solution_outline": {
+      "decisive_insight": "The stack top owns each interval of CPU time. A start begins at its timestamp, but an end includes its timestamp, so the next uncharged time differs after the two event types.",
+      "approach": "Keep active function IDs in a stack and a cursor for the next uncharged time. At a start event, charge the interval before that timestamp to the current stack top, then push the new call. At an end event, charge through that timestamp to the top call, pop it, and advance the cursor past the end timestamp.",
+      "state_and_invariant": "Before each log, every earlier time unit during which a function was active has been charged exactly once to that function. The stack records active nested calls, and the cursor marks the next time that can be charged; idle gaps have no owner.",
+      "correctness": "Chronological, well-formed logs partition execution into intervals whose owner is the current stack top. Start events transfer ownership at their beginning, while end events transfer it after their final time unit. Charging each interval to its owner preserves the invariant, and at the final end every executed unit has been assigned exactly once to the correct function ID.",
+      "complexity": "O(L) time for L logs and O(d + n) auxiliary space for maximum call depth d, output accumulators for n functions, and the active stack.",
+      "pitfall": "Treating an end timestamp as exclusive loses one time unit per call and misattributes resumed parent time."
+    },
+    "accepted_alternatives": ["Track each frame's start and accumulated child duration, then subtract child time on its end; this also uses O(L) time and O(d) stack space."],
+    "tags": ["stack", "event-processing", "interval-accounting"],
+    "prerequisites": ["call-stack", "inclusive-interval"],
+    "common_wrong_turns": ["Include child execution in its parent's exclusive total", "Execute an end event without counting its timestamp", "Assume recursive calls have distinct function IDs"],
+    "source_fidelity_notes": ["The source diagram was replaced with a compact log example; single-threading, recursive calls, inclusive ends, output by function ID, and bounds were retained."]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3942",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3942",
+    "title": "Minimum Operations to Sort a Permutation",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-operations-to-sort-a-permutation/",
+    "local_path": "problems/medium/3942.md",
+    "content_sha256": "2a30d35ced4d04a7c1ea90a1e78407d72fac4ec82e8333aa363e797e65b4932d"
+  },
+  "teaching": {
+    "hint": "How many distinct arrangements can whole-array reversal and rotation actually reach from sorted order?",
+    "solution_outline": {
+      "decisive_insight": "Reversal changes orientation and rotation changes offset, so every reachable arrangement is a rotation of sorted or reverse-sorted order.",
+      "approach": "Check whether the input or its reversal is a rotation of increasing order. If the input is such a rotation and zero is at index k, its cost is min(k,n-k+2). If the reversal is such a rotation and zero is at index j there, its cost is 1+min(j,n-j). Take the best applicable case, or -1 if neither applies.",
+      "state_and_invariant": "The state of any operation sequence reduces to a cyclic offset and an orientation bit; two reversals cancel and conjugate a left rotation into a right rotation.",
+      "correctness": "Every operation sequence has one of the two checked orientations. The allowed candidate sequences realize each possible offset with the fewest reversals and rotations, so their minimum is globally optimal.",
+      "complexity": "O(n) time and O(n) auxiliary space if a reversed copy is used; an index-view implementation uses O(1) extra space.",
+      "pitfall": "A right rotation is not directly allowed and may need two reversals around left rotations."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "transformation-orbit",
+      "rotation-reversal"
+    ],
+    "prerequisites": [
+      "permutations",
+      "operation-invariants"
+    ],
+    "common_wrong_turns": [
+      "Run BFS over full arrays",
+      "Assume every permutation is reachable"
+    ],
+    "source_fidelity_notes": [
+      "The two whole-array operations and impossibility output are explicit; no source diagram is needed."
+    ]
+  }
+}

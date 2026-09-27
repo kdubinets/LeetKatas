@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3133",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3133",
+    "title": "Minimum Array End",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-array-end/",
+    "local_path": "problems/medium/3133.md",
+    "content_sha256": "c5fcd2d28a354f0f264dc80073ea2365a21ce314ac66d65095ea683ef24fc2e5"
+  },
+  "teaching": {
+    "hint": "Which bit positions must be set in every array entry for their common AND to retain each set bit of x?",
+    "solution_outline": {
+      "decisive_insight": "Every array entry must be a supermask of x. The zero positions of x are free positions into which the bits of 0,1,2,... can be placed in order, yielding the supermasks in increasing numeric order.",
+      "approach": "Take n-1 in binary and place its bits from low to high into the zero-bit positions of x, leaving every one-bit of x set. Return this nth supermask.",
+      "state_and_invariant": "As free bit positions are filled from low to high, the constructed value has x's fixed bits and the already consumed low bits of n-1 in the corresponding free positions. This mapping preserves numeric order.",
+      "correctness": "Any valid entry must contain all one-bits of x, so an increasing valid array needs n distinct supermasks; its end is at least the nth smallest. The mapping from ordinary nonnegative integers to supermasks preserves order. Its first n outputs start with x, so their AND is exactly x, and the nth output attains the lower bound.",
+      "complexity": "O(log n + log x) bit positions examined and O(1) auxiliary space. The result can require 64-bit storage.",
+      "pitfall": "Setting only the bits of x in the answer misses the need to reserve distinct larger entries for a strictly increasing array."
+    },
+    "accepted_alternatives": [],
+    "tags": ["bit-manipulation", "constructive-algorithm", "order-statistics"],
+    "prerequisites": ["bitwise-and", "binary-representation"],
+    "common_wrong_turns": ["Assume each zero-bit position can only be used once across the array", "Use 32-bit storage for the result", "Build arbitrary supermasks without proving the endpoint minimum"],
+    "source_fidelity_notes": ["The strict increase, positive values, global AND requirement, n and x bounds, and endpoint-only output were retained; 64-bit growth was clarified."]
+  }
+}

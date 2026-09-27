@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-790",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "790",
+    "title": "Domino and Tromino Tiling",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/domino-and-tromino-tiling/",
+    "local_path": "problems/medium/790.md",
+    "content_sha256": "990f725c8c9eef59d957e07629c9cc3089692f927411e8c1644264d361fa950f"
+  },
+  "teaching": {
+    "hint": "What partial boundary shapes can a tile leave while filling the board from one end?",
+    "solution_outline": {
+      "decisive_insight": "A tromino can create a one-cell protrusion, so a complete-prefix count alone is insufficient; a second boundary state closes the recurrence.",
+      "approach": "Count both completely tiled prefixes and prefixes with one cell of the next column filled. Relate each state to shorter prefixes by the tile shape at its right boundary, then compute modulo the required value.",
+      "state_and_invariant": "The complete and one-cell-protrusion counts summarize all legal partial tilings. Mirrored protrusions have equal counts.",
+      "correctness": "Every tiling has a unique right-edge tile configuration: one vertical domino, two horizontal dominoes, or a tromino closing a protrusion. The corresponding transitions are disjoint and exhaustive; induction yields the full-board count.",
+      "complexity": "O(n) time and O(n) space for a direct DP; rolling state can use O(1) space.",
+      "pitfall": "Counting only flat boundaries misses tilings that temporarily need an uneven frontier."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tiling-dp",
+      "frontier-state"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "symmetry"
+    ],
+    "common_wrong_turns": [
+      "Treat the tromino as a straight three-cell tile",
+      "Count only fully filled prefixes"
+    ],
+    "source_fidelity_notes": [
+      "Replaced image-only tile geometry with a precise textual definition of the L tromino; retained modulo and tiling distinctness."
+    ]
+  }
+}

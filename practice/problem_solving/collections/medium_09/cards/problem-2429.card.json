@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2429",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2429",
+    "title": "Minimize XOR",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimize-xor/",
+    "local_path": "problems/medium/2429.md",
+    "content_sha256": "b23b1742bcf73dff8bec5bdb23db7ee5f6eab999be83c591c2de8e33ec9289a6"
+  },
+  "teaching": {
+    "hint": "What does changing a bit cost in the objective, and which changes can repair the required count?",
+    "solution_outline": {
+      "decisive_insight": "Starting at num1 gives zero disagreement; the popcount mismatch can be repaired with only additions or only removals at the least significant eligible positions.",
+      "approach": "Count the required one-bits. If num1 has too few, set its lowest unset bits until the count matches; if it has too many, clear its lowest set bits. Leave it unchanged when counts already match.",
+      "state_and_invariant": "Every edit changes the one-count in the needed direction. Among eligible edits made so far, the chosen positions have the least available XOR costs.",
+      "correctness": "If additions are needed, any solution with removals also needs extra additions; deleting such a removal/addition pair lowers cost while preserving net count. Thus an optimum uses exactly the deficit in additions. Exchanging a chosen high unset bit with a lower unset bit strictly reduces XOR, forcing the lowest eligible bits. The removal case is symmetric. The count constraint is met and no other selection costs less.",
+      "complexity": "`O(W)` time and `O(1)` space for the bounded bit width W, at most 31 relevant positions here.",
+      "pitfall": "Sacrifice the lowest eligible bits, not the highest: high-bit disagreement dominates low-bit savings."
+    },
+    "tags": [
+      "bit-greedy",
+      "exchange-argument",
+      "popcount"
+    ],
+    "prerequisites": [
+      "binary-place-value",
+      "bitwise-xor"
+    ],
+    "source_fidelity_notes": [
+      "Retained positivity, fixed one-bit count, uniqueness, ordinary XOR minimization, and input bounds."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Sacrifice the lowest eligible bits, not the highest: high-bit disagreement dominates low-bit savings."
+    ]
+  }
+}

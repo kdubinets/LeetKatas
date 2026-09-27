@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2957",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2957",
+    "title": "Remove Adjacent Almost-Equal Characters",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/remove-adjacent-almost-equal-characters/",
+    "local_path": "problems/medium/2957.md",
+    "content_sha256": "638eea1ee45802b08e7a08578cd55895e62e32b55608e8b2d92642a0c3e60814"
+  },
+  "teaching": {
+    "hint": "A replacement can affect which of the original bad adjacencies?",
+    "solution_outline": {
+      "decisive_insight": "Each originally violating adjacent pair needs an edited endpoint; the 26-letter alphabet always permits one edited letter to satisfy both neighboring pairs.",
+      "approach": "Scan the original adjacent pairs from left to right. On a violating pair, charge one edit to its right position and skip the next pair that this edit can also cover.",
+      "state_and_invariant": "Charged bad edges are pairwise vertex-disjoint, while chosen edited positions cover every original bad edge.",
+      "correctness": "Disjoint charged edges force at least one edit each. A replacement avoids at most six forbidden letters from its two neighbors, so every selected edit can fix its incident pairs; the matching construction attains the lower bound.",
+      "complexity": "`O(|word|)` time and `O(1)` auxiliary space.",
+      "pitfall": "Counting every bad pair separately overcounts runs such as three equal letters, where one edit repairs two pairs."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "path-cover",
+      "greedy",
+      "local-edits"
+    ],
+    "prerequisites": [
+      "adjacency",
+      "lower-bound-proof"
+    ],
+    "common_wrong_turns": [
+      "Editing once for every bad pair",
+      "Assuming replacement letters can be unavailable"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; clarified alphabet adjacency and that only the edit count is returned."
+    ]
+  }
+}

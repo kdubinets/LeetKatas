@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1846",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1846",
+    "title": "Maximum Element After Decreasing and Rearranging",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-element-after-decreasing-and-rearranging/",
+    "local_path": "problems/medium/1846.md",
+    "content_sha256": "48a65daa4eee48411f9a4d3cd6ac2327ca795dd28225e0b488f318fc1ea727a3"
+  },
+  "teaching": {
+    "hint": "If every intermediate level between 1 and the maximum must appear, how should the available original values be assigned?",
+    "solution_outline": {
+      "decisive_insight": "After sorting the originals, each next final value can be no larger than its assigned original or one greater than the preceding attainable level.",
+      "approach": "Sort original values and scan from the smallest, greedily setting each final value to the minimum of its original cap and one more than the preceding value.",
+      "state_and_invariant": "The constructed prefix is feasible, nondecreasing, starts at one, and its final value is the largest attainable maximum using that many smallest originals.",
+      "correctness": "Any valid arrangement reaching a maximum M contains every integer level from 1 through M, so sorting its final values preserves adjacency feasibility. Sorted final values can be matched to sorted originals without exceeding caps. Induction shows each feasible sorted value is at most the corresponding greedy value, while greedy itself is feasible.",
+      "complexity": "O(n log n) time for sorting and O(n) space if preserving the input; in-place sorting uses O(log n) stack space.",
+      "pitfall": "Without sorting, a large value spent early can leave too few resources to build the required sequence of intermediate levels."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "sorted-greedy",
+      "resource-ceiling"
+    ],
+    "prerequisites": [
+      "sorting",
+      "greedy-dominance"
+    ],
+    "common_wrong_turns": [
+      "Increase a small original value",
+      "Ignore the requirement that the first result value is one",
+      "Assume the original input order matters"
+    ],
+    "source_fidelity_notes": [
+      "Clarified positivity after decreases and arbitrary rearrangement; kept one small example showing large values alone do not raise the result."
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-2400",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2400",
+    "title": "Number of Ways to Reach a Position After Exactly k Steps",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/number-of-ways-to-reach-a-position-after-exactly-k-steps/",
+    "local_path": "problems/medium/2400.md",
+    "content_sha256": "93376a4e7b0d0b433705a2566043d99f953177e1a49d010b351bbb108decdfb7"
+  },
+  "teaching": {
+    "hint": "How many steps in each direction must any valid sequence contain?",
+    "solution_outline": {
+      "decisive_insight": "Net displacement and total length fix the counts of forward and backward steps; only their order remains to be counted.",
+      "approach": "Let `d=|endPos-startPos|`. If `d>k` or parity differs, return zero. Otherwise choose which `(k+d)/2` of the `k` positions are steps toward the target, and compute that binomial coefficient modulo the given prime.",
+      "state_and_invariant": "A sequence is identified by the chosen positions of its targetward steps; its other positions go the opposite way.",
+      "correctness": "The two direction counts solve the step-count and displacement equations uniquely. Every ordering of those counts is legal on an infinite line and reaches the target, giving a bijection with subsets of positions.",
+      "complexity": "`O(k + log MOD)` time and `O(k)` space with factorials and modular inverses; a step-position DP takes `O(k²)` time.",
+      "pitfall": "Distance alone is insufficient: if `k-d` is odd, the target is unreachable in exactly `k` steps."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "combinatorics",
+      "walk-counting",
+      "parity"
+    ],
+    "prerequisites": [
+      "binomial-coefficient",
+      "modular-arithmetic"
+    ],
+    "common_wrong_turns": [
+      "Counting only shortest walks",
+      "Ignoring displacement parity",
+      "Restricting movement to nonnegative positions"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained exactly-k ordering, infinite line including negatives, and the required modulus."
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1461",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1461",
+    "title": "Check If a String Contains All Binary Codes of Size K",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/",
+    "local_path": "problems/medium/1461.md",
+    "content_sha256": "453b991cbd5c9d3aa04e72ecd3c7eb8018089ae1689477b3ae6a3ac3023384d2"
+  },
+  "teaching": {
+    "hint": "How many different required strings are there, and how much information must describe one fixed-length candidate?",
+    "solution_outline": {
+      "decisive_insight": "Exactly 2^k codes are required, and each length-k binary window has an exact k-bit integer representation.",
+      "approach": "Reject if there are fewer windows than required codes. Otherwise scan the binary windows using an exact shifting-and-masking representation, mark observed codes, and accept once every code has appeared.",
+      "state_and_invariant": "The maintained low k bits encode the current full window, including leading zeroes; the marked set contains exactly the codes seen at processed starts.",
+      "correctness": "Appending a bit and dropping the oldest one gives precisely the next window’s integer code. The representation bijects the length-k strings with integers below 2^k, so distinct marked codes equal distinct observed strings. All required strings occur exactly when all codes are marked; too few windows cannot cover them.",
+      "complexity": "`O(n+2^k)` time and `O(2^k)` auxiliary space; after the window-count guard, allocated inputs have 2^k<=n, so time is `O(n)`.",
+      "pitfall": "Do not mark a partially filled window or forget leading zeroes; if k exceeds string length there are no full windows."
+    },
+    "tags": [
+      "rolling-encoding",
+      "binary-windows",
+      "finite-domain"
+    ],
+    "prerequisites": [
+      "bit-representation",
+      "frequency-set"
+    ],
+    "source_fidelity_notes": [
+      "Clarified fixed-length codes with leading zeroes and overlapping substrings; retained full n/k bounds."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Do not mark a partially filled window or forget leading zeroes; if k exceeds string length there are no full windows."
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-376",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "376",
+    "title": "Wiggle Subsequence",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/wiggle-subsequence/",
+    "local_path": "problems/medium/376.md",
+    "content_sha256": "a26fb4f1cf4aa8aba220f513f55a417f7358e01c90fb87a0bcee2a109c4d5be1"
+  },
+  "teaching": {
+    "hint": "Which facts about a valid subsequence matter when you append a later number?",
+    "solution_outline": {
+      "decisive_insight": "Only the most recent movement direction and the best achievable length in each direction need be retained.",
+      "approach": "Scan values in order, maintaining best lengths for subsequences whose final difference rises or falls. A rise can extend a fall and vice versa; equality extends neither.",
+      "state_and_invariant": "After each position, the two lengths represent the best up-ending and down-ending wiggles available in the processed prefix.",
+      "correctness": "Any longer valid sequence must alternate its last sign, so each new sign uses the opposite state's previous optimum. Retaining only the best such length loses no future optimum.",
+      "complexity": "O(n) time and O(1) auxiliary space.",
+      "pitfall": "Equal values produce a zero difference and cannot count as either direction."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "alternating-subsequence",
+      "two-state-dp"
+    ],
+    "prerequisites": [
+      "subsequence",
+      "dynamic-programming"
+    ],
+    "common_wrong_turns": [
+      "Treat equal adjacent chosen values as a wiggle",
+      "Track only the last raw difference"
+    ],
+    "source_fidelity_notes": [
+      "The strict sign rule, subsequence ordering, singleton case, and O(n) follow-up are explicit."
+    ]
+  }
+}

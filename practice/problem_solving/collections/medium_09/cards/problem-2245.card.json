@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2245",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2245",
+    "title": "Maximum Trailing Zeros in a Cornered Path",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-trailing-zeros-in-a-cornered-path/",
+    "local_path": "problems/medium/2245.md",
+    "content_sha256": "efdeb5a8d1db2b701fe9f002fcc4c78b6fd883bd6ec6062b79cda0766c7c4931"
+  },
+  "teaching": {
+    "hint": "Can extending a legal straight arm ever reduce the property being maximized?",
+    "solution_outline": {
+      "decisive_insight": "Trailing zeroes count matched factors of two and five. Their nonnegative contributions mean each path’s arms may extend to the boundary without losing score.",
+      "approach": "Count factors of two and five per cell, then build row and column cumulative totals. At each possible corner, combine each vertical direction with each horizontal direction, extend both arms to their boundaries, subtract the duplicated corner, and maximize the smaller factor total.",
+      "state_and_invariant": "Each directional total counts exactly its inclusive straight arm; combining two arms subtracts the corner once so every selected cell contributes once.",
+      "correctness": "The product has exactly min(total twos,total fives) trailing zeroes. Extending either arm preserves path legality and cannot lower either total, so a best path is dominated by one of four maximal orientations at its corner. Straight or singleton paths can also be extended into a legal such shape without loss. All four orientations at every corner are evaluated exactly, so the maximum is attained.",
+      "complexity": "`O(m*n)` time under the fixed value bound and `O(m*n)` auxiliary space.",
+      "pitfall": "Optimize the minimum of the two factor totals for one path; independently maximizing them may combine incompatible paths."
+    },
+    "tags": [
+      "prime-exponents",
+      "directional-sums",
+      "shape-dominance"
+    ],
+    "prerequisites": [
+      "prime-factorization",
+      "prefix-sums"
+    ],
+    "source_fidelity_notes": [
+      "Replaced path images with exact side-adjacency, fixed direction per arm, perpendicular single turn, and no-repeat rules.",
+      "Retained positivity, thin-grid/singleton possibilities, product objective, and total-cell/value bounds."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Optimize the minimum of the two factor totals for one path; independently maximizing them may combine incompatible paths."
+    ]
+  }
+}

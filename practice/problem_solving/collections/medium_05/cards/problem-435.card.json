@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-435",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "435",
+    "title": "Non-overlapping Intervals",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/non-overlapping-intervals/",
+    "local_path": "problems/medium/435.md",
+    "content_sha256": "4f83074fdd69dd8b1a2f2e581a35d8e7bafce1a0382a2576cbf2e5ffde8a3af3"
+  },
+  "teaching": {
+    "hint": "Which interval leaves the most room for later compatible choices?",
+    "solution_outline": {
+      "decisive_insight": "Minimizing removals is maximizing kept intervals; an earliest finishing interval can be exchanged into an optimal compatible selection.",
+      "approach": "Order intervals by ending coordinate and keep each interval whose start is at least the end of the last kept interval. Subtract the number kept from the input count.",
+      "state_and_invariant": "The kept set is compatible, and its last end is the earliest possible finishing boundary after that many greedy choices.",
+      "correctness": "Replace the first interval of any optimal set by the earliest finishing interval without harming later compatibility; repeat on the remaining candidates. Thus the greedy kept count is maximal.",
+      "complexity": "`O(n log n)` time for sorting and `O(1)` auxiliary scan state beyond sorting storage.",
+      "pitfall": "Treating endpoint equality as overlap rejects compatible intervals."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "interval-scheduling",
+      "exchange-argument"
+    ],
+    "prerequisites": [
+      "sorting",
+      "greedy-proof"
+    ],
+    "common_wrong_turns": [
+      "Sort solely by start time",
+      "Use strict start > previous end"
+    ],
+    "source_fidelity_notes": [
+      "The endpoint-touch rule is explicit."
+    ]
+  }
+}

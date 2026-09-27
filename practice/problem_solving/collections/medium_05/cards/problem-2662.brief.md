@@ -1,0 +1,3 @@
+# Minimum Cost of a Path With Special Roads
+
+Start and target are points in a two-dimensional integer plane. Ordinary travel between any two points costs their Manhattan distance. Each of up to 200 special roads has a fixed start point, end point, and positive cost; it works only in its stated direction and may be used any number of times. Find the minimum total cost from start to target. Coordinates are between `1` and `10^5`, and each road cost is between `1` and `10^5`. Road endpoints lie within the coordinate rectangle bounded by start and target; ordinary travel is otherwise unobstructed.

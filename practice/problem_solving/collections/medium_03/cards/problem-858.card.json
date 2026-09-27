@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-858",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "858",
+    "title": "Mirror Reflection",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/mirror-reflection/",
+    "local_path": "problems/medium/858.md",
+    "content_sha256": "e7edd0c4bb39cc56577c68371bb9595bd5127aecf2e9234db31607e66a6d0f46"
+  },
+  "teaching": {
+    "hint": "How could reflection paths be compared with straight travel across repeated copies of the room?",
+    "solution_outline": {
+      "decisive_insight": "Unfolding reflections turns the ray into a straight line through tiled squares; the first corner hit is determined by the reduced ratio of p and q.",
+      "approach": "Reduce p and q by their gcd. The number of horizontal and vertical room crossings to the first lattice corner are the reduced p and q; their parities identify east/west and top/bottom.",
+      "state_and_invariant": "The unfolded ray has slope q/p. The first positive room-grid intersection uses horizontal count p/g and vertical count q/g, with g=gcd(p,q).",
+      "correctness": "Unfolding preserves the reflected route. Coprime reduced counts identify the first corner; odd/even crossing parity maps the tiled corner back to a room corner. Both counts cannot be even, so the unlabeled source is not the first receptor.",
+      "complexity": "O(log min(p,q)) time for gcd and O(1) space.",
+      "pitfall": "Testing parity before dividing by gcd can classify an even/even input incorrectly."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "geometry",
+      "reflection",
+      "gcd-parity"
+    ],
+    "prerequisites": [
+      "coordinate-geometry",
+      "greatest-common-divisor"
+    ],
+    "common_wrong_turns": [
+      "Assume all reflections land on the east wall",
+      "Use unreduced p and q for parity"
+    ],
+    "source_fidelity_notes": [
+      "Restated receptor positions and the ray’s initial east-wall height in text because the source relies on an image."
+    ]
+  }
+}

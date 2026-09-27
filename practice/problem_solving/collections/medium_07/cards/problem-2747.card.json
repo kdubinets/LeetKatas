@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-2747",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2747",
+    "title": "Count Zero Request Servers",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-zero-request-servers/",
+    "local_path": "problems/medium/2747.md",
+    "content_sha256": "8af7cc6daeac040189df5bde82a4213706e32cb0c0a1a8259891f5ab9684ffc9"
+  },
+  "teaching": {
+    "hint": "If query times were considered in increasing order, could a discarded old request become relevant again?",
+    "solution_outline": {
+      "decisive_insight": "Increasing query times move both fixed-duration boundaries forward. Per-server occurrence counts turn the active log range into a distinct server count.",
+      "approach": "Sort logs by time and queries by time while preserving query indices. Admit logs through q, remove those strictly before q-x, and update per-server multiplicities and the number of positive counts. Return n minus this active count at each saved index.",
+      "state_and_invariant": "At each answered query the two pointers delimit exactly in-window logs, each server count is its multiplicity there, and the active count is the number of servers with positive multiplicity.",
+      "correctness": "Sorted query boundaries never move backward, so every log enters and leaves at most once. The inclusive comparisons include both endpoint times. Updating the active count only at zero/nonzero transitions counts servers rather than requests. Every server is either active or has zero requests, making the complement exactly the requested answer; saved indices restore output order.",
+      "complexity": "O(L log L + Q log Q + n) time including initialization, and O(n+Q) auxiliary space beyond the log sorting storage.",
+      "pitfall": "Removing a server after just one of its requests expires is wrong while another request from it remains inside the window."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "offline-queries",
+      "sliding-window",
+      "distinct-count"
+    ],
+    "prerequisites": [
+      "window-frequency"
+    ],
+    "common_wrong_turns": [
+      "Removing a server after just one of its requests expires is wrong while another request from it remains inside the window."
+    ],
+    "source_fidelity_notes": [
+      "Retained both inclusive endpoints, all n servers including unlogged ones, unsorted input, and answer order."
+    ]
+  }
+}

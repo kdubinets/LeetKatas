@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1423",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1423",
+    "title": "Maximum Points You Can Obtain from Cards",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-points-you-can-obtain-from-cards/",
+    "local_path": "problems/medium/1423.md",
+    "content_sha256": "a1432642d82d6f8f3bd1b99b13221826ca80e0ee5f8dd493514410e70a98d5c6"
+  },
+  "teaching": {
+    "hint": "After any exact-k sequence of end picks, what shape do the untouched cards have?",
+    "solution_outline": {
+      "decisive_insight": "All selected cards form a prefix plus a suffix; their complement is one contiguous block of length n−k.",
+      "approach": "Compute the total points and subtract the minimum sum among all length-(n−k) contiguous blocks.",
+      "state_and_invariant": "A fixed-length block represents exactly the cards left untouched by one valid split of k picks between the two ends.",
+      "correctness": "Every valid selection maps to a unique untouched block, and every such block can be created by taking its outside prefix and suffix. Maximizing selected score is therefore minimizing untouched score.",
+      "complexity": "O(n) time and O(1) auxiliary space.",
+      "pitfall": "Greedily taking the larger visible end can miss a valuable card just behind a smaller one."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "complement-selection",
+      "fixed-window"
+    ],
+    "prerequisites": [
+      "array-sum",
+      "contiguous-subarray"
+    ],
+    "common_wrong_turns": [
+      "Choose the larger current end at every move",
+      "Forget the k=n empty-complement case"
+    ],
+    "source_fidelity_notes": [
+      "Kept exact-k and k=n cases; removed narrative card example."
+    ]
+  }
+}

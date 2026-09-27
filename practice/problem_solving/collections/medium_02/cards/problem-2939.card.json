@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2939",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2939",
+    "title": "Maximum Xor Product",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-xor-product/",
+    "local_path": "problems/medium/2939.md",
+    "content_sha256": "e992344f5b914aafb27b70efa53f875cd13ba62157af67eff0d45ab9192aba21"
+  },
+  "teaching": {
+    "hint": "At a selectable bit, what changes when a and b have equal bits versus different bits, and what is fixed about the sum of the resulting factors?",
+    "solution_outline": {
+      "decisive_insight": "At equal input bits, the shared XOR choice can set that bit in both factors. At different bits, exactly one factor gets it, so the factor sum is fixed; maximizing their product means making them as close as possible.",
+      "approach": "Preserve the unchangeable bits at positions n and above. Consider lower bits from most significant to least. Set equal input bits in both result factors; for differing input bits, give the bit to the currently smaller factor. Multiply the completed factors and reduce only the final product modulo the required modulus.",
+      "state_and_invariant": "After deciding each high bit, the two factor prefixes represent achievable XOR results and their sum equals the fixed sum available from all decided bits. Choices at differing bits minimize their current absolute gap without changing that sum.",
+      "correctness": "Raising both factors at an equal bit cannot hurt a nonnegative product. At a differing bit, assigning its power of two changes only the gap, not the sum. A higher undecided bit outweighs all lower differing bits combined, so a choice that favors the currently smaller factor cannot be improved by later choices. The completed factors therefore have minimum gap for their fixed sum, which maximizes their ordinary product.",
+      "complexity": "O(n) time over at most 50 selectable bits and O(1) auxiliary space; factor comparison must occur before modular reduction.",
+      "pitfall": "Comparing factor residues modulo 10^9+7 during construction can choose the wrong true maximum."
+    },
+    "accepted_alternatives": [],
+    "tags": ["bit-manipulation", "greedy", "product-optimization"],
+    "prerequisites": ["bitwise-xor", "binary-representation", "greedy-proof"],
+    "common_wrong_turns": ["Maximize the first XOR factor alone", "Reduce candidates modulo the reporting modulus before comparing", "Ignore fixed high bits when n is below the input bit width"],
+    "source_fidelity_notes": ["Examples were omitted; x range, true-product maximization before modulo, n=0 case, and 50-bit bounds were stated directly."]
+  }
+}

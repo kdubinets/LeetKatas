@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3316",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3316",
+    "title": "Find Maximum Removals From Source String",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-maximum-removals-from-source-string/",
+    "local_path": "problems/medium/3316.md",
+    "content_sha256": "2a846076827249cac97f144c36ad5e3f05c94a304ccd83bedc63f064e36fb71c"
+  },
+  "teaching": {
+    "hint": "What must a surviving occurrence of the pattern protect from deletion?",
+    "solution_outline": {
+      "decisive_insight": "All target positions outside one surviving embedding can be removed; maximizing removals is minimizing target positions used by an embedding.",
+      "approach": "Mark target positions with weight one and others with weight zero. Scan source while keeping the minimum weight required to match each pattern prefix, allowing positions to be skipped. When a letter matches the next pattern letter, extend the prior match. Subtract the completed embedding’s weight from the number of targets.",
+      "state_and_invariant": "After a source prefix, each matched-length state is the minimum target-position count of any embedding of that pattern prefix using only processed positions.",
+      "correctness": "Any legal final deletion set avoids some embedding, so it cannot remove that embedding’s target positions. Conversely choosing an embedding permits deletion of every other target in any order because that embedding survives throughout. Choose-or-skip transitions enumerate exactly the ordered embeddings and minimize their weights, establishing the optimum.",
+      "complexity": "`O(n*m)` time and `O(n+m)` auxiliary space for target flags and rolling matching states.",
+      "pitfall": "Removing the first k targets tests only one deletion set; arbitrary removals need not form a prefix. Rolling updates must not reuse one source position."
+    },
+    "tags": [
+      "weighted-subsequence",
+      "embedding-duality",
+      "prefix-dp"
+    ],
+    "prerequisites": [
+      "subsequence",
+      "dynamic-programming"
+    ],
+    "source_fidelity_notes": [
+      "Retained arbitrary operation order, fixed original indices, initial subsequence guarantee, sorted unique targets, and length limits."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Removing the first k targets tests only one deletion set; arbitrary removals need not form a prefix. Rolling updates must not reuse one source position."
+    ]
+  }
+}

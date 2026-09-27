@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3882",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3882",
+    "title": "Minimum XOR Path in a Grid",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-xor-path-in-a-grid/",
+    "local_path": "problems/medium/3882.md",
+    "content_sha256": "c47ff7e427c2d3f729cd80492d666e3ba2055e5f9fbfa1666ab88db5015618df"
+  },
+  "teaching": {
+    "hint": "Could a larger XOR value partway through a path become smaller after the same later cell is included?",
+    "solution_outline": {
+      "decisive_insight": "XOR is not order preserving, so retaining only the smallest cost to a cell is unsafe. Every possible path XOR stays within 10 bits because every cell value is at most 1023.",
+      "approach": "For each cell, keep the set of XOR values reachable by paths ending there. Combine the sets from above and left by XORing each value with the current cell, then take the smallest value in the destination's set.",
+      "state_and_invariant": "The set for a processed cell contains exactly the XOR values of all right/down paths from the start to that cell, including both endpoint values.",
+      "correctness": "The start set contains its sole cell value. Every other valid path enters from above or left and then includes the current cell exactly once, so the transition generates exactly its possible XOR costs. Induction over grid cells establishes the invariant, and the minimum in the destination set is the required result.",
+      "complexity": "O(mn · 1024) time and O(mn · 1024) bits for sets of 10-bit XOR states; at most 1,000 cells are present.",
+      "pitfall": "A single minimum cost per cell can discard a larger prefix whose XOR with later values becomes smaller."
+    },
+    "accepted_alternatives": ["Rolling rows of reachable-value sets reduce auxiliary storage to O(n · 1024) bits while preserving the same transitions and time bound."],
+    "tags": ["grid-dynamic-programming", "bitset", "xor-state"],
+    "prerequisites": ["bitwise-xor", "grid-paths"],
+    "common_wrong_turns": ["Use ordinary minimum-path-sum dynamic programming", "Exclude the starting cell from the XOR", "Assume lower prefix XOR is always better"],
+    "source_fidelity_notes": ["Examples were omitted; both allowed move directions, start/end inclusion, the product bound on grid size, and 10-bit cell values were retained."]
+  }
+}

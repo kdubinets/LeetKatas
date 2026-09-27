@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1292",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1292",
+    "title": "Maximum Side Length of a Square with Sum Less than or Equal to Threshold",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-side-length-of-a-square-with-sum-less-than-or-equal-to-threshold/",
+    "local_path": "problems/medium/1292.md",
+    "content_sha256": "52ebe519a03de6c150a508dd06b159654fb3ae51e01aea561da5eb9c5fe6f106"
+  },
+  "teaching": {
+    "hint": "How does removing rows and columns from a qualifying square affect its sum?",
+    "solution_outline": {
+      "decisive_insight": "Nonnegative entries make feasible square sizes downward closed; repeated square-sum queries can share a 2D cumulative-sum table.",
+      "approach": "Build 2D prefix sums. For a proposed positive side length, inspect every square placement using an inclusion-exclusion sum query. Binary-search for the greatest side with any qualifying placement, treating side zero as the fallback.",
+      "state_and_invariant": "The feasibility test checks all squares of one side exactly; the search retains the largest feasible side in its interval, with zero allowed when no positive side works.",
+      "correctness": "Inclusion-exclusion gives each candidate square its exact sum. Any valid larger square contains a smaller square with no greater sum, so feasible sizes form a prefix. The complete placement test and a greatest-feasible boundary search therefore return exactly the largest permitted side.",
+      "complexity": "O(mn log(min(m,n)+1)) time and O(mn) space.",
+      "pitfall": "The size predicate would not be monotone if negative entries were allowed."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prefix-sum",
+      "binary-search",
+      "matrix"
+    ],
+    "prerequisites": [
+      "inclusion-exclusion",
+      "monotone-predicate"
+    ],
+    "common_wrong_turns": [
+      "The size predicate would not be monotone if negative entries were allowed."
+    ],
+    "source_fidelity_notes": [
+      "Restated the square as consecutive rows and columns so diagrams are unnecessary; kept nonnegative values. Used the complete primary binary-search route, not the underexplained alternative."
+    ]
+  }
+}

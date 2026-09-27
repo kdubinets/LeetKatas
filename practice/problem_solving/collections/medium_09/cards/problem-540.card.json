@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-540",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "540",
+    "title": "Single Element in a Sorted Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/single-element-in-a-sorted-array/",
+    "local_path": "problems/medium/540.md",
+    "content_sha256": "2d79c809766211d3bba2aa981eb51b56cb221406ef63554e34fdf58ae4d20029"
+  },
+  "teaching": {
+    "hint": "How does one unpaired element change the positions occupied by all pairs after it?",
+    "solution_outline": {
+      "decisive_insight": "Before the singleton, pairs start at even indices; after it, their alignment shifts to odd indices.",
+      "approach": "Binary-search the singleton’s interval using an even-aligned midpoint. Equal adjacent values at that midpoint let the search skip that complete pair; unequal values keep the midpoint and the earlier half.",
+      "state_and_invariant": "The singleton remains inside the interval. Equal-pair alignment at even indices holds strictly before it and fails at or after it.",
+      "correctness": "The singleton index is even because preceding values occupy complete pairs. At an even midpoint before it, that value and the next are its pair; at or beyond it, the singleton or shifted alignment makes them unequal. Each branch retains exactly the possible side and shrinks the interval until the singleton is its only index.",
+      "complexity": "`O(log n)` time and `O(1)` auxiliary space.",
+      "pitfall": "A whole-array XOR scan violates the explicit logarithmic bound; ensure an adjacent comparison is in range."
+    },
+    "tags": [
+      "binary-search",
+      "index-parity",
+      "structural-boundary"
+    ],
+    "prerequisites": [
+      "binary-search",
+      "parity"
+    ],
+    "source_fidelity_notes": [
+      "Retained sortedness, exact multiplicities, value bounds, and mandatory time/space requirements."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "A whole-array XOR scan violates the explicit logarithmic bound; ensure an adjacent comparison is in range."
+    ]
+  }
+}

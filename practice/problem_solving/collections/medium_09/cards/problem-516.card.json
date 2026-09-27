@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-516",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "516",
+    "title": "Longest Palindromic Subsequence",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/longest-palindromic-subsequence/",
+    "local_path": "problems/medium/516.md",
+    "content_sha256": "81526f5e7b1d0144e3e09f30c4389db5fbf0d4f412d984b350d4aff85f7e93a1"
+  },
+  "teaching": {
+    "hint": "How do the two ends of an interval affect the characters a palindrome can keep?",
+    "solution_outline": {
+      "decisive_insight": "The two interval endpoints either supply a matching outer pair or cannot both be used; smaller intervals capture all remaining decisions.",
+      "approach": "Compute the best palindromic subsequence length for intervals in increasing length. Equal endpoints add two around the inner optimum; unequal endpoints take the better result after discarding either end. Empty intervals have length zero and single characters length one.",
+      "state_and_invariant": "Each completed interval stores its exact maximum subsequence length. A transition reads only shorter intervals whose values are already final.",
+      "correctness": "For unequal endpoints, a palindrome cannot use both, so at least one of the two shorter intervals contains the optimum. For equal endpoints, a palindrome using neither is dominated by wrapping the inner optimum; a singleton is dominated by the matching endpoint pair, and a longer palindrome using just one endpoint can have its equal outer mate replaced by the other boundary without loss. Thus an optimum uses both, with an optimal inner palindrome. Induction on interval length proves the recurrence.",
+      "complexity": "`O(n^2)` time and `O(n^2)` auxiliary space for the interval table. A rolling row with a saved old diagonal reduces space to `O(n)`.",
+      "pitfall": "Do not confuse a subsequence with a contiguous substring; adjacent equal endpoints also need an empty-inner-interval base."
+    },
+    "tags": [
+      "interval-dp",
+      "palindrome",
+      "subsequence"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "intervals"
+    ],
+    "source_fidelity_notes": [
+      "Restated subsequence and palindrome without solution-revealing examples; retained alphabet and length bound."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Do not confuse a subsequence with a contiguous substring; adjacent equal endpoints also need an empty-inner-interval base."
+    ]
+  }
+}

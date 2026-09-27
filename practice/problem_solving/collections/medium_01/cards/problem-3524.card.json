@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3524",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3524",
+    "title": "Find X Value of Array I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-x-value-of-array-i/",
+    "local_path": "problems/medium/3524.md",
+    "content_sha256": "621d7ac18a35536c8464c2d2e569c62c9e08b19a0aeee8d5c28c2bb4dcd724b8"
+  },
+  "teaching": {
+    "hint": "How many distinct end positions can the remaining nonempty part have, and what information about earlier starts survives multiplication by one new value?",
+    "solution_outline": {
+      "decisive_insight": "Every allowed prefix/suffix removal leaves exactly one nonempty contiguous subarray. Products with the same residue modulo a tiny k can be counted together.",
+      "approach": "Scan each possible right endpoint. Maintain counts of product residues for subarrays ending there: start a new one-element subarray and extend every subarray from the previous endpoint by the new value. Add these counts to the answer for each residue.",
+      "state_and_invariant": "After processing index i, the k counts give exactly how many nonempty subarrays end at i with each product residue. The accumulated result counts exactly those ending at positions through i.",
+      "correctness": "A subarray ending at i is either the single element i or a unique subarray ending at i-1 extended by nums[i]. Multiplication modulo k maps its former residue to the new one, so the update counts each such subarray once. Summing over endpoints counts every permitted removal exactly once because each remaining subarray determines one removed prefix and suffix.",
+      "complexity": "O(nk) time and O(k) auxiliary space, with n up to 100,000 and k at most 5. Counts may exceed 32-bit signed range.",
+      "pitfall": "Multiplying original values before reducing modulo k can overflow; even the count of operations may require a wide integer."
+    },
+    "accepted_alternatives": [],
+    "tags": ["dynamic-programming", "modular-arithmetic", "subarray-counting"],
+    "prerequisites": ["contiguous-subarray", "modular-multiplication"],
+    "common_wrong_turns": ["Count an empty remaining array", "Enumerate all quadratic many subarrays", "Use 32-bit counters for all operation counts"],
+    "source_fidelity_notes": ["Lengthy source examples were removed; the distinct prefix/suffix choice, nonempty remainder, all residue outputs, numeric bounds, and k limit were retained."]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-3529",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3529",
+    "title": "Count Cells in Overlapping Horizontal and Vertical Substrings",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-cells-in-overlapping-horizontal-and-vertical-substrings/",
+    "local_path": "problems/medium/3529.md",
+    "content_sha256": "60a85d634e8aaa42fd02911dc07a6be40414cb3e23c99ea2d1e4b00a918b4c27"
+  },
+  "teaching": {
+    "hint": "Can each wrap rule be viewed as one continuous reading order over all cells?",
+    "solution_outline": {
+      "decisive_insight": "The two wrap rules are row-major and column-major strings; coverage of matching intervals must then be mapped back to cells.",
+      "approach": "Form both readings. Find every pattern occurrence in each in linear time, mark its index interval with range increments, and count cells whose coordinates map to covered indices in both readings.",
+      "state_and_invariant": "Each running coverage count equals the number of matching intervals containing that reading index; row-major and column-major formulas identify the same physical cell in both strings.",
+      "correctness": "The flattened strings contain exactly the allowed substrings. Complete pattern matching finds all occurrences, range marks identify their covered cells, and the final intersection counts precisely the required cells.",
+      "complexity": "`O(m*n + |pattern|)` time and space using a linear string matcher and range markers.",
+      "pitfall": "Scanning each matching interval cell by cell can be quadratic when occurrences overlap heavily."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "string-matching",
+      "grid-flattening",
+      "range-updates"
+    ],
+    "prerequisites": [
+      "prefix-sums",
+      "coordinate-mapping"
+    ],
+    "common_wrong_turns": [
+      "Forbidding matches across a row or column boundary",
+      "Wrapping after the final row or column",
+      "Marking every matched cell separately"
+    ],
+    "source_fidelity_notes": [
+      "Restated both image-dependent wrap rules in text; retained overlap semantics and the no-cyclic-wrap boundary."
+    ]
+  }
+}

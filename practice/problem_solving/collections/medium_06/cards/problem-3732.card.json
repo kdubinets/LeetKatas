@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3732",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3732",
+    "title": "Maximum Product of Three Elements After One Replacement",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-product-of-three-elements-after-one-replacement/",
+    "local_path": "problems/medium/3732.md",
+    "content_sha256": "40571cbd140dd10ea366d706c5dd6f229874510fc072f02c4cc93ecd3661b64b"
+  },
+  "teaching": {
+    "hint": "How much freedom does the replacement give over the sign and magnitude of one chosen factor?",
+    "solution_outline": {
+      "decisive_insight": "The replacement can have maximum magnitude and whichever sign makes the best untouched pair nonnegative.",
+      "approach": "Find the two largest absolute values among original elements. Replace a third index by an endpoint value with the sign that makes their product nonnegative.",
+      "state_and_invariant": "The chosen pair is untouched and maximizes the absolute product of any two originals; a distinct third index exists.",
+      "correctness": "The construction attains `100000` times the largest absolute pair product. Any final triple contains at most one replaced element; if it omits that element, one original factor is also at most `100000` in magnitude, so the same value bounds it.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space, with wide multiplication.",
+      "pitfall": "Replacing one of the best pair values needlessly loses the distinct-index construction."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "extremal-choice",
+      "product-bound"
+    ],
+    "prerequisites": [
+      "absolute-value",
+      "upper-bound-proof"
+    ],
+    "common_wrong_turns": [
+      "Assuming the replacement must be positive",
+      "Multiplying in 32-bit arithmetic"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained exactly-one replacement, distinct indices, signed range, and wide result."
+    ]
+  }
+}

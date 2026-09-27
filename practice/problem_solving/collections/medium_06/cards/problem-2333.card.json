@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-2333",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2333",
+    "title": "Minimum Sum of Squared Difference",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-sum-of-squared-difference/",
+    "local_path": "problems/medium/2333.md",
+    "content_sha256": "43c189e99b42d2c3666a501f17bfffc8dc9a691d85d49711cd4feb7f6ad419e1"
+  },
+  "teaching": {
+    "hint": "Which gap yields the largest improvement from one more unit of effort?",
+    "solution_outline": {
+      "decisive_insight": "Only absolute pairwise gaps matter, the two operation budgets are interchangeable, and reducing a larger gap gives a larger square-cost saving.",
+      "approach": "Compute gaps and combine budgets. If budget covers their total, return zero. Otherwise level the largest gaps toward the next largest group in bulk, then spread any remaining edits evenly over the final tied group.",
+      "state_and_invariant": "Before each level change, the processed largest gaps have a common conceptual height. Remaining budget buys the greatest available marginal reductions.",
+      "correctness": "A decrement from gap `x` saves `2x-1`, so exchanging an edit spent on a smaller gap with one available on a larger gap cannot worsen the result. Bulk leveling produces exactly this optimal sequence and the final squared sum.",
+      "complexity": "`O(n log n)` time and `O(n)` auxiliary space; budgets and squared sums need wide arithmetic.",
+      "pitfall": "When leveling conceptually, original stored gap values are not yet overwritten; using them as already leveled values corrupts the final sum."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "convex-greedy",
+      "resource-allocation",
+      "leveling"
+    ],
+    "prerequisites": [
+      "sorting",
+      "marginal-gain"
+    ],
+    "common_wrong_turns": [
+      "Simulating up to billions of edits one by one",
+      "Treating the two budgets as separate constraints",
+      "Overflowing the sum of squares"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained negative modified values, at-most budgets, and wide numeric bounds."
+    ]
+  }
+}

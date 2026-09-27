@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-399",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "399",
+    "title": "Evaluate Division",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/evaluate-division/",
+    "local_path": "problems/medium/399.md",
+    "content_sha256": "f9a512b2669582e2cad3d9fe8bc44d18f0aee4515b7bf328a79fe932e165b6b4"
+  },
+  "teaching": {
+    "hint": "What does multiplying ratios along a chain of shared variables do?",
+    "solution_outline": {
+      "decisive_insight": "An equation and its reciprocal are weighted connections; multiplying weights along a path telescopes intermediate variables.",
+      "approach": "Build a bidirectional weighted relation graph. For each query, reject undefined endpoints; otherwise search from numerator to denominator, multiplying weights along a found path.",
+      "state_and_invariant": "The running path product is the ratio from the query numerator to the current node; visited nodes prevent cycles.",
+      "correctness": "Each edge represents a true ratio, so path multiplication yields the endpoint ratio. Consistency makes any found path valid; disconnected or undefined endpoints cannot be related from the equations.",
+      "complexity": "O(E+Q(V+E)) time and O(V+E) graph space, plus O(V) search workspace, with E equations and Q queries.",
+      "pitfall": "Returning one for an absent variable divided by itself treats an undefined symbol as known."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "weighted-graph",
+      "ratio-reachability"
+    ],
+    "prerequisites": [
+      "graph-traversal",
+      "multiplicative-inverse"
+    ],
+    "common_wrong_turns": [
+      "Return 1 for unknown x/x",
+      "Forget reciprocal edges",
+      "Multiply ratios in the wrong direction"
+    ],
+    "source_fidelity_notes": [
+      "Retained unknown-self-query distinction and consistency guarantee; simplified long query examples."
+    ]
+  }
+}

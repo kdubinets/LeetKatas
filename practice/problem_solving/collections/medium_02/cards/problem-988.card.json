@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-988",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "988",
+    "title": "Smallest String Starting From Leaf",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/smallest-string-starting-from-leaf/",
+    "local_path": "problems/medium/988.md",
+    "content_sha256": "acf13e8982f2a89d9b11fa00e259a76b2d90b2b4a9367f4ceedb35ce1746a6ab"
+  },
+  "teaching": {
+    "hint": "Which end of a root-to-leaf path becomes the first and most significant character of its candidate string?",
+    "solution_outline": {
+      "decisive_insight": "The first character of a candidate is at the leaf, so a locally smaller root-side branch need not produce the smallest complete string.",
+      "approach": "Traverse every root-to-leaf path while retaining its letters. At each leaf, read that path in reverse to obtain one full candidate and keep the smallest candidate seen.",
+      "state_and_invariant": "The traversal buffer contains exactly the root-to-current-node letters. The running best is the lexicographically smallest completed leaf-to-root string among leaves already visited.",
+      "correctness": "Every leaf determines one and only one candidate path. Reversing its buffered path gives the required leaf-first order, and comparing that candidate with the running minimum preserves the minimum of all candidates seen. Visiting every leaf therefore returns the global minimum, including prefix-length tie behavior.",
+      "complexity": "O(n + Lh) time for n nodes, L leaves, and tree height h because each leaf may reverse and compare a length-h path; O(h) auxiliary space for the traversal path, stack, and best candidate.",
+      "pitfall": "Choosing the smaller-valued child near the root is unsound because that letter appears near the end, not the beginning, of the candidate string."
+    },
+    "accepted_alternatives": ["Prepend each node's letter to a copied partial string during DFS, then compare complete strings at leaves; this uses O(nh) time and O(h^2) live path-copy space in a skewed tree."],
+    "tags": ["tree-traversal", "lexicographic-order", "path-enumeration"],
+    "prerequisites": ["depth-first-traversal", "string-comparison"],
+    "common_wrong_turns": ["Append letters in root-to-leaf order and compare that string", "Greedily choose a smaller child before seeing leaves", "Treat node value zero as an absent-node marker"],
+    "source_fidelity_notes": ["Image-only examples were replaced by a small textual tree; leaf-to-root reading, prefix tie rule, value mapping, and node count were retained."]
+  }
+}

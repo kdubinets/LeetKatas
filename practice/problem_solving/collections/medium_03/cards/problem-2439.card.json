@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-2439",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2439",
+    "title": "Minimize Maximum of Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimize-maximum-of-array/",
+    "local_path": "problems/medium/2439.md",
+    "content_sha256": "c4bd27cb0742bc37da6385bfab6edc05694e35a835c19263a23473a8dd7087f7"
+  },
+  "teaching": {
+    "hint": "Which portions of the array can never lose value under a leftward move?",
+    "solution_outline": {
+      "decisive_insight": "Every original prefix sum is a lower bound on its final sum, so its ceiling average bounds the maximum; these bounds are jointly attainable.",
+      "approach": "Compute the maximum ceiling average among all original prefixes. To justify attainability at a target maximum, carry forced excess from right to left and show feasibility is equivalent to every prefix average meeting that target.",
+      "state_and_invariant": "A running sum holds each original prefix total. The best bound after index i is the largest ceiling prefix average seen so far.",
+      "correctness": "Any final maximum x implies each prefix total is at most its length times x. Conversely the minimum forced right-to-left carry fits at index zero exactly when all those inequalities hold. The largest ceiling average is therefore both necessary and sufficient.",
+      "complexity": "O(n) time and O(1) auxiliary space; the running sum may reach 10^14 and needs wide arithmetic.",
+      "pitfall": "Using only the whole-array average ignores an overloaded prefix that cannot send units right."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prefix-invariant",
+      "optimization-bound",
+      "one-way-flow"
+    ],
+    "prerequisites": [
+      "prefix-sum",
+      "ceil-division"
+    ],
+    "common_wrong_turns": [
+      "Use the whole-array average alone",
+      "Assume units can move right",
+      "Accumulate sums in 32-bit arithmetic"
+    ],
+    "source_fidelity_notes": [
+      "Kept directional operation and numeric limits; removed procedural example."
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-1718",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1718",
+    "title": "Construct the Lexicographically Largest Valid Sequence",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/construct-the-lexicographically-largest-valid-sequence/",
+    "local_path": "problems/medium/1718.md",
+    "content_sha256": "b7ed0e984138ad9b054579a6b9c6a73982eecb6de73ec3ff01b7f5aa9fa7e18d"
+  },
+  "teaching": {
+    "hint": "How can you verify that a promising early choice still permits a complete sequence?",
+    "solution_outline": {
+      "decisive_insight": "Choosing a repeated value fixes both its positions. Descending choices at the earliest empty slot can search completions in lexicographic preference order.",
+      "approach": "Backtrack on the first empty position. Try unused values from n down to 1, placing both copies when their required partner slot exists and is empty, or placing just 1. Undo unsuccessful branches and stop at the first complete sequence.",
+      "state_and_invariant": "Every used value has its complete legal placement; every position before the first empty slot is fixed, and all branches at that point agree on that prefix.",
+      "correctness": "In any completion, the leftmost empty slot must hold an unused value, whose partner, if needed, must be the later slot at its required distance. Thus every possible completion is considered. The descending loop tries its greatest possible next value first; recursively choosing the first successful completion gives the largest suffix compatible with that prefix. Induction over empty slots proves the first full sequence is globally largest.",
+      "complexity": "Exponential search: a conservative O(n^2 * n!) upper bound includes scanning for the next empty slot and trying candidates over value-placement orderings. O(n) auxiliary space and output length 2n-1.",
+      "pitfall": "Always committing to the largest locally legal value without backtracking can leave no possible completion."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "backtracking",
+      "lexicographic-order",
+      "constraint-satisfaction"
+    ],
+    "prerequisites": [
+      "backtracking-restoration"
+    ],
+    "common_wrong_turns": [
+      "Always committing to the largest locally legal value without backtracking can leave no possible completion."
+    ],
+    "source_fidelity_notes": [
+      "Retained the distance-as-index-difference definition, multiplicities, existence guarantee, and small n bound."
+    ]
+  }
+}

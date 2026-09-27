@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-421",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "421",
+    "title": "Maximum XOR of Two Numbers in an Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-xor-of-two-numbers-in-an-array/",
+    "local_path": "problems/medium/421.md",
+    "content_sha256": "d222e772a898a1e22a091592b03bbb73814e35cd3b05ca4c088b5d067a8a43ef"
+  },
+  "teaching": {
+    "hint": "How much can lower bits compensate for losing a more significant result bit?",
+    "solution_outline": {
+      "decisive_insight": "A feasible result prefix with the next high bit set dominates every completion without it; pair-prefix feasibility is tested using a XOR complement.",
+      "approach": "Build the result from bit 30 down. Collect input prefixes through the current bit, propose setting the next result bit, and check whether two prefixes XOR to that proposal. Keep the bit only when the proposal is achievable.",
+      "state_and_invariant": "Before each step, the retained answer is the largest achievable prefix on all already decided higher bits.",
+      "correctness": "For prefixes a and b, a XOR b equals the proposal exactly when b=a XOR proposal, so set membership tests feasibility completely. If achievable, its new one-bit outweighs every lower-bit completion; otherwise all feasible completions have zero there. Induction from high to low therefore returns the greatest full XOR.",
+      "complexity": "Expected O(31n) time and O(n) auxiliary space for each prefix set.",
+      "pitfall": "Optimize high bits first; independently choosing favorable bits from different pairs can create an unrealizable result."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bitwise-greedy",
+      "prefix-feasibility",
+      "hash-set"
+    ],
+    "prerequisites": [
+      "xor-identity",
+      "binary-place-value"
+    ],
+    "common_wrong_turns": [
+      "Optimize high bits first; independently choosing favorable bits from different pairs can create an unrealizable result."
+    ],
+    "source_fidelity_notes": [
+      "Retained self-pair permission, duplicates, nonnegative 31-bit values, and value-only result."
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-3599",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3599",
+    "title": "Partition Array to Minimize XOR",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/partition-array-to-minimize-xor/",
+    "local_path": "problems/medium/3599.md",
+    "content_sha256": "e122f1525c7f534ff7415b1a345b96f29cd682b234ed03e83343c04314739316"
+  },
+  "teaching": {
+    "hint": "If the last part starts at a chosen index, what information about the earlier prefix is needed?",
+    "solution_outline": {
+      "decisive_insight": "A final-cut recurrence gives exact partition optimization; XOR can fall when a part is extended, so length-based greedy feasibility is unsafe.",
+      "approach": "Precompute prefix XORs. For each part count and prefix length, try every legal start of its last nonempty part and minimize the maximum of the preceding optimum and this part’s XOR.",
+      "state_and_invariant": "The state for `p` parts and `e` elements stores the smallest achievable maximum score; each transition uses a shorter prefix with exactly `p-1` parts.",
+      "correctness": "Every valid partition has one final cut. The recurrence considers that cut and an optimal prior partition; replacing a nonoptimal prior partition cannot increase the maximum, so the minimum covers exactly all possibilities.",
+      "complexity": "`O(k n²)` time and `O(k n)` space, with `n <= 250`.",
+      "pitfall": "Applying a greedy capacity test from sum-partition problems fails because adding a value can decrease XOR."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "partition-dp",
+      "xor",
+      "minimax"
+    ],
+    "prerequisites": [
+      "prefix-xor",
+      "optimal-substructure"
+    ],
+    "common_wrong_turns": [
+      "Assuming XOR grows with segment length",
+      "Allowing empty parts",
+      "Using sum-style greedy binary search"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained exactly `k` nonempty contiguous parts and numeric limits."
+    ]
+  }
+}

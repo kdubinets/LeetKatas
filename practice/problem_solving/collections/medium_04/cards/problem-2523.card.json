@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2523",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2523",
+    "title": "Closest Prime Numbers in Range",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/closest-prime-numbers-in-range/",
+    "local_path": "problems/medium/2523.md",
+    "content_sha256": "57bd742b0997b03e5cffb8adee675bee852946ceaa1cbf6e4698c9409ee33d9c"
+  },
+  "teaching": {
+    "hint": "After listing the primes in increasing order, which pairs could have the smallest gap?",
+    "solution_outline": {
+      "decisive_insight": "A nonadjacent prime pair contains at least one smaller consecutive gap, so only neighboring primes need comparison.",
+      "approach": "Identify primes up to right once, scan those in the requested interval in increasing order, and retain the closest consecutive pair. Keep the first pair on equal gaps.",
+      "state_and_invariant": "The previous seen prime and current best pair summarize every candidate gap seen so far; the best pair has minimum gap and earliest lower endpoint among ties.",
+      "correctness": "Every possible optimum is adjacent in sorted prime order. The scan examines each adjacent pair once, and strict improvement preserves the required tie break.",
+      "complexity": "O(right log log right) time and O(right) auxiliary space using a sieve up to right; the final scan is linear in the interval width.",
+      "pitfall": "Treating 1 as prime or replacing the best pair on an equal gap violates the output rule."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prime-sieve",
+      "closest-pair-scan"
+    ],
+    "prerequisites": [
+      "primality",
+      "sorted-neighbors"
+    ],
+    "common_wrong_turns": [
+      "Compare every prime pair",
+      "Break ties by the larger prime"
+    ],
+    "source_fidelity_notes": [
+      "The prime definition, inclusive bounds, no-pair output, and smallest-first tie rule are explicit."
+    ]
+  }
+}

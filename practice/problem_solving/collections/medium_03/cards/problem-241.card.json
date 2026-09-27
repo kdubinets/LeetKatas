@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-241",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "241",
+    "title": "Different Ways to Add Parentheses",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/different-ways-to-add-parentheses/",
+    "local_path": "problems/medium/241.md",
+    "content_sha256": "21448b442e669e4f2d6538d0e6d0bf5704e1fb6faad16ce7b63097aaec945390"
+  },
+  "teaching": {
+    "hint": "Which operator could be the final one evaluated in a fully parenthesized expression?",
+    "solution_outline": {
+      "decisive_insight": "Every full expression tree has one root operator that separates independent left and right subexpressions.",
+      "approach": "For each operator position, obtain all values from its left and right ranges, combine every pair using that operator, and concatenate the results. Memoize repeated ranges.",
+      "state_and_invariant": "A range state stores the list of values for all parenthesizations of exactly that range, including multiplicity; a number-only range has its one literal value.",
+      "correctness": "Every parenthesization has exactly one final operator and one left/right parenthesization pair. Enumerating all splits and pairings therefore lists every structural result exactly once; equal values remain duplicated.",
+      "complexity": "Time and storage scale with all values materialized across subranges and are exponential in the number of operators in the worst case; the 20-character and 10,000-result bounds keep this feasible.",
+      "pitfall": "Using a set loses required duplicate results from distinct expression trees."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "expression-enumeration",
+      "interval-recursion"
+    ],
+    "prerequisites": [
+      "recursion",
+      "memoization"
+    ],
+    "common_wrong_turns": [
+      "Apply ordinary precedence instead of all groupings",
+      "Deduplicate equal results",
+      "Split multi-digit numbers as single digits"
+    ],
+    "source_fidelity_notes": [
+      "Explicitly retained output multiplicity and multi-digit input numbers; removed lengthy enumerated output."
+    ]
+  }
+}

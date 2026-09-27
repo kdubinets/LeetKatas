@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1981",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1981",
+    "title": "Minimize the Difference Between Target and Chosen Elements",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimize-the-difference-between-target-and-chosen-elements/",
+    "local_path": "problems/medium/1981.md",
+    "content_sha256": "1a1f2916faa8793e0936ca8ba0d32bf8a7a022c6922897469fd18495ab7b9e50"
+  },
+  "teaching": {
+    "hint": "How many different sums can the first few rows produce, regardless of how many choice sequences lead to them?",
+    "solution_outline": {
+      "decisive_insight": "The exponentially many row choices collapse to a small bounded set of achievable sums.",
+      "approach": "Start from sum zero. For each row, form the set of sums obtained by extending every previously achievable sum with one value from that row. After the final row, take the closest sum to target.",
+      "state_and_invariant": "After processing k rows, a sum is marked exactly when one choice from each of those k rows produces it.",
+      "correctness": "Every complete selection extends a prior-row sum by exactly one current-row value, and every generated sum corresponds to such a selection. Examining all final sums therefore finds the minimum difference.",
+      "complexity": "O(mnS) scalar time and O(S) space with S ≤ 4900; bitset shifts can reduce word-level work.",
+      "pitfall": "Keeping only the partial sum currently closest to target can discard the best eventual completion."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bounded-sum-dp",
+      "grouped-choice"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "reachable-states"
+    ],
+    "common_wrong_turns": [
+      "Choose the locally closest value in each row",
+      "Allow multiple values from one row"
+    ],
+    "source_fidelity_notes": [
+      "The exactly-one-per-row rule and sum bound that makes state compression viable are retained."
+    ]
+  }
+}

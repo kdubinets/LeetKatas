@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3315",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3315",
+    "title": "Construct the Minimum Bitwise Array II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/construct-the-minimum-bitwise-array-ii/",
+    "local_path": "problems/medium/3315.md",
+    "content_sha256": "f9273bbeae2491eecc2371f4356984b1d21e7faa3210ef3a6e9b489512b0f6d5"
+  },
+  "teaching": {
+    "hint": "What does adding one do to the low-order run of bits before the OR is taken?",
+    "solution_outline": {
+      "decisive_insight": "Adding one flips the trailing ones and first zero, so a valid predecessor is obtained by clearing one bit in the target's trailing ones.",
+      "approach": "For each target, locate its trailing run of set bits. If absent, return -1; otherwise clear the highest bit in that run to get the smallest predecessor.",
+      "state_and_invariant": "Each eligible cleared bit produces a predecessor whose lowest zero is exactly that bit, so OR with its successor restores the target.",
+      "correctness": "The carry pattern proves all valid predecessors come from those positions. Clearing the highest eligible bit subtracts the most and therefore minimizes the result.",
+      "complexity": "O(q log M) time for q values bounded by M and O(1) extra space apart from output.",
+      "pitfall": "Clearing the lowest set bit is valid for odd targets but may not give the minimum."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bitwise-construction",
+      "successor-bits"
+    ],
+    "prerequisites": [
+      "binary-carry",
+      "bitwise-or"
+    ],
+    "common_wrong_turns": [
+      "Return x-1 for every odd x",
+      "Search all predecessors up to 10^9"
+    ],
+    "source_fidelity_notes": [
+      "The prime input guarantee and independent minimization per index remain explicit."
+    ]
+  }
+}

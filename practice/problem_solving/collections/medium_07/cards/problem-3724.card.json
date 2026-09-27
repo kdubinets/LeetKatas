@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3724",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3724",
+    "title": "Minimum Operations to Transform Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-operations-to-transform-array/",
+    "local_path": "problems/medium/3724.md",
+    "content_sha256": "ffdb7db537ce433d2cf532f9069e7e7b67b99f3fbe18bda1f395b49ca258f7d4"
+  },
+  "teaching": {
+    "hint": "Must the copied value equal its source initial value, or could you copy it during a change?",
+    "solution_outline": {
+      "decisive_insight": "The original positions have independent mandatory adjustment costs. During a direct walk from its initial to target value, an element supplies any value in that interval as a copy for no extra source cost.",
+      "approach": "Sum absolute differences for the original n aligned positions. For each such position, find the distance from the final appended target to the interval between its initial and target values. Add the smallest distance and one append to the baseline.",
+      "state_and_invariant": "The baseline contains all mandatory original-position costs; the best extra distance describes the cheapest appended value obtainable during one direct original walk.",
+      "correctness": "Exactly one append is required because no operation reduces length. If copying from position j at value v, that position costs at least |a-v|+|v-b| and the copy costs |v-x|. Subtracting its baseline |a-b| leaves a minimum equal to distance from x to [min(a,b),max(a,b)]: inside has no detour, and an outside detour costs twice its length while saving at most that length on the copy. Copying the closest interval value during the direct walk attains this bound, while all other positions take direct walks.",
+      "complexity": "O(n) time and O(1) auxiliary space; baseline totals need 64-bit arithmetic.",
+      "pitfall": "Copying only an initial or final source value can miss a cheaper copy taken midway."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "separable-cost",
+      "projection",
+      "construction"
+    ],
+    "prerequisites": [
+      "absolute-distance"
+    ],
+    "common_wrong_turns": [
+      "Copying only an initial or final source value can miss a cheaper copy taken midway."
+    ],
+    "source_fidelity_notes": [
+      "Retained append-at-end and copying the current value; clarified appended elements may be incremented or decremented. No permutation operation is implied."
+    ]
+  }
+}

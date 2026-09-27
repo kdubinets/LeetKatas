@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-740",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "740",
+    "title": "Delete and Earn",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/delete-and-earn/",
+    "local_path": "problems/medium/740.md",
+    "content_sha256": "e1d89f19c518c0e0d63a8a237d33d7899ad64337e25d6bf9284f1e23cb30b0c2"
+  },
+  "teaching": {
+    "hint": "Once you decide to earn points from a value, what reason would there be to leave another copy of it unchosen?",
+    "solution_outline": {
+      "decisive_insight": "Positive equal values can be bundled into one reward; choosing a value conflicts only with adjacent values on the number line.",
+      "approach": "Aggregate reward x times its frequency for each value x. Sweep values in order, keeping the best total through the preceding one and two values; choose between skipping x and adding its bundle to the optimum through x-2.",
+      "state_and_invariant": "The best-prefix state is the maximum reward using values no greater than the current value; missing values have zero reward.",
+      "correctness": "Any optimum either excludes x or includes it. In the latter case taking all copies is beneficial and excludes x-1, leaving exactly an independent optimum through x-2. Both alternatives are achievable, so induction over values proves the recurrence and final optimum.",
+      "complexity": "O(n+M) time and O(M) space for frequencies up to maximum value M; the DP itself needs O(1) state.",
+      "pitfall": "Applying a neighbor conflict to adjacent array positions instead of neighboring values solves a different problem."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "dynamic-programming",
+      "aggregation",
+      "independent-set"
+    ],
+    "prerequisites": [
+      "optimal-substructure"
+    ],
+    "common_wrong_turns": [
+      "Applying a neighbor conflict to adjacent array positions instead of neighboring values solves a different problem."
+    ],
+    "source_fidelity_notes": [
+      "Clarified that other equal occurrences are retained after choosing x; retained positivity and bounded value domain."
+    ]
+  }
+}

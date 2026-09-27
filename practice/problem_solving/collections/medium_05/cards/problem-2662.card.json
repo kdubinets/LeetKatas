@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2662",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2662",
+    "title": "Minimum Cost of a Path With Special Roads",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-cost-of-a-path-with-special-roads/",
+    "local_path": "problems/medium/2662.md",
+    "content_sha256": "d0ad03cf48375502119a48a1276b891e70088dc172aa16cbf7e41a5fa69e184e"
+  },
+  "teaching": {
+    "hint": "Which locations can matter immediately before or after an optional special-road use?",
+    "solution_outline": {
+      "decisive_insight": "Between special roads, all ordinary travel can be replaced by one Manhattan move, so only start, target, and road endpoints matter.",
+      "approach": "Form shortest-path states at the special-road entrances. Initial cost is walking from start; from an entrance, take its directed road and walk to any next entrance or target. Include direct walking to target, and solve nonnegative weighted distances.",
+      "state_and_invariant": "Each state records the least cost to reach its road entrance; finalized states cannot improve under nonnegative travel costs.",
+      "correctness": "Every route can be normalized to alternating direct walks and special roads without increasing cost. The finite graph includes every such route and only legal routes, so its minimum is the plane optimum.",
+      "complexity": "With `r ≤ 200` roads, `O(r² log r)` time and up to `O(r²)` queued relaxations, or `O(r²)` time with dense selection.",
+      "pitfall": "Treating roads as bidirectional or forcing a road whenever its entrance is reached can produce a false minimum."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "shortest-path",
+      "relevant-state-compression"
+    ],
+    "prerequisites": [
+      "manhattan-distance",
+      "weighted-graphs"
+    ],
+    "common_wrong_turns": [
+      "Search all plane cells",
+      "Treat special roads as undirected"
+    ],
+    "source_fidelity_notes": [
+      "The directed, reusable-road rule and unobstructed Manhattan travel are retained."
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-1541",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1541",
+    "title": "Minimum Insertions to Balance a Parentheses String",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-insertions-to-balance-a-parentheses-string/",
+    "local_path": "problems/medium/1541.md",
+    "content_sha256": "37a27e882803588c48ff8f662a54bc721700fe9f6f92360553bb71f4c8c7ed17"
+  },
+  "teaching": {
+    "hint": "If one right parenthesis of a closing pair has appeared, what must happen before a new opening parenthesis can begin?",
+    "solution_outline": {
+      "decisive_insight": "Track how many right parentheses are owed. A lone first right parenthesis of a closing pair must be completed before a new opening, and a right parenthesis with no opener forces an inserted opener.",
+      "approach": "Scan the string with a count of owed right parentheses. An opening adds two; if it interrupts an odd outstanding debt, insert one right parenthesis first. A closing consumes one; if debt becomes negative, insert an opening and leave one right parenthesis owed. At the end, insert every remaining owed right parenthesis.",
+      "state_and_invariant": "The debt describes closing characters still required by open pairs in a minimally repaired prefix, and the insertion count records exactly the forced repairs already made. An odd debt marks a half-completed closing token.",
+      "correctness": "An interrupted half-token cannot be completed after a new opening while keeping its two right parentheses adjacent, so one insertion is forced. A right parenthesis with no available opener likewise forces an opening. These local repairs preserve a feasible balanced prefix with the fewest insertions; any remaining debt at the end requires exactly that many appended closers. Thus the total is necessary and sufficient.",
+      "complexity": "O(n) time and O(1) auxiliary space for a string of length n.",
+      "pitfall": "Treating each single right parenthesis as a full closing token gives the ordinary-parentheses answer, which is wrong here."
+    },
+    "accepted_alternatives": [],
+    "tags": ["greedy", "parentheses", "parser-state"],
+    "prerequisites": ["balanced-parentheses", "running-counter"],
+    "common_wrong_turns": ["Allow a new opening between the two characters of one closing token", "Fail to insert an opener when debt becomes negative", "Forget remaining closing debt at the end"],
+    "source_fidelity_notes": ["The source's balanced/unbalanced examples were condensed to one contrast; two consecutive closing characters, usual nesting, insertion-only rule, and length bound were retained."]
+  }
+}

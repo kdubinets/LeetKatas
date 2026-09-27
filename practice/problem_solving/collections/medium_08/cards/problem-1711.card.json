@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1711",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1711",
+    "title": "Count Good Meals",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-good-meals/",
+    "local_path": "problems/medium/1711.md",
+    "content_sha256": "2d8847c5d34985074b71f3dd95dc4d29353d50ec856a92f8b9fe925d558d85ee"
+  },
+  "teaching": {
+    "hint": "For one item, how many different sums could a valid partner produce under the value bounds?",
+    "solution_outline": {
+      "decisive_insight": "The allowed pair sums form only 22 values, and fixing a sum determines the partner value.",
+      "approach": "Scan items, keeping frequencies of earlier values. For each new value, query its complement for every power from 1 through 2^21, add those frequencies, then record the new item.",
+      "state_and_invariant": "Before querying an item, the table contains exactly earlier indices, with their value multiplicities.",
+      "correctness": "Each unordered pair has one later index. At that step its earlier item is present, and exactly its own sum selects the matching complement query. All possible positive power-of-two sums are covered and only those sums are queried, so every valid pair is counted once and no invalid pair is counted.",
+      "complexity": "Expected O(22n) time and O(n) auxiliary space; reduce the count modulo the required modulus.",
+      "pitfall": "Query before recording the current item to prevent pairing an item with itself; zero plus zero is not a power of two."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "pair-counting",
+      "complement-lookup",
+      "frequency-table"
+    ],
+    "prerequisites": [
+      "hash-map",
+      "index-distinct-counting"
+    ],
+    "common_wrong_turns": [
+      "Query before recording the current item to prevent pairing an item with itself; zero plus zero is not a power of two."
+    ],
+    "source_fidelity_notes": [
+      "Made unordered index-pair semantics explicit; retained zeros, positive power definition, sum bound, and modulo."
+    ]
+  }
+}

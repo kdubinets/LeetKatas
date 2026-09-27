@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2069",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2069",
+    "title": "Walking Robot Simulation II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/walking-robot-simulation-ii/",
+    "local_path": "problems/medium/2069.md",
+    "content_sha256": "643e04c0251edfa3d9a09da48722a72ba9aeacbfa4846cb19c971fdabdae71b9"
+  },
+  "teaching": {
+    "hint": "How much of the robot’s route repeats after it has gone around the boundary once?",
+    "solution_outline": {
+      "decisive_insight": "Every successful move advances one cell around a fixed perimeter cycle; position depends on distance modulo perimeter, but the initial and completed-lap states at the origin have different directions.",
+      "approach": "Maintain total boundary progress modulo `2(width+height)−4` plus whether any move has occurred. Add each step count modulo the period; decode position and direction from the four edge segments.",
+      "state_and_invariant": "The progress index identifies the current boundary cell, while the movement-history bit distinguishes initial East from post-lap South at index zero.",
+      "correctness": "The corner-turn rule follows the same boundary cycle on every step. Thus accumulated modular progress gives the correct cell; inclusive segment endpoints preserve the arrival direction, and history resolves the origin ambiguity.",
+      "complexity": "`O(1)` time and space per method.",
+      "pitfall": "At an exact full lap, reporting East at the origin confuses the completed-lap state with initialization."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "cyclic-motion",
+      "state-disambiguation"
+    ],
+    "prerequisites": [
+      "modular-arithmetic",
+      "simulation"
+    ],
+    "common_wrong_turns": [
+      "Simulate every requested step across all calls",
+      "Turn immediately on arriving at a corner"
+    ],
+    "source_fidelity_notes": [
+      "The corner arrival direction and exact successful-step semantics are clarified from the source rule."
+    ]
+  }
+}

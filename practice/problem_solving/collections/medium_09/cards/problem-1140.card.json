@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1140",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1140",
+    "title": "Stone Game II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/stone-game-ii/",
+    "local_path": "problems/medium/1140.md",
+    "content_sha256": "25d1748a1ef28cf52ef23726245e2738e5a88eae6568f316cbd9213cf3171ea4"
+  },
+  "teaching": {
+    "hint": "Which information about earlier moves changes the legal choices from a remaining suffix?",
+    "solution_outline": {
+      "decisive_insight": "The remaining index and current M specify a subgame; a mover gets the remaining total minus the opponent’s optimal share after the chosen move.",
+      "approach": "Precompute suffix totals and memoize the maximum stones the current mover can secure for each index and M. Try every legal X and maximize suffix total minus the opponent’s value at the next index and updated M. If all remaining piles can be taken, take their total.",
+      "state_and_invariant": "A state is the optimal share for whichever player moves next, independent of their name. Each move advances the suffix and updates the same history-dependent bound.",
+      "correctness": "For each legal first move, the rest is the opponent’s smaller subgame. Because all remaining stones must go to one player or the other, subtracting the opponent’s optimal share from the original suffix total gives exactly the mover’s share for that move. Maximizing over all moves and induction on remaining piles prove the value; the initial state belongs to Alice.",
+      "complexity": "`O(n^3)` time as a safe upper bound for `O(n^2)` states with `O(n)` moves each; `O(n^2)` auxiliary space and up to `O(n)` recursion depth.",
+      "pitfall": "Must update M to the larger of its old value and X; discarding M loses information that controls later moves."
+    },
+    "tags": [
+      "minimax",
+      "zero-sum",
+      "suffix-dp"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "game-state"
+    ],
+    "source_fidelity_notes": [
+      "Retained positivity, mandatory turns, exact update to M, move bounds, and optimal-player objective; omitted examples.",
+      "Did not repeat the false canonical claim that increasing M necessarily doubles it."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Must update M to the larger of its old value and X; discarding M loses information that controls later moves."
+    ]
+  }
+}

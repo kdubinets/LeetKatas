@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3176",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3176",
+    "title": "Find the Maximum Length of a Good Subsequence I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-the-maximum-length-of-a-good-subsequence-i/",
+    "local_path": "problems/medium/3176.md",
+    "content_sha256": "a8872b7995dad9967ac052f70215098a343fcce8e35d9d5b08ac08c728e85ee3"
+  },
+  "teaching": {
+    "hint": "What determines the extra cost of appending a new chosen element?",
+    "solution_outline": {
+      "decisive_insight": "The last chosen value determines whether an append consumes one change, so last index plus remaining change allowance is sufficient state.",
+      "approach": "For each ending index and budget, keep the greatest subsequence length. Try every earlier ending index: extending an equal value spends zero changes; extending a different value spends one. Start with singleton length one and maximize over endpoints at budget k.",
+      "state_and_invariant": "The state for index i and allowance c is the longest subsequence ending at i with at most c changes; every predecessor comes from a smaller index.",
+      "correctness": "Every nonsingleton subsequence has one penultimate index. Removing its last element reduces the allowed change count by exactly the equality-dependent transition cost. All such predecessor cases are considered, and appending to any recorded predecessor realizes a valid candidate. Induction over endpoints therefore yields exact optima; maximizing their k-allowance states covers every valid final endpoint.",
+      "complexity": "O(n²(k+1)) time and O(n(k+1)) auxiliary space, including the k=0 case.",
+      "pitfall": "Changes are between successive chosen elements, not distinct values; returning to a prior value can consume another change."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "budgeted-subsequence",
+      "endpoint-dp"
+    ],
+    "prerequisites": [
+      "subsequence-order",
+      "dynamic-programming",
+      "budget-state"
+    ],
+    "common_wrong_turns": [
+      "Changes are between successive chosen elements, not distinct values; returning to a prior value can consume another change."
+    ],
+    "source_fidelity_notes": [
+      "Omitted both incorrect source example explanations; retained the formal change rule and independently derived [1,2,1], k=1 example."
+    ]
+  }
+}

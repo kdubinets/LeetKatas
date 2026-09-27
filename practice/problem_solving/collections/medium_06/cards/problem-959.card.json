@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-959",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "959",
+    "title": "Regions Cut By Slashes",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/regions-cut-by-slashes/",
+    "local_path": "problems/medium/959.md",
+    "content_sha256": "b71cac01471323fa2303ae6111c9f90a5663446a90e25183a21ab2d569546ce6"
+  },
+  "teaching": {
+    "hint": "Is a whole grid square always one indivisible piece of a region?",
+    "solution_outline": {
+      "decisive_insight": "A slash can split a cell internally, so connectivity must be represented using smaller pieces whose boundaries align with every possible slash.",
+      "approach": "Divide each square into top, right, bottom, and left triangles. Connect triangles within a square only when no slash separates them, and connect triangles across every shared outer edge. Count connected components.",
+      "state_and_invariant": "Each triangle lies wholly in one region; connections join exactly pieces sharing an unblocked boundary segment.",
+      "correctness": "Every continuous path through the grid crosses a sequence of these unblocked contacts, and every recorded contact is traversable. Thus connected components of triangles correspond exactly to geometric regions.",
+      "complexity": "`O(n² α(n²))` time and `O(n²)` space with union-find; a small enlarged-grid flood fill is another supported approach.",
+      "pitfall": "Treating a slashed square as one graph vertex merges regions that the slash separates."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "grid-refinement",
+      "connected-components",
+      "geometry"
+    ],
+    "prerequisites": [
+      "union-find",
+      "grid-adjacency"
+    ],
+    "common_wrong_turns": [
+      "Running connectivity on whole cells",
+      "Connecting triangles across a diagonal wall"
+    ],
+    "source_fidelity_notes": [
+      "Restated the visual slash geometry in text and retained a one-cell clarification example."
+    ]
+  }
+}

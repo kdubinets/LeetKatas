@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-137",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "137",
+    "title": "Single Number II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/single-number-ii/",
+    "local_path": "problems/medium/137.md",
+    "content_sha256": "a2e2b634278278ca88b8be071dec35fc0e4d012e1dc4169fe3d684dec644c82f"
+  },
+  "teaching": {
+    "hint": "Which small count for an individual bit would discard every triplicate contribution?",
+    "solution_outline": {
+      "decisive_insight": "Each bit’s count modulo three retains only the unique value’s bit; two masks can encode the three count states for every bit in parallel.",
+      "approach": "Scan the values with masks for count-one and count-two bits. A present input bit advances its state through zero, one, two, then zero; an absent bit leaves it unchanged. Return the count-one bit pattern.",
+      "state_and_invariant": "At each bit position, the two masks represent its count among processed values modulo three, never setting both state bits at once.",
+      "correctness": "The three-state transition preserves the per-bit modulo count. Each triplicated value contributes three copies of its entire fixed-width pattern, cancelling at every position. The unique value contributes its one bits once, including any sign bit, so the final count-one pattern is exactly the requested signed value.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space for fixed 32-bit values.",
+      "pitfall": "Ordinary XOR only cancels even multiplicities. When translating the mask state transition, its second update depends on the newly updated first mask."
+    },
+    "tags": [
+      "bit-parallel",
+      "finite-state",
+      "modulo-counting"
+    ],
+    "prerequisites": [
+      "bitwise-operations",
+      "modular-arithmetic"
+    ],
+    "source_fidelity_notes": [
+      "Retained exact triple/single promise, full signed value range, and mandatory linear-time/constant-space constraints."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Ordinary XOR only cancels even multiplicities. When translating the mask state transition, its second update depends on the newly updated first mask."
+    ]
+  }
+}

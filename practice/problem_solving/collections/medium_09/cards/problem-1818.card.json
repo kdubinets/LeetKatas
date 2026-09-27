@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1818",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1818",
+    "title": "Minimum Absolute Sum Difference",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-absolute-sum-difference/",
+    "local_path": "problems/medium/1818.md",
+    "content_sha256": "aefd97306b5ada3d6edb4dd8f7d129fba11e41a9b678912da7dbd578876e99a2"
+  },
+  "teaching": {
+    "hint": "How does one allowed replacement change the contributions from all the other indices?",
+    "solution_outline": {
+      "decisive_insight": "The replacement affects exactly one summand; the optimum is the baseline minus the greatest achievable saving at one index.",
+      "approach": "Compute the baseline and sort a copy of the allowed replacement values. For each index, locate the two values bracketing its nums2 target, determine the smallest possible replacement distance, and keep the largest saving. Subtract that saving and then apply the modulo.",
+      "state_and_invariant": "The sorted copy is the original allowed value pool; the best saving is the largest true single-index reduction among processed indices.",
+      "correctness": "Absolute distance in a sorted value set is minimized by a predecessor or successor of the target. Thus each query obtains the exact best saving at its index. All other terms remain unchanged, so selecting the largest single saving minimizes the total. Zero saving permits taking no replacement.",
+      "complexity": "`O(n log n)` time and `O(n)` auxiliary space.",
+      "pitfall": "Optimize the ordinary total and saving before modulo; modular order does not preserve which total is smaller."
+    },
+    "tags": [
+      "local-improvement",
+      "binary-search",
+      "nearest-neighbor"
+    ],
+    "prerequisites": [
+      "sorting",
+      "absolute-difference"
+    ],
+    "source_fidelity_notes": [
+      "Clarified replacement as copying an original value without consuming it, at-most-one semantics, and optimization before modulo; omitted examples."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Optimize the ordinary total and saving before modulo; modular order does not preserve which total is smaller."
+    ]
+  }
+}

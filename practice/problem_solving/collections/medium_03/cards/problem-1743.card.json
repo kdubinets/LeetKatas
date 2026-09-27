@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1743",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1743",
+    "title": "Restore the Array From Adjacent Pairs",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/restore-the-array-from-adjacent-pairs/",
+    "local_path": "problems/medium/1743.md",
+    "content_sha256": "06992f219d6a25770ec497189f29ff869df15a9e43666c425ce7e73bc7e97b66"
+  },
+  "teaching": {
+    "hint": "What can the number of neighbors of a value reveal about its position in the array?",
+    "solution_outline": {
+      "decisive_insight": "The unordered pairs form one simple path whose two endpoints have one neighbor each.",
+      "approach": "Build neighbors for each value, begin at either one-neighbor endpoint, and repeatedly take the neighbor that is not the previous value.",
+      "state_and_invariant": "The current and previous values identify a unique forward edge on a degree-at-most-two path; the output prefix is a valid prefix of one orientation of the hidden array.",
+      "correctness": "Every supplied pair is exactly an edge of the original array’s path. The forced walk from an endpoint visits every unique value once and uses every edge; either direction is accepted.",
+      "complexity": "O(n) expected time and O(n) space for adjacency and output.",
+      "pitfall": "Starting from an interior value can branch into two directions and omit part of the path."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "path-reconstruction",
+      "graph-structure"
+    ],
+    "prerequisites": [
+      "adjacency-list",
+      "tree-path"
+    ],
+    "common_wrong_turns": [
+      "Assume pair order or orientation matches the array",
+      "Start from a degree-two value without a path direction"
+    ],
+    "source_fidelity_notes": [
+      "Kept uniqueness, arbitrary pair orientation and order, and acceptance of either reconstruction direction."
+    ]
+  }
+}

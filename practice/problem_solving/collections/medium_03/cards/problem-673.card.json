@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-673",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "673",
+    "title": "Number of Longest Increasing Subsequence",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/number-of-longest-increasing-subsequence/",
+    "local_path": "problems/medium/673.md",
+    "content_sha256": "2da883cdff401248e74db5a277a2cce20d33944123bbd97c1352628aedc5af44"
+  },
+  "teaching": {
+    "hint": "If several earlier elements yield the same best length at one endpoint, how many ways reach that endpoint?",
+    "solution_outline": {
+      "decisive_insight": "Each ending index needs both the best achievable length and the number of ways attaining it; ties add counts, while a new longer length replaces them.",
+      "approach": "For each index, inspect earlier strictly smaller values. Extend their best subsequences; replace the current count on a length improvement and add counts on a tie. Sum counts at endpoints with the global longest length.",
+      "state_and_invariant": "At index i, stored length is the longest increasing subsequence ending exactly at i, and stored count is the number of such index-distinct subsequences.",
+      "correctness": "Every nontrivial subsequence ending at i has a unique predecessor j<i with smaller value. The transition partitions candidates by that predecessor, so it finds the maximum length and sums exactly the counts attaining it. Summing optimal endpoints counts each global answer once.",
+      "complexity": "O(n²) time and O(n) space, suitable for n≤2,000.",
+      "pitfall": "Deduplicating equal-valued elements loses distinct subsequences that choose different indices."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "optimize-and-count-dp",
+      "increasing-subsequence"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "subsequence"
+    ],
+    "common_wrong_turns": [
+      "Allow equal values in a strictly increasing step",
+      "Keep counts from a shorter length after finding a longer one",
+      "Deduplicate equal-value index choices"
+    ],
+    "source_fidelity_notes": [
+      "Explicitly clarified index-distinct counting; source example of all-equal values supports it."
+    ]
+  }
+}

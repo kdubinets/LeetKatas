@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1824",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1824",
+    "title": "Minimum Sideway Jumps",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-sideway-jumps/",
+    "local_path": "problems/medium/1824.md",
+    "content_sha256": "8150516e51fa028788cd1337a075cb09533e963549acb0f4c70ff483255f3973"
+  },
+  "teaching": {
+    "hint": "Can two arrivals at the same point but in different lanes be treated as equivalent?",
+    "solution_outline": {
+      "decisive_insight": "The future depends on both position and lane; retaining a best cost for each of only three lanes avoids path enumeration.",
+      "approach": "Process points in order. Carry valid straight movements forward, then account for legal same-point side jumps among open lanes, retaining the cheapest cost per lane.",
+      "state_and_invariant": "For each point and lane, the state is the least side jumps needed to stand there after any permitted jumps at that point.",
+      "correctness": "Every path reaches a point by a straight move from the previous point, possibly followed by a side jump; the transitions cover these choices. Repeated same-point jumps cannot improve on one direct jump.",
+      "complexity": "O(n) time and O(1) auxiliary space because there are only three lanes.",
+      "pitfall": "A side jump cannot land on the lane blocked at the point where it occurs."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "small-state-dp",
+      "lane-path"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "state-transitions"
+    ],
+    "common_wrong_turns": [
+      "Choose one lane greedily for the whole trip",
+      "Ignore which point a lateral jump occurs at"
+    ],
+    "source_fidelity_notes": [
+      "The single-obstacle rule, any-lane finish, nonadjacent side jump, and open endpoints are explicit."
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-962",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "962",
+    "title": "Maximum Width Ramp",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-width-ramp/",
+    "local_path": "problems/medium/962.md",
+    "content_sha256": "6d0a20c8dff659de34346f63d5ccc9c8724dc8221614685dad1809a3e511a030"
+  },
+  "teaching": {
+    "hint": "When does an earlier index make a possible left endpoint unnecessary?",
+    "solution_outline": {
+      "decisive_insight": "Only strict prefix minima need be left endpoints; processing right endpoints backward finalizes each candidate at its farthest feasible match.",
+      "approach": "Collect indices at new strict prefix minima in a stack. Scan right indices from the end, popping every candidate whose value is no greater than the current value and recording its width when the right index is larger.",
+      "state_and_invariant": "The stack’s indices increase and values strictly decrease. Before a reverse-scan step, its candidates have not matched any previously scanned, farther-right endpoint.",
+      "correctness": "A nonminimum start is dominated by an earlier no-larger value, which makes every corresponding ramp wider. For a surviving candidate, its first compatible reverse-scan endpoint is its largest possible right endpoint, so later endpoints cannot improve its width. If the smallest-valued stack top fails, all deeper candidates fail too. Thus every potentially optimal start is finalized at its best width; self-matches contribute only the zero default, not a strict ramp.",
+      "complexity": "O(n) time and O(n) auxiliary space; each candidate is pushed and popped at most once.",
+      "pitfall": "Equality is allowed when matching endpoints, while equal prefix values need not create a new candidate."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "monotone-stack",
+      "dominance-pruning",
+      "reverse-scan"
+    ],
+    "prerequisites": [
+      "prefix-minimum",
+      "amortized-analysis"
+    ],
+    "common_wrong_turns": [
+      "Equality is allowed when matching endpoints, while equal prefix values need not create a new candidate."
+    ],
+    "source_fidelity_notes": [
+      "Preserved strict index order and nonstrict value order; proof distinguishes zero-width self-matches from actual ramps."
+    ]
+  }
+}

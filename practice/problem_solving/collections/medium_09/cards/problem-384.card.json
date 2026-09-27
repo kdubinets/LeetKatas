@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-384",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "384",
+    "title": "Shuffle an Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/shuffle-an-array/",
+    "local_path": "problems/medium/384.md",
+    "content_sha256": "4247bd79062a62ef296b7bb807b335850dec540338a895287913026b0a0c9611"
+  },
+  "teaching": {
+    "hint": "After fixing some output positions, what should the next random choice range over to keep complete permutations equally likely?",
+    "solution_outline": {
+      "decisive_insight": "Choose uniformly among the remaining elements for each next position; the shrinking choice counts make every fixed permutation have the same probability.",
+      "approach": "Save the constructor input unchanged. Reset returns that configuration. For a shuffle, copy it and fill successive positions by swapping in a uniformly chosen position from the still-unfixed suffix, using a persistent random generator.",
+      "state_and_invariant": "The fixed prefix contains distinct choices already made, while the suffix contains exactly the remaining original elements. The saved original is unchanged by all operations.",
+      "correctness": "For any prescribed permutation, its next required element has probability one divided by the number of remaining elements of being selected at each step. Multiplying these conditional probabilities gives `1/n!`, independently of which permutation was prescribed. Swaps preserve all elements, and starting each shuffle from the saved configuration preserves the population across calls. Reset returns that exact saved order.",
+      "complexity": "`O(n)` time for construction, reset, and shuffle; `O(n)` stored auxiliary space, with `O(n)` returned-array space.",
+      "pitfall": "Choosing from the entire array at every step can disturb fixed positions and does not give a uniform permutation; choose only among remaining positions."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "randomized",
+      "uniform-permutation",
+      "conditional-probability"
+    ],
+    "prerequisites": [
+      "probability",
+      "array-swap"
+    ],
+    "common_wrong_turns": [
+      "Choosing from the entire array at every step can disturb fixed positions and does not give a uniform permutation; choose only among remaining positions."
+    ],
+    "source_fidelity_notes": [
+      "Retained reset/shuffle behavior, uniqueness, equal permutation probability, bounds, and interleaved-call semantics; removed language-specific class boilerplate.",
+      "Expanded the canonical unbiased-remaining-position explanation into its conditional-probability product argument."
+    ]
+  }
+}

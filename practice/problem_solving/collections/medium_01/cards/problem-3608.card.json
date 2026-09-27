@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3608",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3608",
+    "title": "Minimum Time for K Connected Components",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-time-for-k-connected-components/",
+    "local_path": "problems/medium/3608.md",
+    "content_sha256": "a8aa4bc14dd315dd2b1d09e9a97bb8ec66c206826411160a1421125dfb5cd7e4"
+  },
+  "teaching": {
+    "hint": "How does the number of connected components change as time increases, and what happens if you consider the edge events backward?",
+    "solution_outline": {
+      "decisive_insight": "Increasing time only removes edges, so component count never decreases. Reversing the edge events turns deletions into unions, which are easy to track.",
+      "approach": "Sort edges by removal time descending. Starting with n isolated vertices, add edges back with union-find. The first edge whose successful union would reduce the component count below k identifies the minimum feasible time; if none does, return zero.",
+      "state_and_invariant": "Before processing a time-T edge, union-find contains every edge with time greater than T and any time-T edges already processed. Its component count is exact for those restored edges; adding further time-T edges can only reduce it.",
+      "correctness": "At the crossing edge's time T, that edge and all other time-T edges are removed, while all later-time edges are kept, leaving at least k components. At every t<T, the crossing edge and all previously restored edges are present, yielding fewer than k components; adding any other edges cannot increase the count. If no crossing occurs, even the original graph has at least k components, so time zero is feasible.",
+      "complexity": "O(e log e + e α(n)) time to sort and union e edges, and O(n + e) auxiliary space, with n and e at most 100,000.",
+      "pitfall": "Removing an edge on a cycle need not increase the component count; counting removed edges instead of successful unions gives the wrong threshold."
+    },
+    "accepted_alternatives": ["Binary-search a time threshold and rebuild connected components from edges with later removal times at each probe; monotonicity makes this correct but less efficient."],
+    "tags": ["union-find", "offline-processing", "monotone-threshold"],
+    "prerequisites": ["connected-components", "union-find"],
+    "common_wrong_turns": ["Assume the graph starts connected", "Count every removed edge as a new component", "Treat edges removed at time T as present at T"],
+    "source_fidelity_notes": ["Image-only examples were removed; inclusive removal timing, possible initial disconnection, isolated vertices, large time bound, and at-least-k requirement were stated explicitly."]
+  }
+}

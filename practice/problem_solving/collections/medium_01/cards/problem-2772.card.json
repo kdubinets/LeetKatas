@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2772",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2772",
+    "title": "Apply Operations to Make All Array Elements Equal to Zero",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/apply-operations-to-make-all-array-elements-equal-to-zero/",
+    "local_path": "problems/medium/2772.md",
+    "content_sha256": "bd1aef0502621aabd33ed69a2100bb8966cfe5a244898148884fd865708bcc33"
+  },
+  "teaching": {
+    "hint": "Once an early position has become zero, where could a later operation that still changes it begin?",
+    "solution_outline": {
+      "decisive_insight": "After earlier positions are fixed at zero, the effective value at the current position forces exactly how many length-k operations must start there; an earlier start would disturb a finished position, and a later start cannot reach it.",
+      "approach": "Scan left to right, tracking the total decrements from active windows. If the current effective value is negative or a required window no longer fits, return false. Otherwise apply that many operations starting here as one deferred range update. Return true after every position is zero.",
+      "state_and_invariant": "Before each index, all earlier positions are exactly zero and the running adjustment equals the sum of active forced window decrements. A scheduled cancellation removes each adjustment immediately after its length-k window ends.",
+      "correctness": "Every future operation affecting the current position must start here: starts earlier would also alter an already-zero earlier position, while starts later miss it. Thus a positive effective value forces that many operations, and a negative value or missing window proves impossibility. Deferred updates have the same effect as those operations, so induction over positions establishes the final answer.",
+      "complexity": "O(n) time and O(n) auxiliary space using deferred range updates, for n up to 100,000.",
+      "pitfall": "A total sum divisible by k is insufficient for feasibility; the forced windows can over-decrease a later element."
+    },
+    "accepted_alternatives": [],
+    "tags": ["greedy", "difference-array", "range-update"],
+    "prerequisites": ["contiguous-subarray", "prefix-accumulation"],
+    "common_wrong_turns": ["Apply each repeated operation to all k elements literally", "Ignore negative effective values", "Assume divisibility of the sum decides feasibility"],
+    "source_fidelity_notes": ["Example transcripts were omitted; exactly-k contiguous operations, repeated use, nonnegative initial values, bounds, and all-zero objective were retained."]
+  }
+}

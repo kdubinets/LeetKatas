@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-1871",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1871",
+    "title": "Jump Game VII",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/jump-game-vii/",
+    "local_path": "problems/medium/1871.md",
+    "content_sha256": "3112c5a792b38b5b2146058c19153f7234af48730624575e6ceec78745adcd58"
+  },
+  "teaching": {
+    "hint": "For one destination, which earlier positions could have reached it, and how does that set change at the next destination?",
+    "solution_outline": {
+      "decisive_insight": "A position j is reachable exactly when it is open and some reachable predecessor lies in the interval [j-maxJump, j-minJump]. That interval slides one place as j advances.",
+      "approach": "Scan destinations from left to right. Maintain a count of reachable positions in the current predecessor interval by adding the new right endpoint and removing the old left endpoint. Mark an open destination reachable when the count is positive.",
+      "state_and_invariant": "Before deciding j, the running count equals the number of already decided reachable indices inside j's legal predecessor interval. The reachability flags for all indices below j are final.",
+      "correctness": "Rearranging the jump bounds gives exactly the stated predecessor interval, whose indices are all smaller than j. The entering/leaving updates preserve its exact reachable count. Thus induction over j marks precisely the positions attainable by a legal jump sequence; the last flag gives the answer.",
+      "complexity": "O(n) time and O(n) auxiliary space for n string positions, independent of jump-range width.",
+      "pitfall": "Scanning every outgoing jump from every reachable index can take quadratic time on a long open string with a wide jump range."
+    },
+    "accepted_alternatives": ["Breadth-first search can also run in O(n) time by remembering the furthest successor index already enqueued and never scanning that index again."],
+    "tags": ["dynamic-programming", "sliding-window", "reachability"],
+    "prerequisites": ["interval-boundaries", "boolean-dynamic-programming"],
+    "common_wrong_turns": ["Permit jumps shorter than minJump", "Rescan the entire jump interval at each index", "Count a blocked destination as reachable"],
+    "source_fidelity_notes": ["Examples were omitted; exact inclusive jump bounds, blocked destinations, start-cell guarantee, size bound, and last-index objective were retained."]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2840",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2840",
+    "title": "Check if Strings Can be Made Equal With Operations II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/check-if-strings-can-be-made-equal-with-operations-ii/",
+    "local_path": "problems/medium/2840.md",
+    "content_sha256": "c45cf5c508b49a1fe069fa362b511bb56d9925d4961da9d20209eb37f05230a1"
+  },
+  "teaching": {
+    "hint": "What property of a character position cannot change under a legal swap?",
+    "solution_outline": {
+      "decisive_insight": "Legal swaps preserve even and odd index classes separately, and every transposition within one class is legal.",
+      "approach": "Count each letter separately at even and odd indices in the two strings. Return true exactly when both corresponding frequency tables agree.",
+      "state_and_invariant": "The two parity-class multisets are unchanged by every permitted operation; frequency equality tests their agreement exactly.",
+      "correctness": "Necessity follows because no character can cross parity classes. For sufficiency, every pair of positions in one class may swap, so arbitrary permutations within each class are achievable. Matching letter multiplicities therefore let the even positions and odd positions be matched independently, producing equal strings.",
+      "complexity": "O(n) time and O(1) space for two parity classes and 26 letters.",
+      "pitfall": "Whole-string anagram equality is necessary but insufficient because letters may occupy the wrong parity classes."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "invariant",
+      "reachability",
+      "permutation"
+    ],
+    "prerequisites": [
+      "frequency-counting",
+      "transpositions"
+    ],
+    "common_wrong_turns": [
+      "Whole-string anagram equality is necessary but insufficient because letters may occupy the wrong parity classes."
+    ],
+    "source_fidelity_notes": [
+      "Retained operations on either string, even index difference, lowercase alphabet, and equal lengths; made zero-based parity explicit."
+    ]
+  }
+}

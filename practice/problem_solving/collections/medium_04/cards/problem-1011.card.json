@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1011",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1011",
+    "title": "Capacity To Ship Packages Within D Days",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/",
+    "local_path": "problems/medium/1011.md",
+    "content_sha256": "bc70b3694e0bbe38060fb70bd53a8bd0e74ce8f853908a3f4b0f56e0fc83d44c"
+  },
+  "teaching": {
+    "hint": "For a proposed capacity, how can you decide whether the deadline is achievable without searching all partitions?",
+    "solution_outline": {
+      "decisive_insight": "A capacity is feasible exactly when greedily filling each day uses no more than the allowed days, and feasibility is monotone in capacity.",
+      "approach": "Search capacities between the heaviest package and total weight. For each capacity, scan in order, starting a new day only when the next package would exceed it.",
+      "state_and_invariant": "The scan uses the fewest possible days for the proposed capacity; all tested capacities can hold every individual package.",
+      "correctness": "Delaying a package that fits today cannot reduce later day count. Therefore the scan decides feasibility exactly. Larger capacities preserve feasible partitions, so the first feasible capacity is the answer.",
+      "complexity": "O(n log S) time and O(1) auxiliary space, where S is the total weight.",
+      "pitfall": "A trial capacity below the heaviest package is invalid even if a naive day counter appears to accept it."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "answer-space-search",
+      "ordered-packing"
+    ],
+    "prerequisites": [
+      "binary-search",
+      "greedy-feasibility"
+    ],
+    "common_wrong_turns": [
+      "Reorder packages by weight",
+      "Assume a fixed number of packages per day"
+    ],
+    "source_fidelity_notes": [
+      "The mandatory package order, contiguous daily portions, and days bound are explicit."
+    ]
+  }
+}

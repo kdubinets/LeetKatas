@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2952",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2952",
+    "title": "Minimum Number of Coins to be Added",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-number-of-coins-to-be-added/",
+    "local_path": "problems/medium/2952.md",
+    "content_sha256": "66626959a5b58cd1b335c85e5f50e0233a9457a6f354b4a4be54fc397760479f"
+  },
+  "teaching": {
+    "hint": "What is the first sum you cannot yet make, and how large can the next useful coin be?",
+    "solution_outline": {
+      "decisive_insight": "If all sums below a frontier are covered, a coin no larger than the frontier extends the covered interval; a larger coin leaves the frontier missing.",
+      "approach": "Process original coins in ascending order. Keep the first uncovered positive sum. Consume each available coin that bridges it; otherwise add a coin equal to that missing sum, then continue.",
+      "state_and_invariant": "Before each step, every positive value below `missing` is obtainable, and the unused original coins are no smaller than the next one under consideration.",
+      "correctness": "When the next coin exceeds `missing`, no original coin can fill the gap, so an addition is forced. Adding exactly `missing` gives the largest possible new covered interval among legal additions, preserving an optimal plan.",
+      "complexity": "O(n log n) time for sorting and O(1) auxiliary space beyond sorting for n coins; use a wide integer for the frontier.",
+      "pitfall": "Using an original coin larger than the first gap does not make that gap obtainable."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "coverage-frontier",
+      "coin-patching"
+    ],
+    "prerequisites": [
+      "subset-sums",
+      "greedy-proof"
+    ],
+    "common_wrong_turns": [
+      "Process coins without sorting",
+      "Advance past a coin that is still too large"
+    ],
+    "source_fidelity_notes": [
+      "Clarifies occurrence reuse and that added coin values are unrestricted positive integers; the original subsequence wording was shortened."
+    ]
+  }
+}

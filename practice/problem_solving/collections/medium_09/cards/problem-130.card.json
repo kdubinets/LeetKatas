@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-130",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "130",
+    "title": "Surrounded Regions",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/surrounded-regions/",
+    "local_path": "problems/medium/130.md",
+    "content_sha256": "f0a32614a2dc07b183f250e3ac89e08e381df8a2dec3303c082087150e6c9559"
+  },
+  "teaching": {
+    "hint": "Could it be easier to identify which cells must survive than to test every enclosed region?",
+    "solution_outline": {
+      "decisive_insight": "The surviving O cells are exactly those reachable from any boundary O through O-only side connections.",
+      "approach": "Traverse from all boundary O cells and mark reached cells temporarily. Then capture unmarked O cells and restore the marked cells to O. An explicit frontier avoids recursion-depth dependence.",
+      "state_and_invariant": "Temporarily marked cells are exactly the O cells already reached from the boundary; original X cells are never used as traversal links.",
+      "correctness": "Every marked cell follows an O path from an edge, so its region must survive. Every O region meeting an edge is fully reached by traversal; an interior-only component cannot be reached from another component. Thus the final sweep preserves exactly the edge-connected regions and captures exactly all others.",
+      "complexity": "`O(m*n)` time and `O(m*n)` auxiliary frontier space in the worst case, while changing the original board.",
+      "pitfall": "Checking only whether an individual cell is interior misses long corridors connecting its region to an edge."
+    },
+    "tags": [
+      "grid",
+      "multi-source-traversal",
+      "complement-connectivity"
+    ],
+    "prerequisites": [
+      "graph-traversal",
+      "components"
+    ],
+    "source_fidelity_notes": [
+      "Restated enclosure as exact connected-component edge membership without diagrams; retained in-place mutation and side-only connections.",
+      "Added the single-row example to make boundary semantics observable without revealing a traversal method."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Checking only whether an individual cell is interior misses long corridors connecting its region to an edge."
+    ]
+  }
+}

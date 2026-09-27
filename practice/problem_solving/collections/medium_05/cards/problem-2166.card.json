@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2166",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2166",
+    "title": "Design Bitset",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/design-bitset/",
+    "local_path": "problems/medium/2166.md",
+    "content_sha256": "79107577b6e23d746d67dd1c8d25b0296a1add6db96febe0dcf845acb710f41b"
+  },
+  "teaching": {
+    "hint": "Can a whole-bitset flip be represented without touching every stored bit immediately?",
+    "solution_outline": {
+      "decisive_insight": "A global complement flag reinterprets stored bits in constant time, while a logical one-count answers aggregate queries.",
+      "approach": "Store physical bits, a complement flag, and the current logical one-count. Translate individual writes through the flag, toggle the flag and complement the count on `flip`, and materialize a string only on `toString`.",
+      "state_and_invariant": "The logical value at each index is its stored bit XOR the flag, and the count equals the number of logical ones after every operation.",
+      "correctness": "Construction establishes the invariant. Individual updates preserve it at one index, a flip complements all logical values and changes the count to `size−count`, and every query reads the resulting logical state.",
+      "complexity": "`O(1)` time for all operations except `toString`, which takes `O(size)`; `O(size)` storage. At most five materializations occur.",
+      "pitfall": "After a flip, changing a stored bit without translating through the flag can reverse the requested logical update."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "lazy-global-toggle",
+      "bitset-design"
+    ],
+    "prerequisites": [
+      "representation-invariant",
+      "aggregate-count"
+    ],
+    "common_wrong_turns": [
+      "Physically scan every bit on each flip",
+      "Change the one-count for an idempotent fix/unfix"
+    ],
+    "source_fidelity_notes": [
+      "The five-call cap on `toString` and index-to-character order are retained."
+    ]
+  }
+}

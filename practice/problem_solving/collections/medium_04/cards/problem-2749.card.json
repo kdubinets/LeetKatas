@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2749",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2749",
+    "title": "Minimum Operations to Make the Integer Zero",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-operations-to-make-the-integer-zero/",
+    "local_path": "problems/medium/2749.md",
+    "content_sha256": "383a62f8b585734d4264032971b4dd8b7792548dcf08ee2cb65a909031357822"
+  },
+  "teaching": {
+    "hint": "After fixing the number of operations, what sum must the chosen powers of two make?",
+    "solution_outline": {
+      "decisive_insight": "For k operations, the adjusted target must be representable as exactly k powers of two, which is characterized by its popcount and size.",
+      "approach": "Try operation counts in increasing order within a finite small bound. For each k, compute `num1-k*num2` and test whether it can be split into exactly k allowed powers of two.",
+      "state_and_invariant": "A positive integer x is a sum of exactly k powers of two iff `popcount(x) ≤ k ≤ x`; splitting a larger power increases term count by one.",
+      "correctness": "The operation equation makes the condition necessary. Repeated splitting makes it sufficient, so the first feasible k is minimal. The input bounds ensure any feasible minimum occurs within 60 trials.",
+      "complexity": "O(60) arithmetic trials and O(1) auxiliary space; use wide arithmetic for k times num2.",
+      "pitfall": "Checking only the binary popcount misses the requirement that each of k terms contributes at least one."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bit-decomposition",
+      "operation-count-search"
+    ],
+    "prerequisites": [
+      "popcount",
+      "constructive-proof"
+    ],
+    "common_wrong_turns": [
+      "Use only distinct exponents",
+      "Ignore negative num2 when bounding trials"
+    ],
+    "source_fidelity_notes": [
+      "The exponent range, reuse permission, negative offset, and impossibility result remain explicit."
+    ]
+  }
+}

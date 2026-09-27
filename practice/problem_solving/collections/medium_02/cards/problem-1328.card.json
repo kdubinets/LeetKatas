@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-1328",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1328",
+    "title": "Break a Palindrome",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/break-a-palindrome/",
+    "local_path": "problems/medium/1328.md",
+    "content_sha256": "f9af511e0277aa3c239416bcfa51c49184b48f602df05c22c5fd6b0d1ce0ef18"
+  },
+  "teaching": {
+    "hint": "Which early position could be made smaller while still breaking its mirror match?",
+    "solution_outline": {
+      "decisive_insight": "Lexicographic minimization favors the earliest possible decrease, but changing the center of an odd-length palindrome cannot break symmetry.",
+      "approach": "For length one, return empty. Scan the first half for the first character above a and replace it with a. If none exists, replace the final character with b.",
+      "state_and_invariant": "Before finding a non-a character in the first half, no earlier position admits a lowering edit that breaks the palindrome. The untouched mirrored character ensures any such first-half lowering does break it.",
+      "correctness": "A first-half non-a character can be lowered to the smallest letter and becomes unequal to its unchanged mirror; the earliest such position makes the lexicographically smallest possible valid result. If no such position exists, every first-half character is already a and the only lowerable possible middle position cannot break symmetry, so the least harmful valid increase is b at the final position. A length-one string can never become non-palindromic.",
+      "complexity": "O(n) time and O(n) space for a returned copy of the n-character string, with O(1) extra space beyond that copy.",
+      "pitfall": "Changing the middle character of an odd-length palindrome leaves it a palindrome, even if the string becomes lexicographically smaller."
+    },
+    "accepted_alternatives": [],
+    "tags": ["greedy", "lexicographic-order", "palindrome"],
+    "prerequisites": ["palindrome-symmetry", "lexicographic-comparison"],
+    "common_wrong_turns": ["Edit the middle character of an odd-length string", "Always increase the first character", "Return a character for a length-one input"],
+    "source_fidelity_notes": ["The multiple-option source example was removed; exactly-one replacement, lowercase alphabet, minimum lexicographic result, length-one impossibility, and bounds were retained."]
+  }
+}

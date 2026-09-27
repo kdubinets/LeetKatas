@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-904",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "904",
+    "title": "Fruit Into Baskets",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/fruit-into-baskets/",
+    "local_path": "problems/medium/904.md",
+    "content_sha256": "8d542f091991f3ee274c00d1ad1b72e596a96209a8fad7ee609db8c4a4fae04c"
+  },
+  "teaching": {
+    "hint": "When a third type appears, which early trees can no longer belong to the current valid collection?",
+    "solution_outline": {
+      "decisive_insight": "A legal collection is a contiguous range containing at most two fruit types. As the right endpoint moves, removing a prefix can restore validity without losing any longer valid range ending there.",
+      "approach": "Sweep the right endpoint through the array while maintaining type counts in the current range. Whenever a third type appears, move the left endpoint right until only two types remain; record the largest valid length.",
+      "state_and_invariant": "After each right-endpoint step, the maintained range contains at most two types, and its left endpoint is the earliest one that makes this endpoint valid. Type counts describe exactly the range's contents.",
+      "correctness": "Every possible collection has an endpoint. For each endpoint, the maintained earliest valid left boundary gives the longest legal collection ending there: any earlier start has too many types, while any later start is shorter. Taking the maximum over endpoints therefore finds the global optimum.",
+      "complexity": "O(n) time because each boundary advances at most n times; O(1) auxiliary space because the type map holds at most three types during repair.",
+      "pitfall": "A basket can hold unlimited fruit of one type; treating it as a capacity of one fruit changes the problem."
+    },
+    "accepted_alternatives": ["Track each type's last index in the current range instead of its count, removing a type when its final occurrence passes the left boundary."],
+    "tags": ["sliding-window", "frequency-counting"],
+    "prerequisites": ["contiguous-subarray", "frequency-map"],
+    "common_wrong_turns": ["Choose a noncontiguous set of trees", "Reset the entire range on seeing a third type", "Shrink only one position when several old fruits remain"],
+    "source_fidelity_notes": ["The farm story was shortened while keeping the rightward consecutive-picking rule, two unlimited single-type baskets, value bounds, and maximum-length objective."]
+  }
+}

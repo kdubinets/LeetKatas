@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-542",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "542",
+    "title": "01 Matrix",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/01-matrix/",
+    "local_path": "problems/medium/542.md",
+    "content_sha256": "13aaa9783c7b403c4856a864ec9ae342a5055bad7615e899e6b3e669bf1dc871"
+  },
+  "teaching": {
+    "hint": "Could the searches for different cells share their expanding frontiers?",
+    "solution_outline": {
+      "decisive_insight": "Distances from the nearest zero can be computed by starting one breadth-first exploration from every zero simultaneously.",
+      "approach": "Assign every zero distance zero and put them all into a queue. Expand side-neighbors in breadth-first order, assigning each unvisited neighbor the current distance plus one.",
+      "state_and_invariant": "The queue explores distance layers from the entire source set; every assigned cell has its shortest distance to some zero.",
+      "correctness": "All sources begin at distance zero. Each layer reaches precisely cells one edge beyond earlier layers. A cell first reached at distance d has a length-d route to a zero; a shorter route would have placed it in an earlier layer. Thus every assigned distance is minimal, and connectivity of the rectangular grid guarantees all cells are reached.",
+      "complexity": "O(mn) time and O(mn) auxiliary space for distances and the frontier.",
+      "pitfall": "A separate search from each one-cell repeats work; all zeros must seed the same initial frontier."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "multi-source-bfs",
+      "grid-distance"
+    ],
+    "prerequisites": [
+      "breadth-first-layers",
+      "grid-neighbors"
+    ],
+    "common_wrong_turns": [
+      "A separate search from each one-cell repeats work; all zeros must seed the same initial frontier."
+    ],
+    "source_fidelity_notes": [
+      "Restated distance without source images and made side adjacency and zero self-distance explicit; introductory simultaneous-source role."
+    ]
+  }
+}

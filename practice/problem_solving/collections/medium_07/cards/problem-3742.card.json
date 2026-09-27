@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3742",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3742",
+    "title": "Maximum Path Score in a Grid",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-path-score-in-a-grid/",
+    "local_path": "problems/medium/3742.md",
+    "content_sha256": "5e088fb986e8be1136e17c6ff927e08574444eaa22168fb5b567dc6595875a33"
+  },
+  "teaching": {
+    "hint": "Could two paths reaching the same cell differ in which future paths they can afford?",
+    "solution_outline": {
+      "decisive_insight": "A path prefix score alone is insufficient: spent cost also determines its future feasibility. Equal endpoint and cost permit retaining only the greatest score.",
+      "approach": "For each cell and exact spent cost, store the best score or unreachable. Extend from the above and left states, adding this cell score and cost. Limit the cost dimension to the smaller of k and m+n-2, and take the best destination state within budget. Rows may be rolled.",
+      "state_and_invariant": "Each state is the maximum score among paths reaching that cell with exactly its stated cost; every transition uses a processed predecessor.",
+      "correctness": "Every nonstart path enters its last cell from above or left. Removing that cell gives exactly the predecessor cost and score, so all paths are represented by these transitions. Replacing a prefix with a larger score at the same cell and cost preserves every possible continuation. Induction gives exact states; maximizing within budget gives the answer or proves none exists. A monotone path visits m+n-1 cells and the start is free, justifying the structural cost cap.",
+      "complexity": "O(mn(B+1)) time and O(n(B+1)) space with rolling rows, where B=min(k,m+n-2).",
+      "pitfall": "Treating cell value as its cost incorrectly charges two for a value-two cell."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "grid-dp",
+      "resource-dimension",
+      "state-compression"
+    ],
+    "prerequisites": [
+      "optimal-substructure"
+    ],
+    "common_wrong_turns": [
+      "Treating cell value as its cost incorrectly charges two for a value-two cell."
+    ],
+    "source_fidelity_notes": [
+      "Retained start value zero, score/cost distinction, all visited cells, at-most budget, impossible result, and single-cell grids."
+    ]
+  }
+}

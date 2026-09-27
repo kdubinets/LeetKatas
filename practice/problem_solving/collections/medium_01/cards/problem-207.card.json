@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-207",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "207",
+    "title": "Course Schedule",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/course-schedule/",
+    "local_path": "problems/medium/207.md",
+    "content_sha256": "3c6ca0b982251e666efe74d16c2a41f36043e876eb807acd4a7adb9611f55d65"
+  },
+  "teaching": {
+    "hint": "Which courses can be taken immediately, and what information changes after one of them is completed?",
+    "solution_outline": {
+      "decisive_insight": "Finishing all courses is possible exactly when the prerequisite graph contains no directed cycle.",
+      "approach": "Direct every edge from a prerequisite to its dependent course. Repeatedly remove a course with no remaining prerequisites and decrement the counts of its dependents; succeed only if every course is removed.",
+      "state_and_invariant": "A course's remaining prerequisite count equals its incoming edges from courses not yet removed, so zero-count courses are currently legal to take.",
+      "correctness": "Removing a zero-count course is valid and faithfully exposes newly available dependents. If removal stops early, each remaining vertex has an incoming edge, which in a finite graph implies a cycle. Conversely, an acyclic directed graph always has a zero-indegree vertex, so all courses are removed exactly when completion is possible.",
+      "complexity": "Building and processing the graph costs O(V + E) time and O(V + E) space.",
+      "pitfall": "Reversing the prerequisite edge direction makes indegree mean the wrong condition and can accept or reject the wrong instances."
+    },
+    "accepted_alternatives": ["Depth-first traversal with visiting and completed states, rejecting a back edge to a currently visiting course."],
+    "tags": ["graph", "topological-sort", "cycle-detection"],
+    "prerequisites": ["directed-graph", "queue"],
+    "common_wrong_turns": ["Treating prerequisites as undirected edges", "Checking only whether every course appears in some pair", "Declaring a graph with no prerequisite pairs impossible"],
+    "source_fidelity_notes": ["Examples were omitted; pair direction, label range, unique-pair guarantee, and course and edge bounds were retained."]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-400",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "400",
+    "title": "Nth Digit",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/nth-digit/",
+    "local_path": "problems/medium/400.md",
+    "content_sha256": "26b3f68aabce6f2a782c49c0f305531f7f230d117c2efab2091268353baa3b96"
+  },
+  "teaching": {
+    "hint": "How many positions are occupied by all the numbers having the same decimal length?",
+    "solution_outline": {
+      "decisive_insight": "Numbers of equal digit width form blocks whose total length can be counted without constructing the sequence.",
+      "approach": "Subtract complete digit-width blocks until the target position falls inside one. Divide the remaining zero-based offset by that width to locate the number, then use the remainder to locate its digit.",
+      "state_and_invariant": "At every step the remaining position is relative to the first unskipped digit-width block; completed blocks contribute exactly their counted digits.",
+      "correctness": "Every integer appears once in increasing order, and quotient/remainder uniquely locate the number and digit inside the surviving block.",
+      "complexity": "O(log n) time and O(1) auxiliary space; block counts require wide integers.",
+      "pitfall": "Mixing 1-based input with zero-based division puts positions at block boundaries in the wrong number."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "implicit-sequence-indexing",
+      "digit-blocks"
+    ],
+    "prerequisites": [
+      "place-value",
+      "quotient-remainder"
+    ],
+    "common_wrong_turns": [
+      "Build the concatenated sequence up to n",
+      "Use 32-bit products for block sizes"
+    ],
+    "source_fidelity_notes": [
+      "The 1-based index and lack of separators are explicit; a compact boundary example is retained."
+    ]
+  }
+}

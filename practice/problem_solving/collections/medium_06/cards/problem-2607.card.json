@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2607",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2607",
+    "title": "Make K-Subarray Sums Equal",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/make-k-subarray-sums-equal/",
+    "local_path": "problems/medium/2607.md",
+    "content_sha256": "4363ed1e867df5aae4b32e644cda6e7cbaa4464f251d1be8f705d0e9e6c90cc7"
+  },
+  "teaching": {
+    "hint": "How do the sums of neighboring circular windows differ?",
+    "solution_outline": {
+      "decisive_insight": "Equal neighboring window sums force entries `k` positions apart to match, dividing the circle into `gcd(n,k)` independent equality classes.",
+      "approach": "Use the adjacent-window identity to form index orbits under adding `k` modulo `n`. Within each orbit, choose a common value minimizing total unit changes and sum the costs.",
+      "state_and_invariant": "Each orbit consists of exactly one residue class modulo `gcd(n,k)`; all entries in it share one target. A median minimizes the sum of absolute changes in that class.",
+      "correctness": "The window identity makes orbit equality necessary and sufficient for all sums to agree. Edits to different classes are independent, and the median is optimal for each, so their costs sum to the global minimum.",
+      "complexity": "`O(n log n)` time with sorting within classes and `O(n)` auxiliary space; selection can reduce expected time to `O(n)`.",
+      "pitfall": "When `k=n`, there is only one distinct circular window and the answer is zero; forcing all values equal is wrong."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "circular-array",
+      "gcd-orbits",
+      "median"
+    ],
+    "prerequisites": [
+      "window-difference",
+      "absolute-deviation"
+    ],
+    "common_wrong_turns": [
+      "Grouping by `k` rather than `gcd(n,k)`",
+      "Forcing the full array to one value when `k=n`"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained wraparound windows, two-way unit edits, and the `k=n` boundary."
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3259",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3259",
+    "title": "Maximum Energy Boost From Two Drinks",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-energy-boost-from-two-drinks/",
+    "local_path": "problems/medium/3259.md",
+    "content_sha256": "39c4e1a263c4145ff2c24319a84ca3327ebf4d40ef53645b0c42985d6754e7da"
+  },
+  "teaching": {
+    "hint": "What part of the previous schedule affects which drinks are available this hour?",
+    "solution_outline": {
+      "decisive_insight": "Switching has a one-hour opportunity cost, so a locally better drink need not improve the full schedule.",
+      "approach": "Track the best totals associated with each drink side after every hour. Staying adds this hour’s drink value; moving to the other side uses this hour for cleansing and adds zero.",
+      "state_and_invariant": "Each side’s value is the best schedule prefix that ends ready for that side, including a possible cleanse hour. Both transitions read the preceding hour’s states.",
+      "correctness": "Every valid schedule’s last hour either drinks on its current side or is the cleansing hour of a switch. The transitions cover both cases and choose the best prefix, so the larger final state is optimal.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space; use a wide total.",
+      "pitfall": "Switching cannot collect the destination drink’s energy in the same hour."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "dynamic-programming",
+      "switching-cost"
+    ],
+    "prerequisites": [
+      "state-definition",
+      "rolling-state"
+    ],
+    "common_wrong_turns": [
+      "Choosing the larger hourly value greedily",
+      "Giving energy during a cleanse hour"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained either starting drink and the lost hour when switching."
+    ]
+  }
+}

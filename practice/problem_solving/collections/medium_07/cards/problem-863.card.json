@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-863",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "863",
+    "title": "All Nodes Distance K in Binary Tree",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/",
+    "local_path": "problems/medium/863.md",
+    "content_sha256": "938c8b84868de997ec4c553467efd695006ba2e163671ef224c99233424d927b"
+  },
+  "teaching": {
+    "hint": "Can all nodes at the requested distance be reached by following child links alone?",
+    "solution_outline": {
+      "decisive_insight": "Distance from an interior node may travel upward and then into another subtree, so the representation must expose parent neighbors.",
+      "approach": "Find the target and record parent links in one tree traversal. Run a breadth-first traversal from it over left, right, and parent neighbors, marking visited nodes. Return the frontier at distance k, or an empty result if the frontier expires first.",
+      "state_and_invariant": "The frontier contains exactly nodes at the current distance; a visited node is never admitted again through a reverse edge.",
+      "correctness": "Parent links supply exactly the missing directions of each tree edge. A breadth-first layer reaches all nodes with a path of that length before longer paths and first discovers each node at its shortest distance. Thus the kth layer is exactly the required set, including the target alone at k=0.",
+      "complexity": "O(N) time and O(N) auxiliary space, with early termination when no frontier remains.",
+      "pitfall": "Without visited tracking, adding parent edges allows immediate backtracking and repeated visits."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "breadth-first-search",
+      "tree",
+      "graph-modeling"
+    ],
+    "prerequisites": [
+      "breadth-first-layers"
+    ],
+    "common_wrong_turns": [
+      "Without visited tracking, adding parent edges allows immediate backtracking and repeated visits."
+    ],
+    "source_fidelity_notes": [
+      "Made distance directions explicit and preserved unique target-by-value identification, any output order, and k=0."
+    ]
+  }
+}

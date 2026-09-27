@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3923",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3923",
+    "title": "Minimum Generations to Target Point",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-generations-to-target-point/",
+    "local_path": "problems/medium/3923.md",
+    "content_sha256": "2dbb18915387f4c653b3920197a8c770334732ce167e266557aae95a0c626ac0"
+  },
+  "teaching": {
+    "hint": "Can a newly created point be used immediately within the same generation?",
+    "solution_outline": {
+      "decisive_insight": "Midpoints stay in the bounded 343-point coordinate universe. Generations are synchronous monotone closure steps, and a step adding nothing proves a fixed point.",
+      "approach": "Store all available coordinate triples. In each generation, snapshot the set and form midpoints of its distinct unordered pairs, merging results only as available for the next generation. Check the target after the step; stop with -1 if nothing new appears.",
+      "state_and_invariant": "Before step k the set is exactly the union of generations zero through k-1; its snapshot alone supplies the parents for generation k.",
+      "correctness": "Pairing every coordinate-distinct snapshot pair produces exactly the source generation rule. Merging establishes the next-step invariant, so target detection gives its first generation. If no point is added, the set is closed and every future generation repeats existing points. Every nonfinal step otherwise adds a new point from a finite universe, ensuring termination.",
+      "complexity": "With P=343 possible points, O(P^3 log P) worst-case time using ordered sets and O(P) space: at most P steps, each with O(P^2) pair insertions.",
+      "pitfall": "Pairing a new point in the same step produces an artificially early generation."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "finite-state-space",
+      "closure",
+      "synchronous-transitions"
+    ],
+    "prerequisites": [
+      "set-membership"
+    ],
+    "common_wrong_turns": [
+      "Pairing a new point in the same step produces an artificially early generation."
+    ],
+    "source_fidelity_notes": [
+      "Retained persistent availability, simultaneous production, coordinate-distinct pairing, floor midpoint, and generation-zero result."
+    ]
+  }
+}

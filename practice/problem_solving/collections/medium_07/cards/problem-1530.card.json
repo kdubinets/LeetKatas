@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1530",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1530",
+    "title": "Number of Good Leaf Nodes Pairs",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/number-of-good-leaf-nodes-pairs/",
+    "local_path": "problems/medium/1530.md",
+    "content_sha256": "43063f5aa1959517a3327d8dd724416993f6f1ac5b5418a5847e7e6be9e74e63"
+  },
+  "teaching": {
+    "hint": "Where do the paths from two leaves first meet, and what information about each side matters there?",
+    "solution_outline": {
+      "decisive_insight": "Each leaf pair has one lowest common ancestor; its distance is the sum of its depths below that ancestor.",
+      "approach": "Process subtrees after their children. Return counts of leaves by bounded depth. At a parent, count products of left/right depth buckets whose depths plus the two child edges fit the limit, then shift and merge the histograms.",
+      "state_and_invariant": "A returned bucket counts exactly leaves at its depth below the current node. The accumulated answer includes precisely qualifying pairs whose lowest common ancestor has been processed.",
+      "correctness": "Child histograms give exact independent left/right choices. Cross-child pairs have this node as their unique lowest common ancestor, so each is counted once with its exact distance. Shifting preserves depths, and omitting leaves already deeper than the limit cannot affect any ancestor pair because their distances only increase.",
+      "complexity": "For n nodes, height h, and D=distance: O(nD²) time and O(hD) auxiliary space with recursive subtree histograms.",
+      "pitfall": "The connecting distance includes one edge to each child; bucket depths a and b give a+b+2, not a+b."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree-dp",
+      "bounded-histogram",
+      "pair-counting"
+    ],
+    "prerequisites": [
+      "postorder",
+      "tree-distance",
+      "counting-products"
+    ],
+    "common_wrong_turns": [
+      "The connecting distance includes one edge to each child; bucket depths a and b give a+b+2, not a+b."
+    ],
+    "source_fidelity_notes": [
+      "Restated distance as edge count and pairs as unordered distinct node identities; removed source diagrams."
+    ]
+  }
+}

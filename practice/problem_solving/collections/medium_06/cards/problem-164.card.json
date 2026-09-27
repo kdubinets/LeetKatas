@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-164",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "164",
+    "title": "Maximum Gap",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-gap/",
+    "local_path": "problems/medium/164.md",
+    "content_sha256": "0347addd9eb79d41e9e48a4648f07d63303e18c6b81559692598e8d57f1a838a"
+  },
+  "teaching": {
+    "hint": "How large must at least one sorted gap be between the minimum and maximum?",
+    "solution_outline": {
+      "decisive_insight": "The average-gap lower bound lets buckets be narrow enough that the maximum sorted gap cannot be hidden within one bucket.",
+      "approach": "Find the minimum and maximum. Partition their range into at most `n` equal-width buckets using the ceiling average gap; keep the minimum and maximum of each nonempty bucket, then compare consecutive nonempty buckets.",
+      "state_and_invariant": "A bucket contains only its two extremes; its width is below the guaranteed maximum-gap lower bound. The scan remembers the maximum of the preceding nonempty bucket.",
+      "correctness": "At least one of the `n-1` sorted gaps reaches the ceiling average. Every intra-bucket gap is smaller, so the true maximum is a boundary gap between consecutive nonempty buckets, all of which are checked.",
+      "complexity": "`O(n)` time and `O(n)` auxiliary space.",
+      "pitfall": "When all values equal, the range is zero and bucket width would otherwise be zero."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "pigeonhole",
+      "bucketing",
+      "sorted-gaps"
+    ],
+    "prerequisites": [
+      "integer-arithmetic",
+      "min-max"
+    ],
+    "common_wrong_turns": [
+      "Sorting despite the required linear bound",
+      "Using a zero width for equal values",
+      "Comparing only adjacent occupied bucket indices"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained the mandatory complexity bound, duplicates, and full value range."
+    ]
+  }
+}

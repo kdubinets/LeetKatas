@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1621",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1621",
+    "title": "Number of Sets of K Non-Overlapping Line Segments",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/number-of-sets-of-k-non-overlapping-line-segments/",
+    "local_path": "problems/medium/1621.md",
+    "content_sha256": "404871ab07c0c4e7ae0e228f04b3bd86a7621af556c8e867076c5bc86dedffb7"
+  },
+  "teaching": {
+    "hint": "How do the endpoint inequalities differ inside one segment and between neighboring segments?",
+    "solution_outline": {
+      "decisive_insight": "Shifting both endpoints of the ith segment by i-1 converts mixed strict and nonstrict endpoint inequalities into one strictly increasing sequence.",
+      "approach": "Order segments from left to right. Transform their 2k endpoints by those shifts, giving 2k distinct positions chosen from 0 through n+k-2. Return C(n+k-1,2k) modulo the prime modulus.",
+      "state_and_invariant": "Inside each pair the difference remains positive; between pairs the shift makes a permitted shared endpoint into two distinct increasing positions.",
+      "correctness": "Every legal set has a unique left-to-right endpoint chain. The shift maps it into a strictly increasing 2k-tuple. Conversely, subtracting the shifts leaves strict inequalities inside pairs and nonstrict inequalities between them, with endpoints in 0..n-1. These inverse maps form a bijection, so the subset count is exact. The factorial denominator is invertible because 2k is smaller than the prime modulus.",
+      "complexity": "O(k+log MOD) time and O(1) auxiliary space using products and a modular inverse.",
+      "pitfall": "Shared endpoints are allowed; treating all original endpoints as distinct gives the wrong binomial count."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "combinatorial-bijection",
+      "mixed-inequalities",
+      "binomial-count"
+    ],
+    "prerequisites": [
+      "ordered-endpoints",
+      "modular-inverse"
+    ],
+    "common_wrong_turns": [
+      "Shared endpoints are allowed; treating all original endpoints as distinct gives the wrong binomial count."
+    ],
+    "source_fidelity_notes": [
+      "Restated segment nonoverlap as interior disjointness, kept shared endpoints and unused points, and made unordered set counting explicit."
+    ]
+  }
+}

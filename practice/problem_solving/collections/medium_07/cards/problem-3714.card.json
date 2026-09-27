@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3714",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3714",
+    "title": "Longest Balanced Substring II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/longest-balanced-substring-ii/",
+    "local_path": "problems/medium/3714.md",
+    "content_sha256": "5fa3347edee8755ed0c654a6c8c87c5f15754cbfdef35cf8564bfc459407d50c"
+  },
+  "teaching": {
+    "hint": "What different sets of characters could a qualifying substring contain?",
+    "solution_outline": {
+      "decisive_insight": "Balance depends on the set of letters present. Within a fixed allowed set, equality of letter counts becomes equality of prefix-count differences.",
+      "approach": "Handle one-letter substrings as equal-character runs. For each two-letter pair, split at the excluded letter and track the earliest prefix index for each difference of the two counts inside each segment. Over the whole string, track earliest indices for the pair of differences a-b and a-c. Take the largest span from all cases.",
+      "state_and_invariant": "Each difference key describes the current prefix; its saved index is the earliest eligible prefix with that key. Pair-case state is reset at every excluded letter.",
+      "correctness": "Every balanced substring has one, two, or three distinct letters. Equal prefix differences make the included substring counts equal; excluding the third letter ensures the pair case is valid. A nonempty substring with all three counts equal contains all three. Earliest matching prefixes maximize each ending span, and the cases cover all valid substrings.",
+      "complexity": "O(n) expected time over five passes and O(n) space for prefix-state maps.",
+      "pitfall": "Checking only equality of all three counts misses valid substrings with one or two distinct letters."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prefix-sum",
+      "state-compression",
+      "hashing"
+    ],
+    "prerequisites": [
+      "prefix-differences"
+    ],
+    "common_wrong_turns": [
+      "Checking only equality of all three counts misses valid substrings with one or two distinct letters."
+    ],
+    "source_fidelity_notes": [
+      "Made absent-letter semantics explicit; retained alphabet and length bounds."
+    ]
+  }
+}

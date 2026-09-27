@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3153",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3153",
+    "title": "Sum of Digit Differences of All Pairs",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/sum-of-digit-differences-of-all-pairs/",
+    "local_path": "problems/medium/3153.md",
+    "content_sha256": "ffdd12152813c8c16a88ce1d7b12b54204965eebeee1d478030d3bff534f76c8"
+  },
+  "teaching": {
+    "hint": "Can you count contributions from one digit position without examining every pair?",
+    "solution_outline": {
+      "decisive_insight": "The pair difference is a sum of independent position indicators. Swap the pair and position summations, then count agreements using ten digit frequencies.",
+      "approach": "For each decimal position, count its digit frequencies. Subtract the sum of within-digit pair counts from the total number of index pairs and add the remaining disagreeing pair count to the answer.",
+      "state_and_invariant": "At one position, every index pair belongs either to one equal-digit frequency group or to the complementary set of differing digits.",
+      "correctness": "Exchanging two finite sums preserves the total. At a fixed position, digit groups partition agreeing pairs, with a group of f indices contributing f(f-1)/2. All pairs minus those counts gives exactly differing pairs there. Summing across every aligned digit position counts each pair contribution exactly as defined, including zero interior digits.",
+      "complexity": "O(nd) time for d<=9 digit positions and O(1) auxiliary counters if each digit is extracted without consuming the input; 64-bit pair counts and total are required.",
+      "pitfall": "Deduplicating equal-valued inputs removes distinct index pairs that the task includes."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "contribution-counting",
+      "digits",
+      "combinatorics"
+    ],
+    "prerequisites": [
+      "sum-order-interchange"
+    ],
+    "common_wrong_turns": [
+      "Deduplicating equal-valued inputs removes distinct index pairs that the task includes."
+    ],
+    "source_fidelity_notes": [
+      "Made unordered distinct-index pair semantics explicit from examples; retained common digit width and real interior zeros."
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1996",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1996",
+    "title": "The Number of Weak Characters in the Game",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/the-number-of-weak-characters-in-the-game/",
+    "local_path": "problems/medium/1996.md",
+    "content_sha256": "7f02ca10d5f15ec92616abc804c6e73100333ab4355b6ce7a8ff7408f5f675c1"
+  },
+  "teaching": {
+    "hint": "After ordering by one property, what must happen to equal-valued groups?",
+    "solution_outline": {
+      "decisive_insight": "Sort by attack to turn two-dimensional dominance into a defense maximum scan; equal-attack entries must be prevented from dominating one another.",
+      "approach": "Sort by descending attack, breaking equal-attack ties by ascending defense. Scan in that order and count a character when an earlier defense maximum is strictly larger.",
+      "state_and_invariant": "At a character, any earlier equal-attack entry has defense no larger than its defense, so a larger stored maximum must come from a strictly higher-attack entry.",
+      "correctness": "The stored maximum witnesses weakness exactly when it exceeds the current defense. Later entries have no greater attack, so no missed dominator can appear later.",
+      "complexity": "`O(n log n)` time for sorting and `O(1)` additional scan state, excluding sort workspace.",
+      "pitfall": "Descending defense within equal attack values falsely counts lower-defense peers as weak."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "dominance",
+      "sort-and-scan",
+      "tie-handling"
+    ],
+    "prerequisites": [
+      "sorting",
+      "running-extreme"
+    ],
+    "common_wrong_turns": [
+      "Using non-strict comparisons",
+      "Letting same-attack characters dominate one another"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained both strict inequalities and duplicate-property possibilities."
+    ]
+  }
+}

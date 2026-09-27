@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-3964",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3964",
+    "title": "Minimum Lights to Illuminate a Road",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-lights-to-illuminate-a-road/",
+    "local_path": "problems/medium/3964.md",
+    "content_sha256": "83aa0ef7067e5bd3ed08fab3402dab75155faea4642d9e3992976df5239bf451"
+  },
+  "teaching": {
+    "hint": "At the leftmost unlit position, which placement could serve it while helping farthest to the right?",
+    "solution_outline": {
+      "decisive_insight": "Existing large intervals can be aggregated once; the first remaining dark position forces a new bulb, and shifting it right maximizes useful future coverage.",
+      "approach": "Mark existing bulbs’ coverage using interval range updates. Scan positions in order; at the first uncovered position, add a new bulb as far right as possible while still covering it, then skip its illuminated positions.",
+      "state_and_invariant": "Before each scan point, all earlier positions are covered. A chosen bulb covers the first dark point and reaches at least as far right as any competing bulb that could cover it.",
+      "correctness": "Every solution needs a new bulb covering the first dark position. Moving such a bulb to the rightmost legal location loses no coverage that still matters; repeat by exchange over successive dark positions.",
+      "complexity": "`O(n)` time and `O(n)` auxiliary space.",
+      "pitfall": "At the last road position, the nominal `p+1` location is outside the road; place the bulb at `p` instead."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "interval-coverage",
+      "greedy-exchange",
+      "range-updates"
+    ],
+    "prerequisites": [
+      "prefix-sums",
+      "coverage-invariant"
+    ],
+    "common_wrong_turns": [
+      "Painting each existing bulb interval cell by cell",
+      "Placing each new bulb exactly at the first dark point",
+      "Using an out-of-range final position"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained inclusive clipped intervals and permission to install at any road position."
+    ]
+  }
+}

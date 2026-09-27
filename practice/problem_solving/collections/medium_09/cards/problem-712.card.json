@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-712",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "712",
+    "title": "Minimum ASCII Delete Sum for Two Strings",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-ascii-delete-sum-for-two-strings/",
+    "local_path": "problems/medium/712.md",
+    "content_sha256": "ee0bae75ef26d6b63885d0297224463a19e3d5e81329a849bb49ab8a3e35811a"
+  },
+  "teaching": {
+    "hint": "Does retaining the greatest number of common characters necessarily save the greatest deletion cost?",
+    "solution_outline": {
+      "decisive_insight": "The surviving text is a common subsequence, but its total character weight rather than its length controls saved deletion cost.",
+      "approach": "Compute minimum deletion cost for pairs of prefixes. An empty side forces deletion of the other prefix. Equal final characters may be matched for free; otherwise choose which final character to delete and pay its weight.",
+      "state_and_invariant": "A completed prefix-pair state is the least total deleted weight making those prefixes equal. Transitions read smaller prefix pairs.",
+      "correctness": "If final characters differ, at least one must be deleted, and both exhaustive choices use an optimal smaller problem. If they match, an optimal retained subsequence can align those terminal copies without losing weight: move its terminal equal match to the ends, or append the pair when both were unused. Removing that pair leaves the optimal smaller prefix problem. Induction gives exact costs, including empty-prefix bases.",
+      "complexity": "`O(n*m)` time and `O(n*m)` auxiliary space; rolling rows can reduce space to `O(min(n,m))`.",
+      "pitfall": "An ordinary longest-common-subsequence length can choose a cheaper-weight retained string and therefore give the wrong deletion cost."
+    },
+    "tags": [
+      "weighted-alignment",
+      "prefix-dp",
+      "subsequence"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "character-weights"
+    ],
+    "source_fidelity_notes": [
+      "Retained deletion from either side, ASCII weighting, order preservation, lowercase alphabet, and both size bounds."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "An ordinary longest-common-subsequence length can choose a cheaper-weight retained string and therefore give the wrong deletion cost."
+    ]
+  }
+}

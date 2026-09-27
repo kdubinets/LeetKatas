@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-2975",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2975",
+    "title": "Maximum Square Area by Removing Fences From a Field",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-square-area-by-removing-fences-from-a-field/",
+    "local_path": "problems/medium/2975.md",
+    "content_sha256": "a381c82a878e5c31fee4fa5ee3574ad4ea010b8328a13eddd7683df3a32118df"
+  },
+  "teaching": {
+    "hint": "What side lengths can be made independently in each orientation after removing intervening fences?",
+    "solution_outline": {
+      "decisive_insight": "Any pair of horizontal fence coordinates can bound an attainable height; the same holds for vertical widths. A square needs a length in both sets.",
+      "approach": "Include the fixed borders, enumerate pairwise horizontal distances into a set, and scan pairwise vertical distances for the largest common value. Square that length before taking the modulus.",
+      "state_and_invariant": "The horizontal set contains precisely all attainable heights; the running best is the largest attainable width found in that set.",
+      "correctness": "Every attainable square has one distance from each set, and any shared distance yields a square after removing intervening fences. Maximizing the shared length maximizes true area.",
+      "complexity": "Expected `O(H²+V²)` time and `O(H²)` space for `H,V ≤ 602` fence coordinates including borders.",
+      "pitfall": "Comparing areas after modular reduction can choose the wrong square; maximize the actual side first."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "pairwise-distances",
+      "set-intersection"
+    ],
+    "prerequisites": [
+      "coordinate-differences"
+    ],
+    "common_wrong_turns": [
+      "Check only adjacent fences",
+      "Compare reduced areas"
+    ],
+    "source_fidelity_notes": [
+      "Restates the border coordinates and removability; source diagrams are unnecessary once fence-line coordinates are explicit."
+    ]
+  }
+}

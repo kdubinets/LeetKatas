@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-930",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "930",
+    "title": "Binary Subarrays With Sum",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/binary-subarrays-with-sum/",
+    "local_path": "problems/medium/930.md",
+    "content_sha256": "f99fd026df10c2378a36c1d5ad54c71a730de75516d219255863c7a00c97bbc8"
+  },
+  "teaching": {
+    "hint": "Can the count for an exact sum be expressed using counts for two neighboring upper bounds?",
+    "solution_outline": {
+      "decisive_insight": "Because all entries are nonnegative, subarrays with sum at most a bound have a moving threshold of valid starts. Exact-goal count equals count at most goal minus count at most goal-1.",
+      "approach": "For each bound, sweep the right endpoint while shrinking the left endpoint until the current sum is at most the bound. Count all starts from the left endpoint through the right endpoint, then subtract the two at-most totals. A negative bound contributes zero.",
+      "state_and_invariant": "After repairing the window for each right endpoint, its left endpoint is the earliest valid start for that bound; every later start gives an at-most-bound subarray ending there.",
+      "correctness": "Nonnegative entries make the sum no larger when a start moves right, so valid starts at an endpoint form exactly one suffix. The sweep counts each qualifying subarray once at its endpoint. A sum equals goal exactly when it is at most goal but not at most goal-1, so the difference gives the required count, including the goal-zero case.",
+      "complexity": "O(n) time over two moving-window passes and O(1) auxiliary space for n array elements.",
+      "pitfall": "Counting one matching window per endpoint misses multiple valid starts created by zeros."
+    },
+    "accepted_alternatives": ["Count prior prefix sums with a hash map to find equal-goal subarrays in O(n) expected time and O(n) space; this also works for arrays with negative values."],
+    "tags": ["sliding-window", "exact-count", "binary-array"],
+    "prerequisites": ["contiguous-subarray", "nonnegative-window"],
+    "common_wrong_turns": ["Count only one start for each right endpoint", "Compute atMost(-1) with an ordinary window when goal is zero", "Assume zeros do not affect the number of matching subarrays"],
+    "source_fidelity_notes": ["The highlighted subarray example was replaced by an all-zero count; exact nonempty contiguous subarrays, goal-zero possibility, size bound, and binary values were retained."]
+  }
+}

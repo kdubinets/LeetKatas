@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2616",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2616",
+    "title": "Minimize the Maximum Difference of Pairs",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimize-the-maximum-difference-of-pairs/",
+    "local_path": "problems/medium/2616.md",
+    "content_sha256": "ada1e0df20b6c054c7f0a501533a200147fee6adbfc5fa5612aca86985f5743e"
+  },
+  "teaching": {
+    "hint": "After sorting values, which candidate pairings need to be considered under a proposed maximum difference?",
+    "solution_outline": {
+      "decisive_insight": "A feasible matching can be transformed into disjoint adjacent sorted-value pairs without increasing its largest gap.",
+      "approach": "Sort values, then search the smallest allowed gap for which a left-to-right scan can form at least p disjoint qualifying adjacent pairs.",
+      "state_and_invariant": "For a tested gap, the scan's pair count is the maximum achievable among eligible neighboring pairs; larger gaps never reduce feasibility.",
+      "correctness": "An exchange removes crossing or nested pair choices without worsening the bottleneck. Taking the earliest qualifying adjacent pair cannot reduce the number of later pairs, so the scan tests feasibility exactly. Monotonicity locates the minimum gap.",
+      "complexity": "O(n log n + n log R) time for value range R ≤ 10^9 and O(1) auxiliary space beyond sorting.",
+      "pitfall": "Greedily choosing the globally smallest gap without checking disjointness can consume an index needed by another pair."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bottleneck-matching",
+      "answer-space-search"
+    ],
+    "prerequisites": [
+      "sorting",
+      "greedy-exchange"
+    ],
+    "common_wrong_turns": [
+      "Reuse one index across pairs",
+      "Pair arbitrary sorted neighbors in fixed blocks without skipping"
+    ],
+    "source_fidelity_notes": [
+      "Distinct-index pairing and the special p=0 output are explicit."
+    ]
+  }
+}

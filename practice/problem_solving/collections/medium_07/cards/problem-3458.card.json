@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3458",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3458",
+    "title": "Select K Disjoint Special Substrings",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/select-k-disjoint-special-substrings/",
+    "local_path": "problems/medium/3458.md",
+    "content_sha256": "6743bc27c17f68f00c08891d9611029c0c066951d9485c5fe8d5be04df3d1ff6"
+  },
+  "teaching": {
+    "hint": "If a selected substring contains one occurrence of a letter, which other positions must it contain?",
+    "solution_outline": {
+      "decisive_insight": "Every selected interval is closed under all occurrences of its letters. Its minimal closed interval can be generated from the first occurrence of its first letter.",
+      "approach": "Record first and last occurrences. From each letter first position, expand the candidate right boundary to include all occurrences of encountered letters. Reject it if any encountered letter begins earlier, or if it becomes the whole string. Sort remaining candidates by end and greedily select disjoint intervals; compare the count with k.",
+      "state_and_invariant": "An expanded candidate contains the last occurrence of every scanned letter; the earlier-first check ensures their first occurrences also lie inside. Selected intervals are disjoint and have the earliest possible next finishing boundary.",
+      "correctness": "Every retained candidate is proper and contains all occurrences of its letters. Any valid interval begins at its first letter first occurrence and contains the generated minimal interval, so replacing selected intervals by these candidates preserves disjointness. Among candidates, an earliest-ending interval can replace the first interval of an optimum without harming any later choice. Repeating this exchange maximizes the count; a count at least k supplies exactly k selections by discarding extras.",
+      "complexity": "O(26n) time plus O(26 log 26) sorting, and O(26) auxiliary space.",
+      "pitfall": "An interval containing a letter with an occurrence before its proposed start cannot be repaired just by extending its right boundary."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "interval-scheduling",
+      "closure",
+      "candidate-reduction"
+    ],
+    "prerequisites": [
+      "interval-exchange"
+    ],
+    "common_wrong_turns": [
+      "An interval containing a letter with an occurrence before its proposed start cannot be repaired just by extending its right boundary."
+    ],
+    "source_fidelity_notes": [
+      "Retained global occurrence exclusivity, proper-substring exclusion, disjointness, and k=0; removed examples."
+    ]
+  }
+}

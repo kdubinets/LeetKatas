@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3478",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3478",
+    "title": "Choose K Elements With Maximum Sum",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/choose-k-elements-with-maximum-sum/",
+    "local_path": "problems/medium/3478.md",
+    "content_sha256": "d755d1bba0ebf67b52985fc4a41ddeba5ee247cb0c93e134a7304fcc1f88ba20"
+  },
+  "teaching": {
+    "hint": "Which answers become determined together when the threshold value is the same?",
+    "solution_outline": {
+      "decisive_insight": "Sorting by the threshold key creates growing eligible sets, but equal-key entries must all be answered before any is admitted.",
+      "approach": "Process equal `nums1` groups in increasing order. Retain the largest at most `k` positive `nums2` values from earlier groups and their sum; write that sum for the current group, then add its entries.",
+      "state_and_invariant": "Before a group is answered, the retained values are the top `k` among precisely the indices with strictly smaller `nums1`.",
+      "correctness": "Positive values make selecting the largest available `k` optimal. Delayed insertion excludes equals, and every original index receives its answer when its group is processed.",
+      "complexity": "`O(n log n + n log k)` time and `O(n + k)` auxiliary space; use a wide sum.",
+      "pitfall": "Inserting a value before answering its equal-key group violates the strict comparison."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "offline-sweep",
+      "top-k",
+      "strict-inequality"
+    ],
+    "prerequisites": [
+      "sorting",
+      "heap-invariant"
+    ],
+    "common_wrong_turns": [
+      "Allowing equal `nums1` values to contribute to one another",
+      "Keeping only the current maximum instead of the top `k`"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; explicitly retained positive `nums2`, strict comparison, original output order, and wide sums."
+    ]
+  }
+}

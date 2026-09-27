@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-853",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "853",
+    "title": "Car Fleet",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/car-fleet/",
+    "local_path": "problems/medium/853.md",
+    "content_sha256": "d20f86ff7c528c7c529c269d5c7c15a2610c93b078332f02a823ecff984de6e7"
+  },
+  "teaching": {
+    "hint": "How does each car’s solo arrival time compare with the group already ahead of it?",
+    "solution_outline": {
+      "decisive_insight": "When scanning from the car closest to the target backward, a car joins an ahead fleet exactly when its solo arrival time is no later than that fleet’s arrival time.",
+      "approach": "Sort cars by decreasing starting position. Compute their solo times to target and scan, maintaining the arrival time of the last fleet ahead; start a new fleet only when the next car’s solo time is strictly greater.",
+      "state_and_invariant": "The maintained time is the arrival time of the nearest formed fleet ahead; formed fleet times increase as the scan proceeds backward.",
+      "correctness": "A car whose solo time is no later catches the fleet ahead by the target and cannot pass it. A slower-arriving car cannot catch that fleet, so it begins a distinct fleet. The scan decides each car exactly once.",
+      "complexity": "`O(n log n)` time for sorting and `O(n)` storage for paired position and speed information.",
+      "pitfall": "Treating equal arrival times as separate fleets violates the catch-at-target rule."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "car-fleet",
+      "monotone-arrival-sweep"
+    ],
+    "prerequisites": [
+      "sorting",
+      "relative-motion"
+    ],
+    "common_wrong_turns": [
+      "Compare only raw speeds",
+      "Treat meeting exactly at the target as separate fleets"
+    ],
+    "source_fidelity_notes": [
+      "The no-passing and catch-at-target rules are both explicit; source examples are omitted."
+    ]
+  }
+}

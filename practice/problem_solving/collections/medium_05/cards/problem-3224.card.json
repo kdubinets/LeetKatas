@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3224",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3224",
+    "title": "Minimum Array Changes to Make Differences Equal",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-array-changes-to-make-differences-equal/",
+    "local_path": "problems/medium/3224.md",
+    "content_sha256": "302911902029c31d94994c75a9097c70f214a96b27da205142b2232fdf20f534"
+  },
+  "teaching": {
+    "hint": "For one mirrored pair, how does its least cost vary with the chosen common difference?",
+    "solution_outline": {
+      "decisive_insight": "For each pair, a target difference costs zero at its current difference, one across a contiguous reachable range, and two otherwise; these costs can be aggregated over all targets.",
+      "approach": "For every mirrored pair, derive its current difference and largest difference reachable by changing one endpoint. Add its cost contributions over target values `0..k` with range updates, sweep total cost, and take the minimum.",
+      "state_and_invariant": "The accumulated range effects equal the exact sum of per-pair minimum changes for each candidate `X`.",
+      "correctness": "Pairs are independent once `X` is fixed. A pair needs zero changes at its existing difference, one within its one-endpoint reach, and two for every other allowed target; the sweep checks every possible `X`.",
+      "complexity": "`O(n+k)` time and `O(k)` auxiliary space.",
+      "pitfall": "Only considering current pair differences, or using the wrong one-change reach, can miss the best target."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "piecewise-cost",
+      "difference-array"
+    ],
+    "prerequisites": [
+      "range-updates",
+      "mirrored-pairs"
+    ],
+    "common_wrong_turns": [
+      "Recompute every pair cost for every X",
+      "Pair i with i+n/2 rather than n−1−i"
+    ],
+    "source_fidelity_notes": [
+      "The mirrored pairing and replacement range are explicit; `X` lies in `[0,k]` because final values do."
+    ]
+  }
+}

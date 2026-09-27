@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3223",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3223",
+    "title": "Minimum Length of String After Operations",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-length-of-string-after-operations/",
+    "local_path": "problems/medium/3223.md",
+    "content_sha256": "8b33c229f4c5c42541efb8a3d9487517abd71e7c935f9ad0da409d20d465afcf"
+  },
+  "teaching": {
+    "hint": "What can one operation change about the counts of the different letters?",
+    "solution_outline": {
+      "decisive_insight": "Each operation removes two copies of one letter, preserving its count parity; whenever that letter has at least three copies, another operation is possible.",
+      "approach": "Count each letter. For every positive count, retain one if it is odd and two if it is even; sum these residual counts.",
+      "state_and_invariant": "Each present letter keeps positive count and its original parity. Counts of all other letters are unchanged by a reduction.",
+      "correctness": "An operation requires at least three copies and leaves the selected copy, so a present letter cannot disappear. Parity forces at least one odd-count copy or two even-count copies. Whenever three copies remain, a middle occurrence has equal copies on both sides and can remove two. Repeating reaches those bounds independently for every letter, proving the sum attainable and minimal.",
+      "complexity": "O(n) time and O(1) auxiliary space for 26 counts.",
+      "pitfall": "An absent letter contributes zero, and an even positive count cannot be reduced to one or zero."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "frequency-reduction",
+      "parity-invariant",
+      "lower-bound"
+    ],
+    "prerequisites": [
+      "letter-counts",
+      "invariant",
+      "attaining-construction"
+    ],
+    "common_wrong_turns": [
+      "An absent letter contributes zero, and an even positive count cannot be reduced to one or zero."
+    ],
+    "source_fidelity_notes": [
+      "Preserved nonadjacent occurrences, nearest-copy deletions, the surviving selected character, and repeated operations; omitted examples that reveal counts."
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2685",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2685",
+    "title": "Count the Number of Complete Components",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-the-number-of-complete-components/",
+    "local_path": "problems/medium/2685.md",
+    "content_sha256": "e3cc5df4191a0d31bc3550947a5aad2c5e5529e509cf34b910106f84d7e66824"
+  },
+  "teaching": {
+    "hint": "For a component with a known number of vertices, how many edges would make it complete?",
+    "solution_outline": {
+      "decisive_insight": "A component of k vertices is complete exactly when it has k(k-1)/2 edges; the sum of its vertex degrees is twice its edge count.",
+      "approach": "Traverse each unvisited connected component, count its vertices and sum their degrees, then compare the degree sum with k(k-1). Count components that match.",
+      "state_and_invariant": "During one traversal, the visited set holds exactly the discovered vertices in that component; the running degree sum includes each discovered vertex's full degree once. At completion, it counts each internal edge twice.",
+      "correctness": "A traversal from one unvisited vertex reaches precisely its connected component. No edge leaves a completed component, so its degree sum equals twice its number of edges. A simple graph on k vertices has at most k(k-1)/2 edges, attaining that count exactly when every pair is adjacent. Applying the test to every component counts precisely the complete ones.",
+      "complexity": "O(n + e) time and O(n + e) auxiliary space with an adjacency list, where e is the number of edges.",
+      "pitfall": "An isolated vertex has zero of the zero possible edges and must be counted as complete."
+    },
+    "accepted_alternatives": ["Union-find can group vertices first; a second pass counts edges in each group before applying the same completeness test."],
+    "tags": ["graph-components", "graph-counting"],
+    "prerequisites": ["graph-traversal", "undirected-degree"],
+    "common_wrong_turns": ["Use one global edge count for all components", "Forget that degree sums double-count edges", "Exclude isolated vertices"],
+    "source_fidelity_notes": ["Diagram-dependent examples were omitted; isolated-vertex behavior was made explicit. The simple undirected graph and size bounds were retained."]
+  }
+}

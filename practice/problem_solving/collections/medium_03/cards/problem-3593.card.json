@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-3593",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3593",
+    "title": "Minimum Increments to Equalize Leaf Paths",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-increments-to-equalize-leaf-paths/",
+    "local_path": "problems/medium/3593.md",
+    "content_sha256": "a693cf2b37d6674ed6e1229793e9787fae106b22d62c3dd6cf5814354a3b3f7e"
+  },
+  "teaching": {
+    "hint": "When several child subtrees have different longest path totals, where can one increase affect all paths in a child subtree?",
+    "solution_outline": {
+      "decisive_insight": "Each subtree can be equalized to its original longest leaf-path score; deficient children of a branching node each require one raise at their own root.",
+      "approach": "Process the tree from leaves upward. For each node, find the maximum path sum through a child; count each child whose sum is smaller and carry the maximum plus this node’s cost upward.",
+      "state_and_invariant": "The propagated value is the maximum original cost from that node to a leaf. Within a processed subtree, all paths can be equalized to this value using the counted raises.",
+      "correctness": "Raising a deficient child by the gap lifts every leaf path beneath it at once, proving sufficiency. A path following maximum children within that deficient subtree must receive a positive raise; those witness paths for different deficient children are disjoint, giving a matching lower bound.",
+      "complexity": "O(n) time and O(n) space; path sums may reach 10^14, so arithmetic must be wide.",
+      "pitfall": "Counting the total increase instead of nodes changed solves a different optimization problem."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree-dp",
+      "branch-equalization",
+      "greedy-proof"
+    ],
+    "prerequisites": [
+      "rooted-tree",
+      "postorder-traversal"
+    ],
+    "common_wrong_turns": [
+      "Raise individual leaves instead of a shared ancestor",
+      "Use 32-bit path sums",
+      "Minimize total increment rather than changed-node count"
+    ],
+    "source_fidelity_notes": [
+      "Clarified root-to-leaf score includes endpoints and objective counts distinct increased nodes; omitted image-dependent examples."
+    ]
+  }
+}

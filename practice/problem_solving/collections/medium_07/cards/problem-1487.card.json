@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1487",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1487",
+    "title": "Making File Names Unique",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/making-file-names-unique/",
+    "local_path": "problems/medium/1487.md",
+    "content_sha256": "3c704dfba62ddcac91501613ae7e67ec19fbf269ad04c20eddbc6f1e0f96481b"
+  },
+  "teaching": {
+    "hint": "Once a candidate suffix has been found occupied, can it ever become available later?",
+    "solution_outline": {
+      "decisive_insight": "Occupied names never disappear, so each exact base can remember the first suffix its previous search has not ruled out.",
+      "approach": "Maintain assigned names with a next-suffix cursor for each. Accept an unused name directly. For a duplicate, resume its cursor, probe consecutive candidates until one is unused, then reserve that exact candidate and advance the base cursor.",
+      "state_and_invariant": "Every assigned name is recorded. For each base, every positive suffix below its cursor is occupied; the cursor itself may need further probing because names can be reserved by other requests.",
+      "correctness": "An unrecorded name is unique. For a duplicate, all suffixes before the cursor are occupied, and consecutive probing rules out each remaining smaller candidate before choosing the first free one. Reservations never expire, so advancing the cursor preserves this smallest-suffix guarantee. Generated names receive their own cursors for later exact-string requests.",
+      "complexity": "Expected O(total produced characters) time for construction, hashing, and amortized probes; O(total stored characters) auxiliary space for the name map, excluding returned strings.",
+      "pitfall": "Do not parse away existing suffixes: `a` and `a(1)` are different bases, and generated names must also be reserved."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "hash-map",
+      "amortized-probing",
+      "stateful-scan"
+    ],
+    "prerequisites": [
+      "identity-lookup",
+      "amortized-analysis"
+    ],
+    "common_wrong_turns": [
+      "Do not parse away existing suffixes: `a` and `a(1)` are different bases, and generated names must also be reserved."
+    ],
+    "source_fidelity_notes": [
+      "Preserved ordered assignment, smallest positive suffix, and literal handling of preexisting parentheses; included a compact nested-name clarification."
+    ]
+  }
+}

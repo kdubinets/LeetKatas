@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-97",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "97",
+    "title": "Interleaving String",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/interleaving-string/",
+    "local_path": "problems/medium/97.md",
+    "content_sha256": "591f0335a05dec98a0347d0025746e5fc92780128789853e1b1b3af7008a53e1"
+  },
+  "teaching": {
+    "hint": "When both sources offer the required next letter, what information distinguishes the possible continuations?",
+    "solution_outline": {
+      "decisive_insight": "The consumed prefix lengths i and j determine target progress i+j, so no separate target-position dimension is needed.",
+      "approach": "Check the total lengths. Use a two-prefix reachability table: the final character comes from either source if that character matches the target and its predecessor state is feasible. Keep one row for the memory follow-up.",
+      "state_and_invariant": "A state is true exactly when the two specified source prefixes merge into the target prefix of their combined length. In one-row storage, the current entry is the previous row while its left neighbor is the current row.",
+      "correctness": "Every nonempty valid merge has a final character from exactly one source. Removing it leaves the corresponding smaller prefix state; conversely a matching character appended to any feasible predecessor forms a valid merge. These two exhaustive cases establish the table by induction on i+j. Complete source consumption then decides the requested result.",
+      "complexity": "O((m+1)(n+1)) time and O(n+1) auxiliary space, with m=|s1| and n=|s2|.",
+      "pitfall": "A greedy choice when both next characters match can discard the only successful continuation; retain both feasible branches."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "dual-prefix-dp",
+      "merge-feasibility",
+      "state-reduction"
+    ],
+    "prerequisites": [
+      "prefix-state",
+      "dynamic-programming"
+    ],
+    "common_wrong_turns": [
+      "A greedy choice when both next characters match can discard the only successful continuation; retain both feasible branches."
+    ],
+    "source_fidelity_notes": [
+      "Restated block interleaving as equivalent order-preserving character merge; retained empty strings, complete consumption, length bounds, and the explicit memory follow-up."
+    ]
+  }
+}

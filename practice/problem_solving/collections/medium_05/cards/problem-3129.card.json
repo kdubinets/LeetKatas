@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3129",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3129",
+    "title": "Find All Possible Stable Binary Arrays I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-all-possible-stable-binary-arrays-i/",
+    "local_path": "problems/medium/3129.md",
+    "content_sha256": "8fdba8abca7207c10eb3c2a7e5d382ade4fe976f5f861621c0d8e6c347d545d9"
+  },
+  "teaching": {
+    "hint": "What does a violating all-equal subarray say about a run of equal values?",
+    "solution_outline": {
+      "decisive_insight": "The condition is exactly that no equal-value run exceeds `limit`; counting can depend on the used zeros, used ones, and final value.",
+      "approach": "Count arrays ending in each bit for each pair of used quantities. Extend shorter arrays by one bit, then subtract extensions whose prior final run already had length `limit`; seed the one-value boundaries by their run limit.",
+      "state_and_invariant": "Each table entry counts exactly stable arrays with its two counts and final bit; the subtraction removes precisely the newly overlong runs.",
+      "correctness": "Appending one bit preserves all old windows. The only new violation is a final run of length `limit+1`, which is in bijection with a shorter stable array ending in the opposite bit followed by `limit` copies.",
+      "complexity": "`O(zero·one)` time and space for the compressed count; a run-length state uses `O(zero·one·limit)` time and space.",
+      "pitfall": "Missing one-value base cases or mishandling modular subtraction corrupts the recurrence."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bounded-runs",
+      "counting-dp"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "modular-arithmetic"
+    ],
+    "common_wrong_turns": [
+      "Enumerate all binary arrays",
+      "Treat the all-subarray condition as unrelated windows"
+    ],
+    "source_fidelity_notes": [
+      "The quantified subarray condition and exact counts remain explicit; source enumeration example is omitted."
+    ]
+  }
+}

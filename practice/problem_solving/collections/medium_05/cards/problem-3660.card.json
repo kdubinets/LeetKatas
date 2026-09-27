@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3660",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3660",
+    "title": "Jump Game IX",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/jump-game-ix/",
+    "local_path": "problems/medium/3660.md",
+    "content_sha256": "e025747a3e1f23a327265b7a1a63100c38de20f3e48e003916221eaf8b33376d"
+  },
+  "teaching": {
+    "hint": "When can a cut between a prefix and suffix be crossed by any legal jump?",
+    "solution_outline": {
+      "decisive_insight": "An inverted index/value pair permits jumps both ways, and its connected components form contiguous segments separated exactly where prefix maximum is at most suffix minimum.",
+      "approach": "Precompute suffix minima and scan with a prefix maximum. Close a segment whenever no inversion crosses the cut, then assign its maximum to every index in that segment.",
+      "state_and_invariant": "The current segment is one inversion-connected component; a reported boundary has no legal crossing edge.",
+      "correctness": "No jump crosses a cut with all left values at most all right values. An inversion joining two indices also joins every index between them through at least one endpoint, so unsplit segments are connected.",
+      "complexity": "`O(n)` time and `O(n)` space for suffix minima and output.",
+      "pitfall": "Only comparing adjacent entries misses long inversions that connect distant positions."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "inversion-graph",
+      "component-boundaries"
+    ],
+    "prerequisites": [
+      "graph-connectivity",
+      "prefix-suffix-extrema"
+    ],
+    "common_wrong_turns": [
+      "Run a search from every index",
+      "Treat equal values as jumpable"
+    ],
+    "source_fidelity_notes": [
+      "Strict comparisons and the inclusion of the starting value are explicit."
+    ]
+  }
+}

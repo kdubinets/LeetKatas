@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-2063",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2063",
+    "title": "Vowels of All Substrings",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/vowels-of-all-substrings/",
+    "local_path": "problems/medium/2063.md",
+    "content_sha256": "e61ce6c2c5a811a9ca6bb8f54017bb744cbf09e61b3171451d5b698db08cd939"
+  },
+  "teaching": {
+    "hint": "How many choices of substring endpoints include one particular character position?",
+    "solution_outline": {
+      "decisive_insight": "Reorder the sum by vowel positions: position i belongs to (i+1)(n-i) substrings.",
+      "approach": "Scan the string and add that endpoint-choice product for each vowel position.",
+      "state_and_invariant": "The running sum is the total number of substring-position incidences whose vowel position has been processed.",
+      "correctness": "Every vowel counted in every substring is one incidence of a substring and a contained position. For position i, independent starts 0..i and ends i..n-1 specify exactly all containing substrings. Summing these products counts every required incidence once, equal to the original total of vowel counts.",
+      "complexity": "O(n) time and O(1) auxiliary space. A single contribution as well as the final sum may exceed a 32-bit integer.",
+      "pitfall": "Do not count unique substring texts: positions and endpoint choices distinguish occurrences."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "contribution-counting",
+      "substring-incidences"
+    ],
+    "prerequisites": [
+      "double-counting",
+      "independent-endpoints"
+    ],
+    "common_wrong_turns": [
+      "Do not count unique substring texts: positions and endpoint choices distinguish occurrences."
+    ],
+    "source_fidelity_notes": [
+      "Retained nonempty occurrence semantics and wide result; included a small derived example to clarify summing counts rather than counting substrings."
+    ]
+  }
+}

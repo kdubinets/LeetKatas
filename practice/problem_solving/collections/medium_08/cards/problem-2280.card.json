@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2280",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2280",
+    "title": "Minimum Lines to Represent a Line Chart",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-lines-to-represent-a-line-chart/",
+    "local_path": "problems/medium/2280.md",
+    "content_sha256": "457b2bbee801d77100d329be9836bfef906b482f182c1f9729b3f64fb31a8426"
+  },
+  "teaching": {
+    "hint": "At which intermediate points is ending one straight segment unavoidable?",
+    "solution_outline": {
+      "decisive_insight": "Every change in consecutive direction forces a boundary; maximal collinear runs each need and suffice with one segment.",
+      "approach": "Sort points by day. Compare consecutive displacement directions using exact cross products or normalized integer ratios, and count a first segment plus every direction change.",
+      "state_and_invariant": "The prior direction is that of the preceding elementary segment; the running count is the number of maximal equal-direction runs processed.",
+      "correctness": "Two adjacent elementary segments can be one straight segment exactly when their slopes agree. A slope change cannot be covered by a single straight segment, supplying a necessary boundary. Combining each maximal equal-slope run attains those boundaries, so their count is minimal.",
+      "complexity": "O(n log n) time and O(log n) auxiliary sorting stack space with cross-product comparisons after in-place sorting.",
+      "pitfall": "Floating-point slopes can misclassify near-equal ratios; cross-product multiplication must handle values near 10^18."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "exact-geometry",
+      "direction-runs",
+      "sorting"
+    ],
+    "prerequisites": [
+      "ratio-equality",
+      "integer-cross-product"
+    ],
+    "common_wrong_turns": [
+      "Floating-point slopes can misclassify near-equal ratios; cross-product multiplication must handle values near 10^18."
+    ],
+    "source_fidelity_notes": [
+      "Clarified finite connected segment counting rather than distinct infinite lines, chronological order, and the single-point case; introductory exact-geometry role."
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3012",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3012",
+    "title": "Minimize Length of Array Using Operations",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimize-length-of-array-using-operations/",
+    "local_path": "problems/medium/3012.md",
+    "content_sha256": "a0acfd45e3507e30e4bae7584cf37fdf99409b63ae6eabc767ed61bbe08178a3"
+  },
+  "teaching": {
+    "hint": "What events permanently prevent the array from shrinking further?",
+    "solution_outline": {
+      "decisive_insight": "Each operation removes one array entry, but a zero is inert. A nonmultiple of the minimum can create a unique smaller value; otherwise copies of the minimum force residual zeros.",
+      "approach": "Find the minimum `m`. If some value is not divisible by `m`, a sequence of positive remainders can reach length one. Otherwise count copies of `m` and return half that count rounded up.",
+      "state_and_invariant": "When all values are multiples of `m`, no positive result below `m` can be created. Only a zero-producing operation can lower the count of `m` values, by at most two.",
+      "correctness": "A nonmultiple permits a strictly decreasing positive minimum until a unique minimum remains, enabling a one-element result. In the all-multiple case, the minimum-copy bound forces at least `ceil(count/2)` residual items, and pairing minima after deleting larger values attains it.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space.",
+      "pitfall": "Treating zeros as still selectable incorrectly predicts that every input can shrink to length one."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "destructive-operation",
+      "inert-result-accounting"
+    ],
+    "prerequisites": [
+      "modular-remainder",
+      "lower-bound-proof"
+    ],
+    "common_wrong_turns": [
+      "Use the gcd alone as the branch condition",
+      "Count multiples rather than copies of the minimum"
+    ],
+    "source_fidelity_notes": [
+      "The operand order, positive-entry requirement, and permanently inert zero are explicit."
+    ]
+  }
+}

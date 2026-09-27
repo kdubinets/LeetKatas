@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-1647",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1647",
+    "title": "Minimum Deletions to Make Character Frequencies Unique",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-deletions-to-make-character-frequencies-unique/",
+    "local_path": "problems/medium/1647.md",
+    "content_sha256": "55dd2f6ec72edb35337d0984fe2be93cbdbf10660b95fd899afa6ac1a986a33f"
+  },
+  "teaching": {
+    "hint": "How does deleting characters affect the available final counts for each letter?",
+    "solution_outline": {
+      "decisive_insight": "Only original frequency caps matter; assigning decreasing retained counts to decreasing caps can maximize the total characters kept.",
+      "approach": "Count letters and sort positive frequencies descending. Give each the largest nonnegative target no larger than its original count and strictly below the preceding positive target; once zero is reached, subsequent targets are zero. Sum the decreases.",
+      "state_and_invariant": "The retained positive targets are distinct and decreasing. Each processed target is the largest compatible target under its cap and all previously chosen targets.",
+      "correctness": "Any feasible assignment can be reordered to align larger targets with larger caps: swapping a reversed pair remains feasible. In that order, the largest capped first target bounds every possible first target. Inductively, each next target is bounded by its cap and one less than the previous greedy target. The greedy sequence therefore dominates every feasible sorted sequence componentwise, maximizing retained total and minimizing deletions.",
+      "complexity": "O(n+26 log 26)=O(n) time and O(1) auxiliary space.",
+      "pitfall": "Zero may be assigned to multiple letters; insisting that removed letters have distinct counts forces unnecessary deletions."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "greedy-slot-allocation",
+      "frequency-reduction"
+    ],
+    "prerequisites": [
+      "sorting",
+      "exchange-proof"
+    ],
+    "common_wrong_turns": [
+      "Zero may be assigned to multiple letters; insisting that removed letters have distinct counts forces unnecessary deletions."
+    ],
+    "source_fidelity_notes": [
+      "Preserved deletion-only edits, lowercase alphabet, and exclusion of frequency zero from distinctness."
+    ]
+  }
+}

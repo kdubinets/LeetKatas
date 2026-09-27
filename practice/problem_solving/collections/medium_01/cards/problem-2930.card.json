@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2930",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2930",
+    "title": "Number of Strings Which Can Be Rearranged to Contain Substring",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/number-of-strings-which-can-be-rearranged-to-contain-substring/",
+    "local_path": "problems/medium/2930.md",
+    "content_sha256": "e6231e32a93b1e00d2b135e6816e3df7c22777cd52b5b3963063b465c730628f"
+  },
+  "teaching": {
+    "hint": "Which facts about a string stay the same when its characters are rearranged?",
+    "solution_outline": {
+      "decisive_insight": "The possibility of forming leet depends only on having at least one l, two e's, and one t. Counts beyond those thresholds no longer affect eligibility.",
+      "approach": "Build strings by length using counts indexed by whether l and t have appeared and by the number of e's capped at two. For each state, account for the three distinguished letters separately and group the other 23 choices. Read the fully satisfied state after n positions.",
+      "state_and_invariant": "Each state counts exactly the prefixes of the current length with its capped l/e/t counts. Prefixes merged into the same state have identical eligibility under any continuation.",
+      "correctness": "Rearrangement preserves letter multiplicities, and the threshold counts are necessary and sufficient to place leet contiguously. Every next letter belongs to exactly one transition class, with 23 ordinary choices counted separately. Induction over string positions counts each original string once; the accepting state therefore counts exactly the qualifying strings.",
+      "complexity": "O(n) time and O(1) auxiliary space: there are 12 capped states and four transition classes per position. Arithmetic is reduced modulo 10^9+7.",
+      "pitfall": "Treating e as merely present counts strings with only one e, which cannot form leet."
+    },
+    "accepted_alternatives": ["Inclusion-exclusion over absence of l, absence of t, and fewer than two e's gives a closed form with modular exponentiation in O(log n) time, provided subtraction is normalized modulo 10^9+7."],
+    "tags": ["counting-dp", "state-compression", "combinatorics"],
+    "prerequisites": ["modular-arithmetic", "dynamic-programming"],
+    "common_wrong_turns": ["Require leet in the original order", "Collapse all e counts above zero", "Forget the 23 unconstrained letters' multiplicity"],
+    "source_fidelity_notes": ["The long enumeration for n=4 was omitted; rearrangement, original-string distinctness, lowercase alphabet, n bound, and modulus were retained."]
+  }
+}

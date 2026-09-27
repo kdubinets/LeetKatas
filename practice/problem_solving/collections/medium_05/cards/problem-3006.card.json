@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3006",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3006",
+    "title": "Find Beautiful Indices in the Given Array I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-beautiful-indices-in-the-given-array-i/",
+    "local_path": "problems/medium/3006.md",
+    "content_sha256": "84838fa9da01026aaaed3b1a46e4c4ec84d302d4d67148192cd81d76d825db20"
+  },
+  "teaching": {
+    "hint": "Can the two pattern searches and the distance condition be considered separately?",
+    "solution_outline": {
+      "decisive_insight": "The definition combines independent occurrence lists with a proximity test on start positions; both lists are naturally sorted.",
+      "approach": "Find every occurrence start of `a` and `b`. For each `a` start, check whether the ordered `b` starts contain any value in its closed distance window, and retain qualifying starts.",
+      "state_and_invariant": "The occurrence lists contain exactly the valid starts for their patterns; each proximity query answers existence in `[i-k,i+k]`.",
+      "correctness": "A start is returned exactly when it is an `a` occurrence and a `b` start lies in its allowed window. Scanning `a` starts in order preserves sorted output.",
+      "complexity": "`O(|s|(|a|+|b|)+A log B)` time using ordered lookup for `A,B` occurrence counts, and `O(|s|)` space; pattern lengths are at most 10.",
+      "pitfall": "Nested comparison of every `a` and `b` occurrence can become quadratic on dense inputs."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "pattern-occurrences",
+      "ordered-proximity"
+    ],
+    "prerequisites": [
+      "substring-matching",
+      "binary-search"
+    ],
+    "common_wrong_turns": [
+      "Check only b occurrences after i",
+      "Skip overlapping pattern matches"
+    ],
+    "source_fidelity_notes": [
+      "The distance applies to start indices, not interval overlap, and equality is permitted."
+    ]
+  }
+}

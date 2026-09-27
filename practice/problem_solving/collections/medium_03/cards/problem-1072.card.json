@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1072",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1072",
+    "title": "Flip Columns For Maximum Number of Equal Rows",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/flip-columns-for-maximum-number-of-equal-rows/",
+    "local_path": "problems/medium/1072.md",
+    "content_sha256": "3a933c7dff0b4bf3e5ca664c27702c46197d1f3efba8e0df05728c90eaa9200f"
+  },
+  "teaching": {
+    "hint": "What property do two rows need to share to become uniform under one common column choice?",
+    "solution_outline": {
+      "decisive_insight": "Rows that are equal or bitwise complements require the same flip pattern up to an irrelevant flip of every column.",
+      "approach": "Give each row a signature indicating whether each entry differs from that row’s first entry. Count equal signatures and return the largest count.",
+      "state_and_invariant": "The signature records within-row equality relative to column zero and is unchanged by complementing a whole row. Rows with the same signature can be made uniform together.",
+      "correctness": "For any fixed column-flip set, every uniform resulting row has the same relative pattern; conversely choosing flips at the differing positions makes every row of one signature uniform. Thus the maximum group size is optimal.",
+      "complexity": "O(mn) expected time and O(mn) space for signatures and counts.",
+      "pitfall": "Grouping only identical original rows misses rows that are exact complements."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "binary-matrix",
+      "symmetry-normalization",
+      "frequency-counting"
+    ],
+    "prerequisites": [
+      "binary-xor",
+      "equivalence-class"
+    ],
+    "common_wrong_turns": [
+      "Count only equal rows, not complementary rows",
+      "Choose flips separately for each row"
+    ],
+    "source_fidelity_notes": [
+      "Clarified that one shared column choice is used and that uniform rows need not share the same final bit."
+    ]
+  }
+}

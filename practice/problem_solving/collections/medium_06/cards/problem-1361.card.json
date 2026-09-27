@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-1361",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1361",
+    "title": "Validate Binary Tree Nodes",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/validate-binary-tree-nodes/",
+    "local_path": "problems/medium/1361.md",
+    "content_sha256": "ce83d62dd5a27531a5e02043361e87f5b8aebad6ed503f3741c388c7817fbd33"
+  },
+  "teaching": {
+    "hint": "What must be true both locally at each child and globally across all nodes?",
+    "solution_outline": {
+      "decisive_insight": "A single rooted tree requires one parent per nonroot, one root, and reachability of every node from that root.",
+      "approach": "Count incoming child links and reject any node with multiple parents. Require exactly one zero-indegree root, then traverse its child links and require all `n` nodes visited.",
+      "state_and_invariant": "After the local checks, each nonroot has one parent and the root has none. The traversal count records whether every supplied node belongs to that rooted structure.",
+      "correctness": "A valid tree passes all checks. Conversely, if every node is reached from the sole root and no child has two parents, the reachable structure has exactly `n-1` links and cannot contain a cycle or disconnected component.",
+      "complexity": "`O(n)` time and `O(n)` auxiliary space.",
+      "pitfall": "A unique root and valid indegrees do not exclude a separate directed cycle."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree-validation",
+      "indegree",
+      "reachability"
+    ],
+    "prerequisites": [
+      "directed-graph",
+      "graph-traversal"
+    ],
+    "common_wrong_turns": [
+      "Checking only for multiple parents",
+      "Checking only for a unique root",
+      "Ignoring unreachable cycles"
+    ],
+    "source_fidelity_notes": [
+      "Removed diagram-based examples; retained child direction, `-1` semantics, and exact-one-tree requirement."
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-538",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "538",
+    "title": "Convert BST to Greater Tree",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/convert-bst-to-greater-tree/",
+    "local_path": "problems/medium/538.md",
+    "content_sha256": "d34c74d3f87c062fe86f38479baca9c6d12dbb61c4bfda148f894d55fd909c74"
+  },
+  "teaching": {
+    "hint": "In which order could you visit BST keys so that all greater original keys have already been seen?",
+    "solution_outline": {
+      "decisive_insight": "A BST yields keys in descending order by visiting right subtree, node, then left subtree. At each node, all greater original keys have already contributed to a running sum.",
+      "approach": "Traverse in reverse inorder while carrying a sum of keys visited so far. Add the node's original key to the sum, then replace its value with that sum.",
+      "state_and_invariant": "Before visiting a node, the accumulator equals the sum of original keys greater than that node's original key; each encountered node contributes its original value before mutation.",
+      "correctness": "The strict BST order makes reverse inorder visit each key once in decreasing order. Consequently the accumulated earlier keys are exactly those greater than the current key. Adding the current original key yields its required replacement, and processing it before overwriting preserves the sum needed at later, smaller nodes.",
+      "complexity": "O(n) time and O(h) auxiliary traversal space for n nodes and tree height h; O(n) space in a skewed tree.",
+      "pitfall": "Ordinary inorder reaches smaller keys first and cannot produce the required greater-key sum with the same running direction."
+    },
+    "accepted_alternatives": ["An explicit stack can perform the same reverse-inorder traversal in O(n) time and O(h) space without recursion."],
+    "tags": ["binary-search-tree", "tree-traversal", "prefix-aggregate"],
+    "prerequisites": ["bst-order", "inorder-traversal"],
+    "common_wrong_turns": ["Accumulate already-mutated values instead of original keys", "Include only keys in the right subtree rather than all greater keys", "Assume keys are nonnegative"],
+    "source_fidelity_notes": ["The image example was omitted; strict unique-key BST ordering, original-value semantics, possible negative keys, empty tree, bounds, and shape preservation were retained."]
+  }
+}

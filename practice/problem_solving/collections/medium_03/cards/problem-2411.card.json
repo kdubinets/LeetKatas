@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2411",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2411",
+    "title": "Smallest Subarrays With Maximum Bitwise OR",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/smallest-subarrays-with-maximum-bitwise-or/",
+    "local_path": "problems/medium/2411.md",
+    "content_sha256": "4a5b2b9ae1c8fed0fa03462ee288cbebe1014271093869d98e104cee54c0e6e8"
+  },
+  "teaching": {
+    "hint": "For a fixed start, which bit positions must eventually appear, and how soon can each appear?",
+    "solution_outline": {
+      "decisive_insight": "OR only gains bits as a subarray grows; the target is the entire suffix OR. The shortest endpoint must reach the nearest occurrence of every bit present in that suffix.",
+      "approach": "Scan from right to left, recording the nearest index at or after the current start containing each of the at most 30 bits. The farthest required index determines the length, with the start itself as the minimum endpoint.",
+      "state_and_invariant": "After processing index i, each stored bit position is its nearest occurrence in suffix i..n−1, or absent. Updating with value i preserves this state.",
+      "correctness": "A prefix of the suffix reaches the full suffix OR iff it has seen every bit that occurs later. It must extend through each required nearest occurrence, so the maximum of those positions is necessary and sufficient.",
+      "complexity": "O(30n) time and O(30) auxiliary space besides the output.",
+      "pitfall": "Using the last occurrence of a bit rather than the nearest can overstate the required length."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bitwise-or",
+      "nearest-occurrence",
+      "suffix-scan"
+    ],
+    "prerequisites": [
+      "bitwise-operations",
+      "contiguous-subarray"
+    ],
+    "common_wrong_turns": [
+      "Use the last occurrence of a repeated bit",
+      "Return zero length for an all-zero suffix"
+    ],
+    "source_fidelity_notes": [
+      "Clarified maximum is per starting index and retained nonempty-window edge case."
+    ]
+  }
+}

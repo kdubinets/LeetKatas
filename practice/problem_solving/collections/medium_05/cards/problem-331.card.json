@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-331",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "331",
+    "title": "Verify Preorder Serialization of a Binary Tree",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/verify-preorder-serialization-of-a-binary-tree/",
+    "local_path": "problems/medium/331.md",
+    "content_sha256": "2e04007df36f8119e138f80b4503a42ef0fd36d838aed371ae9d10381aa35796"
+  },
+  "teaching": {
+    "hint": "What must still be supplied after reading any prefix of the token sequence?",
+    "solution_outline": {
+      "decisive_insight": "Each token fills one outstanding tree position, while a non-null node creates two new child positions.",
+      "approach": "Scan the tokens with one initial root position. Consume one position for every token and add two for a value; reject when a token has no position, and accept only if none remain at the end.",
+      "state_and_invariant": "The position count equals the number of unfilled child obligations implied by the processed preorder prefix.",
+      "correctness": "The token grammar is `tree = #` or `value tree tree`; the count exactly tracks its pending subtrees. Negative count means extra tokens, and positive final count means missing tokens.",
+      "complexity": "`O(L)` time for string length `L` and `O(1)` auxiliary state beyond token parsing.",
+      "pitfall": "Checking only the final count misses a prefix that completed a tree before more tokens arrived."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree-serialization",
+      "obligation-counting"
+    ],
+    "prerequisites": [
+      "preorder-traversal",
+      "tree-grammar"
+    ],
+    "common_wrong_turns": [
+      "Reconstruct the tree",
+      "Check only the final token count"
+    ],
+    "source_fidelity_notes": [
+      "Retains the no-reconstruction rule and clarifies that a single `#` is valid."
+    ]
+  }
+}

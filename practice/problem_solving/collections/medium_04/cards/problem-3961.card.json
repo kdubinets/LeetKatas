@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3961",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3961",
+    "title": "Maximize Sum of Device Ratings",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximize-sum-of-device-ratings/",
+    "local_path": "problems/medium/3961.md",
+    "content_sha256": "41bc296da00ed05cdaf541ca834e11b0864f2574af1b6ab98cfb9a66696a26b4"
+  },
+  "teaching": {
+    "hint": "What benefit can removing one unit give its source, and what can that unit do to its destination?",
+    "solution_outline": {
+      "decisive_insight": "Only a source's minimum can improve its rating, while the transferred minimum must land somewhere and can lower a receiver's rating.",
+      "approach": "For device i, let a_i be its minimum and g_i its second minimum minus a_i (zero for a singleton). Let B=sum a_i, G=sum g_i, and a=min a_i. Compare B+G-min_j(g_j+a_j-a), achieved by sending every other useful minimum to sink j, with B+G-sum_{i:a_i=a}g_i, achieved by using a global-minimum device as sink and moving only larger minima.",
+      "state_and_invariant": "The baseline is the sum of initial minima. Source gains are bounded by second-minus-first minima; the receiver of the smallest transferred unit imposes the unavoidable loss captured by the two plans.",
+      "correctness": "Both expressions describe feasible transfer plans. For any plan, take the receiver of the smallest transferred minimum. If that minimum equals global a, the receiver forfeits its own gain and loses at least a_j-a, bounding the plan by the first expression. If the minimum is larger than a, no global-minimum source was improved, bounding it by the second expression. Thus the better feasible plan meets every upper bound.",
+      "complexity": "O(mn) time and O(m) auxiliary space; sums require a wide integer type.",
+      "pitfall": "Adding every possible source gain ignores the damage caused by the transferred units at their destination."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "resource-transfer",
+      "optimization-proof"
+    ],
+    "prerequisites": [
+      "greedy-bounds",
+      "array-minima"
+    ],
+    "common_wrong_turns": [
+      "Assume all sources can gain independently",
+      "Treat a one-unit device as gaining when emptied"
+    ],
+    "source_fidelity_notes": [
+      "The operation's source-once and different-destination rules, receiving behavior, empty rating, and total-size bound are retained."
+    ]
+  }
+}

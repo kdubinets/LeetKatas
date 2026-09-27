@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3424",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3424",
+    "title": "Minimum Cost to Make Arrays Identical",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-cost-to-make-arrays-identical/",
+    "local_path": "problems/medium/3424.md",
+    "content_sha256": "0e315021ef6e348023612ec493356398d11bd984febfc3be0baa8f1eb33a9b7c"
+  },
+  "teaching": {
+    "hint": "What range of reorderings becomes possible after paying the fixed cost once?",
+    "solution_outline": {
+      "decisive_insight": "One split into singleton pieces permits any permutation, so there are only two cost regimes: no rearrangement or unrestricted rearrangement for one fee.",
+      "approach": "Compare the original positionwise adjustment cost with `k` plus the minimum adjustment cost after any permutation; obtain the latter by matching the two arrays in sorted order.",
+      "state_and_invariant": "The no-fee regime retains original alignment. In the fee regime, each source element is matched to exactly one target and sorted matching minimizes total absolute differences.",
+      "correctness": "All changes can be moved after reorderings. Additional paid reorderings cannot improve beyond the permutation already available after one. Uncrossing two mismatched sorted pairs never increases their total distance, proving sorted matching optimal.",
+      "complexity": "O(n log n) time for sorting and O(n) auxiliary space if inputs are preserved; wide arithmetic is required for the fee and totals.",
+      "pitfall": "Sorting the original array before computing the no-rearrangement cost destroys that candidate."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "fixed-fee-optimization",
+      "sorted-matching"
+    ],
+    "prerequisites": [
+      "sorting",
+      "exchange-argument"
+    ],
+    "common_wrong_turns": [
+      "Assume the paid operation can only swap large blocks",
+      "Always pay the fixed fee"
+    ],
+    "source_fidelity_notes": [
+      "The singleton split permission and large k bound are explicit."
+    ]
+  }
+}

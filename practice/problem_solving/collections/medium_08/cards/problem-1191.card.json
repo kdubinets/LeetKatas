@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1191",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1191",
+    "title": "K-Concatenation Maximum Sum",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/k-concatenation-maximum-sum/",
+    "local_path": "problems/medium/1191.md",
+    "content_sha256": "b831cd7e3bd86f53674181246623926a1e78d7a607568331655526ea1588b2ec"
+  },
+  "teaching": {
+    "hint": "What parts of a chosen subarray can lie between its first and last touched copies?",
+    "solution_outline": {
+      "decisive_insight": "A range spanning copies consists of one suffix, some complete middle copies, and one prefix; only the sign of the complete-copy sum decides whether more middle copies help.",
+      "approach": "For k=1, find the ordinary maximum subarray sum with zero allowed. For k>=2, find the maximum on two copies. Add (k-2) times the original total only when that total is positive. Apply the modulus after maximizing ordinary sums.",
+      "state_and_invariant": "The two-copy optimum covers both single-copy ranges and suffix-plus-prefix ranges; the original total measures the gain of every additional whole middle copy.",
+      "correctness": "Every range has the stated decomposition. Nonpositive middle copies can be removed without lowering its sum, so two copies suffice. If total T>0 and an internal optimum M has outside pieces A,B with A+B=T-M, the best suffix plus prefix is at least (M+A)+(M+B)=M+T>M. Thus the doubled optimum is boundary-crossing and can gain exactly (k-2)T by adding all middle copies. This attains the bound for every range shape.",
+      "complexity": "O(n) time and O(1) auxiliary space if two copies are scanned virtually. Sums before modulo may reach about 10^14.",
+      "pitfall": "Reducing sums modulo the modulus before comparing maxima changes their order and invalidates the optimization."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "periodic-array",
+      "maximum-subarray",
+      "case-decomposition"
+    ],
+    "prerequisites": [
+      "prefix-suffix-sums",
+      "maximum-subarray-invariant"
+    ],
+    "common_wrong_turns": [
+      "Reducing sums modulo the modulus before comparing maxima changes their order and invalidates the optimization."
+    ],
+    "source_fidelity_notes": [
+      "Preserved conceptual repetition, k=1, empty ranges, negatives, and final modulo; distinguished separate copies from circular-buffer reuse restrictions."
+    ]
+  }
+}

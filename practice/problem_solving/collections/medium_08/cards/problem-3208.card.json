@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3208",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3208",
+    "title": "Alternating Groups II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/alternating-groups-ii/",
+    "local_path": "problems/medium/3208.md",
+    "content_sha256": "50dd95b2919b9aa4396fd82f9e3b4fee153990403cc354b24714c7df071cfa5b"
+  },
+  "teaching": {
+    "hint": "How does a repeated neighboring color affect all groups ending at that position?",
+    "solution_outline": {
+      "decisive_insight": "A window alternates exactly when the alternating suffix ending there has length at least k; circular starts correspond to a precise finite range of unrolled endpoints.",
+      "approach": "Read positions 0 through n+k-2 using circular indices. Track the current alternating run length, resetting to one at equal neighbors. Count endpoints k-1 through n+k-2 whose run reaches k.",
+      "state_and_invariant": "The run length is the longest alternating suffix in the unrolled prefix. Each counted endpoint corresponds to one starting position in 0..n-1.",
+      "correctness": "A length-k group is alternating exactly when all its k-1 internal edges change color, equivalent to a suffix run of at least k. Start s maps uniquely to endpoint s+k-1. The endpoint range covers precisely all n starts, so the scan includes wrapped groups once each and imposes no additional closing-edge condition.",
+      "complexity": "O(n+k)=O(n) time and O(1) auxiliary space.",
+      "pitfall": "Unrolling a full second copy and counting every qualifying endpoint can count some starts twice; use the exact endpoint range."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "circular-window",
+      "suffix-run",
+      "endpoint-bijection"
+    ],
+    "prerequisites": [
+      "local-adjacency",
+      "circular-indexing"
+    ],
+    "common_wrong_turns": [
+      "Unrolling a full second copy and counting every qualifying endpoint can count some starts twice; use the exact endpoint range."
+    ],
+    "source_fidelity_notes": [
+      "Replaced diagrams with explicit internal adjacency, full-length group semantics, and occurrence counting by circular start."
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-310",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "310",
+    "title": "Minimum Height Trees",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-height-trees/",
+    "local_path": "problems/medium/310.md",
+    "content_sha256": "c8e0e1c3edf8ee7824e0d4e081285b616a03fd4d7b133bc5be94e2edc743d9a1"
+  },
+  "teaching": {
+    "hint": "Which tree positions are farthest from the leaves at both ends of a longest path?",
+    "solution_outline": {
+      "decisive_insight": "The minimizing roots are the one or two centers of a tree; removing all current leaves together preserves those centers.",
+      "approach": "Build degrees and adjacency, then repeatedly remove a whole layer of degree-one vertices until at most two vertices remain. Return the survivors; handle the single-vertex tree directly.",
+      "state_and_invariant": "The queue holds exactly the leaves of the current reduced tree; each round deletes one complete outer layer and preserves its center set.",
+      "correctness": "Every longest path loses one endpoint at each end per round, so its middle vertices remain. A tree has one or two such centers, exactly the final survivors.",
+      "complexity": "`O(n)` time and `O(n)` space; each vertex enters one layer and each edge is considered at most twice.",
+      "pitfall": "Removing newly exposed leaves in the same round can shift the center."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree-centers",
+      "layer-peeling"
+    ],
+    "prerequisites": [
+      "tree-paths",
+      "breadth-first-traversal"
+    ],
+    "common_wrong_turns": [
+      "Root a traversal at every vertex",
+      "Peel leaves asynchronously"
+    ],
+    "source_fidelity_notes": [
+      "The statement’s output order is unrestricted and `n=1` is retained explicitly."
+    ]
+  }
+}

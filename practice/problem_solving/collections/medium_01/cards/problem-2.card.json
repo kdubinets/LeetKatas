@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2",
+    "title": "Add Two Numbers",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/add-two-numbers/",
+    "local_path": "problems/medium/2.md",
+    "content_sha256": "066a1b8e6d53e727607af40f3f85e1166f3d71e65aabe67e74f71b11c2d8dc61"
+  },
+  "teaching": {
+    "hint": "What does reverse digit order let you compute immediately at the two list heads?",
+    "solution_outline": {
+      "decisive_insight": "Because the least-significant digits come first, the lists are already ordered exactly as elementary addition processes columns.",
+      "approach": "Walk both lists together while either has a node or a carry remains. At each position, add the available digits and carry, append the result digit, and propagate the next carry. A dummy result head keeps every append uniform.",
+      "state_and_invariant": "Before each step, the output contains the correct digit for every processed position, and the carry is exactly the carry entering the next position.",
+      "correctness": "The next output digit and carry are the quotient and remainder of the two available digits plus the incoming carry. This preserves the invariant one column at a time. Once both inputs and the carry are exhausted, every position of the sum has been emitted.",
+      "complexity": "O(max(m, n)) time and O(max(m, n)) output space, with O(1) auxiliary space excluding the returned list.",
+      "pitfall": "Stopping when the shorter list ends, or when both lists end but a final carry remains, loses required digits."
+    },
+    "accepted_alternatives": [],
+    "tags": ["linked-list", "simulation", "carry"],
+    "prerequisites": ["linked-list-traversal", "decimal-carry"],
+    "common_wrong_turns": ["Converting the entire lists to fixed-width integers", "Forgetting a final carry node", "Assuming equal list lengths"],
+    "source_fidelity_notes": ["The decorative source image and repetitive examples were omitted; reverse order, digit bounds, nonempty inputs, and length asymmetry were retained."]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3015",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3015",
+    "title": "Count the Number of Houses at a Certain Distance I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-the-number-of-houses-at-a-certain-distance-i/",
+    "local_path": "problems/medium/3015.md",
+    "content_sha256": "c136092e35109827bcf25b92b2c0ce07b4a8f0ad8a6fdb8bcd1437f3c5f7e15a"
+  },
+  "teaching": {
+    "hint": "How many times could a shortest route benefit from crossing the single extra street?",
+    "solution_outline": {
+      "decisive_insight": "A shortest route uses the extra edge at most once, so its distance is the minimum of a direct path and two orientations through that edge.",
+      "approach": "Enumerate every unordered pair of distinct houses. Compare path distance with the route entering the extra edge at `x` and the route entering at `y`, then add two to the appropriate distance bucket.",
+      "state_and_invariant": "Each processed unordered pair contributes exactly its two ordered directions to the bucket for its true shortest distance.",
+      "correctness": "Repeating the extra edge creates a removable loop, so an optimal route is among the three evaluated forms. All unordered pairs are visited once and every ordered pair is counted once.",
+      "complexity": "`O(n²)` time and `O(n)` output space, with constant auxiliary state.",
+      "pitfall": "Counting each unordered pair only once undercounts the required ordered pairs by a factor of two."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "single-shortcut-distance",
+      "pair-histogram"
+    ],
+    "prerequisites": [
+      "path-distance",
+      "shortest-path"
+    ],
+    "common_wrong_turns": [
+      "Assume x<y",
+      "Ignore the reverse orientation through the extra street"
+    ],
+    "source_fidelity_notes": [
+      "The source uses a 1-indexed result convention; this brief states the returned array index explicitly and clarifies distinct ordered houses."
+    ]
+  }
+}

@@ -2,7 +2,9 @@
 
 ## Status
 
-Manually reviewed Level C foundation collection.
+Archived, manually reviewed Level C foundation collection. New practice uses
+the difficulty-specific `medium_01` and `hard_01` collections with fresh
+statistics.
 
 ## Purpose and scope
 

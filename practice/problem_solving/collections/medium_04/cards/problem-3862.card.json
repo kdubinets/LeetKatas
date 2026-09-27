@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3862",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3862",
+    "title": "Find the Smallest Balanced Index",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-the-smallest-balanced-index/",
+    "local_path": "problems/medium/3862.md",
+    "content_sha256": "96bbd41305bd0376b6f8000907465471e264ed0d656d96661ec084abff725ecc"
+  },
+  "teaching": {
+    "hint": "How large can a right-side product become before its exact value can no longer affect any comparison?",
+    "solution_outline": {
+      "decisive_insight": "Any product above the largest possible left sum cannot match it, so such products may be safely capped.",
+      "approach": "Compute the total sum, then build suffix products saturated just above that sum. Sweep indices left to right with a running left sum and return the first equality.",
+      "state_and_invariant": "Every unsaturated suffix entry is exact; a saturated entry exceeds every possible left sum. The running sum contains exactly the positions before the current index.",
+      "correctness": "At each index the two maintained quantities match the definition. Saturation cannot create a false equality, and scanning in order returns the smallest match.",
+      "complexity": "O(n) time and O(n) auxiliary space, using wide arithmetic and checking before multiplication.",
+      "pitfall": "Multiplying an unbounded suffix product can overflow and accidentally appear equal to a prefix sum."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "saturated-arithmetic",
+      "prefix-suffix"
+    ],
+    "prerequisites": [
+      "overflow-bounds",
+      "array-scan"
+    ],
+    "common_wrong_turns": [
+      "Use modular products for equality",
+      "Include the current element on either side"
+    ],
+    "source_fidelity_notes": [
+      "Empty-side identities and strict-before/after boundaries are retained."
+    ]
+  }
+}

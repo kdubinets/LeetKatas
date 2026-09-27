@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-300",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "300",
+    "title": "Longest Increasing Subsequence",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/longest-increasing-subsequence/",
+    "local_path": "problems/medium/300.md",
+    "content_sha256": "97933f9d2fbceba816290bb95bac4c774d8213561f424ecbd40f0a4aae344713"
+  },
+  "teaching": {
+    "hint": "If two increasing subsequences have the same length, which ending value leaves more future options?",
+    "solution_outline": {
+      "decisive_insight": "For each attainable length, only the smallest ending value matters for extending future increasing subsequences.",
+      "approach": "Scan values while maintaining the smallest attainable tail for each length. Locate the first tail at least as large as the new value and replace it, or extend the list of lengths if none exists.",
+      "state_and_invariant": "The tail at each position is attainable and minimal among subsequences of that length in the processed prefix; the tail list is increasing.",
+      "correctness": "Replacing a larger tail preserves length and improves extension potential. Appending proves a new length; since every subsequence length is represented, the number of tails is the optimum.",
+      "complexity": "`O(n log n)` time and `O(n)` auxiliary space; a quadratic dynamic program also fits the base bound.",
+      "pitfall": "Using a strict-greater replacement boundary lets equal values extend a supposedly strict subsequence."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "longest-increasing-subsequence",
+      "dominance-frontier"
+    ],
+    "prerequisites": [
+      "subsequences",
+      "binary-search"
+    ],
+    "common_wrong_turns": [
+      "Treat the tails list itself as a witnessed subsequence",
+      "Let duplicate values increase the length"
+    ],
+    "source_fidelity_notes": [
+      "The source follow-up on `O(n log n)` time is retained as a question."
+    ]
+  }
+}

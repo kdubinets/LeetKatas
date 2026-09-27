@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2358",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2358",
+    "title": "Maximum Number of Groups Entering a Competition",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-number-of-groups-entering-a-competition/",
+    "local_path": "problems/medium/2358.md",
+    "content_sha256": "ab2e29a7377ecdfe348d77babb86c3aa5a99b05983641269d4ab4eb1a45e7534"
+  },
+  "teaching": {
+    "hint": "What is the fewest students that could support a chosen number of strictly growing group sizes?",
+    "solution_outline": {
+      "decisive_insight": "The size rule gives a triangular-number lower bound, and positivity lets a sorted assignment satisfy the sum rule whenever the size bound is met.",
+      "approach": "Find the largest `g` with `1+2+...+g <= n`. To establish achievability, sort grades conceptually and assign successive blocks of sizes `1,2,...,g-1`, then put the rest into the final group.",
+      "state_and_invariant": "Every later block has more members, each no smaller than members in earlier blocks; its positive extra member makes its sum strictly greater.",
+      "correctness": "Any `g` groups need at least the first `g` positive sizes, giving the upper bound. The sorted construction uses all students and satisfies both strict inequalities, so the bound is attained.",
+      "complexity": "`O(sqrt n)` time and `O(1)` auxiliary space to compute the count; sorting is only a proof construction, not required by the algorithm.",
+      "pitfall": "Ignoring the grade-sum condition without proving it follows from a suitable assignment is incomplete."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "constructive-proof",
+      "triangular-bound"
+    ],
+    "prerequisites": [
+      "counting",
+      "ordered-groups"
+    ],
+    "common_wrong_turns": [
+      "Assuming arbitrary grouping satisfies increasing sums",
+      "Sorting grades in the implementation unnecessarily"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained positivity, all-students requirement, strict inequalities, and free assignment order."
+    ]
+  }
+}

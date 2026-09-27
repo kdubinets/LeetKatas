@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3857",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3857",
+    "title": "Minimum Cost to Split into Ones",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-cost-to-split-into-ones/",
+    "local_path": "problems/medium/3857.md",
+    "content_sha256": "aaf92f969042084469664a3b9fed4631424de1da6384097c5f18b78c3f13d025"
+  },
+  "teaching": {
+    "hint": "Can the cost of a split be interpreted as counting something that happens once over the whole process?",
+    "solution_outline": {
+      "decisive_insight": "A split of groups of sizes a and b separates exactly a×b pairs of original unit items, and every pair is separated exactly once.",
+      "approach": "View the initial number as n labeled unit items. Count the pairs separated by all splits; return the number of unordered pairs of items.",
+      "state_and_invariant": "At any point, each original pair is either still in one piece or has already been separated, and separated pairs never reunite.",
+      "correctness": "The split charge counts exactly the newly separated cross-piece pairs. Every pair starts together and ends in different singleton pieces, so each contributes exactly one to total cost regardless of split order.",
+      "complexity": "O(1) time and O(1) auxiliary space; the maximum answer for n=500 is 124,750.",
+      "pitfall": "Choosing the most balanced or most unbalanced split cannot change the total cost."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "split-invariant",
+      "pair-counting"
+    ],
+    "prerequisites": [
+      "combinatorics",
+      "conservation-argument"
+    ],
+    "common_wrong_turns": [
+      "Search split trees unnecessarily",
+      "Treat n=1 as requiring a split"
+    ],
+    "source_fidelity_notes": [
+      "The positive-part split rule, final all-ones condition, and n=1 boundary are explicit."
+    ]
+  }
+}

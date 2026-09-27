@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1061",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1061",
+    "title": "Lexicographically Smallest Equivalent String",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/lexicographically-smallest-equivalent-string/",
+    "local_path": "problems/medium/1061.md",
+    "content_sha256": "ad45a8aaef082e925e659f085c143ad2401e44d0d00beb8200d404464e03ff99"
+  },
+  "teaching": {
+    "hint": "How can a whole equivalence class retain the best output letter as declarations accumulate?",
+    "solution_outline": {
+      "decisive_insight": "Pairwise declarations generate equivalence classes, and each output position can independently use its class’s smallest letter.",
+      "approach": "Maintain the 26 classes as pairs are processed, preserving the minimum letter as each merged class’s representative. Map every base character through its final class representative.",
+      "state_and_invariant": "Each class representative is its smallest member after every merge; all processed declarations hold within their classes.",
+      "correctness": "Closure under equivalence puts exactly the interchangeable letters in one class. Choosing its minimum independently at every position gives the lexicographically smallest valid string.",
+      "complexity": "`O(|s1|+|baseStr|)` time with a fixed 26-letter alphabet and `O(26)` space.",
+      "pitfall": "Replacing only directly paired characters ignores transitive equivalence."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "equivalence-classes",
+      "canonical-representative"
+    ],
+    "prerequisites": [
+      "disjoint-set-union",
+      "lexicographic-order"
+    ],
+    "common_wrong_turns": [
+      "Apply pair substitutions only once",
+      "Choose a representative without preserving class minimum"
+    ],
+    "source_fidelity_notes": [
+      "The three equivalence laws and independent per-position replacement are retained."
+    ]
+  }
+}

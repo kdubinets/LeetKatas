@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-984",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "984",
+    "title": "String Without AAA or BBB",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/string-without-aaa-or-bbb/",
+    "local_path": "problems/medium/984.md",
+    "content_sha256": "07d13b5bcce8c924440b6b20eb6696699b068f93448cfa9d8b3b1f6f452f2560"
+  },
+  "teaching": {
+    "hint": "How many copies of one letter can fit around the available copies of the other?",
+    "solution_outline": {
+      "decisive_insight": "Available opposite letters create gaps that can hold at most two copies of a repeated letter; a construction must preserve that remaining capacity.",
+      "approach": "Build the string in short blocks. Favor the letter with the larger remaining count, but emit at most two copies before using an available opposite letter as a separator; alternate when counts are equal.",
+      "state_and_invariant": "The remaining counts continue to satisfy the gap-capacity feasibility condition, and the current suffix never has a run longer than two.",
+      "correctness": "The block choice reduces the larger remaining count while preserving the possibility of separating all future copies. Each block itself is valid and the separator prevents an invalid boundary run; termination uses exactly the requested counts.",
+      "complexity": "O(a+b) time and O(a+b) output space; O(1) extra workspace.",
+      "pitfall": "Appending the currently more frequent letter three times can create a forbidden run even if the final counts are feasible."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "constructive-greedy",
+      "run-limit"
+    ],
+    "prerequisites": [
+      "counting",
+      "feasibility-invariant"
+    ],
+    "common_wrong_turns": [
+      "Spend all copies of one letter first",
+      "Assume a count of zero always permits the other count arbitrarily large"
+    ],
+    "source_fidelity_notes": [
+      "Kept the guaranteed-existence condition and both zero-count edge cases; no sample output is prescribed."
+    ]
+  }
+}

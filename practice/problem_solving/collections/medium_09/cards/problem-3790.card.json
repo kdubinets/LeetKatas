@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3790",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3790",
+    "title": "Smallest All-Ones Multiple",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/smallest-all-ones-multiple/",
+    "local_path": "problems/medium/3790.md",
+    "content_sha256": "3da379cb3369ff498d265ca588c1380677fb31cd38f1068f261ef1aefc7539f1"
+  },
+  "teaching": {
+    "hint": "Which part of an increasingly long decimal candidate matters for divisibility?",
+    "solution_outline": {
+      "decisive_insight": "Remainders suffice to append another one, and coprimality with ten makes repeated remainders imply a divisible repunit of bounded length.",
+      "approach": "Reject k divisible by two or five. Otherwise start from remainder zero, append digit one through the modular update, and stop at the first zero remainder while checking lengths one through k.",
+      "state_and_invariant": "After t appended ones, the remainder is exactly that length-t repunit modulo k; tested lengths are in increasing numerical order.",
+      "correctness": "An all-one decimal number ends in one and cannot be divisible by two or five. Otherwise gcd(k,10)=1. Two among the first k+1 repunits share a remainder; subtracting them yields a shorter repunit times a power of ten. Cancelling that invertible power shows some length at most k is divisible. Exact remainder updates find the first such length, which is the smallest candidate.",
+      "complexity": "`O(k)` time and `O(1)` auxiliary space.",
+      "pitfall": "Do not construct the growing integer or loop indefinitely without establishing a bound or detecting a repeated state."
+    },
+    "tags": [
+      "modular-state",
+      "pigeonhole",
+      "repunit"
+    ],
+    "prerequisites": [
+      "modular-arithmetic",
+      "gcd"
+    ],
+    "source_fidelity_notes": [
+      "Retained decimal-only-one semantics, impossible-case encoding, length output, and k bounds; removed examples."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Do not construct the growing integer or loop indefinitely without establishing a bound or detecting a repeated state."
+    ]
+  }
+}

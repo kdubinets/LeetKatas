@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3362",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3362",
+    "title": "Zero Array Transformation III",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/zero-array-transformation-iii/",
+    "local_path": "problems/medium/3362.md",
+    "content_sha256": "a4deb18d5a7611b57e1db9167a72a9e339be55bf65a62de59ee5922449690e79"
+  },
+  "teaching": {
+    "hint": "For the first position still needing help, which available choice leaves the most possibilities later?",
+    "solution_outline": {
+      "decisive_insight": "Independent decrements turn feasibility into coverage demand: index i needs at least nums[i] retained intervals. A deficit should use available intervals with farthest right endpoints.",
+      "approach": "Sweep left to right, making started intervals available by right endpoint. Track selected active coverage and its expirations. Whenever coverage is short, choose the farthest-ending available interval until the demand is met; fail if no unexpired interval remains. Return total queries minus those selected.",
+      "state_and_invariant": "Previously processed demands are already met by the irrevocably selected set. At the current index, active coverage counts exactly selected intervals still covering it.",
+      "correctness": "Every completion needs enough newly selected intervals covering a deficit. In an optimal completion containing prior greedy choices, replace a newly needed earlier-ending interval with the farthest-ending available one. Earlier positions remain satisfied by the prior choices, the current position remains covered, and later coverage cannot decrease. Repeated exchanges align an optimum with every choice without increasing its size. Missing enough available intervals proves infeasibility.",
+      "complexity": "O((n+q) log q) time and O(n+q) auxiliary space for available endpoints and scheduled expirations.",
+      "pitfall": "Coverage beyond a demand is harmless because each query may skip that index; do not treat it as a forced full-range decrement."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "interval-multicover",
+      "greedy-exchange",
+      "sweep-line"
+    ],
+    "prerequisites": [
+      "priority-order",
+      "difference-array",
+      "exchange-proof"
+    ],
+    "common_wrong_turns": [
+      "Coverage beyond a demand is harmless because each query may skip that index; do not treat it as a forced full-range decrement."
+    ],
+    "source_fidelity_notes": [
+      "Preserved optional per-index decrement, separate duplicate queries, maximal removals, and infeasibility; proof uses finished-prefix feasibility rather than claiming earlier coverage never changes."
+    ]
+  }
+}

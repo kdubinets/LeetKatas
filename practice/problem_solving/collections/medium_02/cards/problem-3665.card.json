@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3665",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3665",
+    "title": "Twisted Mirror Path Count",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/twisted-mirror-path-count/",
+    "local_path": "problems/medium/3665.md",
+    "content_sha256": "8ddb8ad73d6f5e6e3c88a77c4efc51bc92168e05c50495a6189509543b88a9f3"
+  },
+  "teaching": {
+    "hint": "Does arriving at a mirror from the left allow the same continuation as arriving from above?",
+    "solution_outline": {
+      "decisive_insight": "A mirror's next direction depends on its incoming direction, so a cell needs separate counts for rightward and downward arrivals. Every transition still increases row plus column.",
+      "approach": "Count walks through cells by their arrival direction. From an empty cell, send all arriving paths right and down; from a mirror, send rightward arrivals down and downward arrivals right. Skip transitions beyond the grid and sum both arrival counts at the destination.",
+      "state_and_invariant": "For each processed cell, its two counts equal the numbers of valid partial walks that reach it from the left and from above. Mirrors are passed through with a forced turn, so these states include reflection chains without separately simulating them.",
+      "correctness": "Every partial path has a unique previous cell and incoming direction. The transition for that previous cell sends it to exactly the legal next state, including a mirror's forced turn; off-grid transitions are discarded. Row-plus-column strictly increases, so processing in grid order counts each path once and the destination sum is exact.",
+      "complexity": "O(mn) time and O(mn) auxiliary space for the two direction counts at each cell; counts are reduced modulo 10^9+7.",
+      "pitfall": "A single count per mirror loses the arrival direction and can send a path along the wrong reflected continuation."
+    },
+    "accepted_alternatives": ["Rolling rows can keep the same two directional states in O(n) auxiliary space while retaining O(mn) time."],
+    "tags": ["grid-dynamic-programming", "path-counting", "directional-state"],
+    "prerequisites": ["grid-paths", "dynamic-programming"],
+    "common_wrong_turns": ["Allow a new choice at every mirror", "Follow a reflection that exits the grid", "Merge the two arrival directions into one state"],
+    "source_fidelity_notes": ["The source's long path diagrams were replaced by compact grid cases; before-entry chained reflections, forced turn directions, invalid exits, endpoint emptiness, bounds, and modulus were retained."]
+  }
+}

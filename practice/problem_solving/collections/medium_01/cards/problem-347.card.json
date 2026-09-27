@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-347",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "347",
+    "title": "Top K Frequent Elements",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/top-k-frequent-elements/",
+    "local_path": "problems/medium/347.md",
+    "content_sha256": "e032ba279930debfb4d37eddd043915e1c6330682545c1bf8f2b1be683b83026"
+  },
+  "teaching": {
+    "hint": "After counting occurrences, what is the full possible range of a frequency relative to the input length?",
+    "solution_outline": {
+      "decisive_insight": "A frequency is an integer from 1 through n, so it can serve as an index rather than requiring comparison sorting.",
+      "approach": "Count each value, place values into buckets indexed by their frequency, then scan the buckets from n downward until k values have been collected.",
+      "state_and_invariant": "Every distinct input value belongs to exactly one bucket whose index is its true count; during the descending scan, all collected values have frequency at least that of any later bucket.",
+      "correctness": "The counting pass assigns every distinct value its exact frequency. Scanning bucket indices from greatest to least collects only values no less frequent than all unscanned values. Once k values are collected, they are exactly the requested top k; arbitrary order within a bucket is permitted.",
+      "complexity": "Counting, bucket creation, and the bounded bucket scan take O(n) time and O(n) auxiliary space.",
+      "pitfall": "Sorting all distinct values by frequency takes O(n log n), which violates the explicit follow-up requirement."
+    },
+    "accepted_alternatives": ["A selection-based partition around frequencies can achieve expected O(n) time, but requires careful handling of the selection boundary."],
+    "tags": ["hash-map", "bucket-sort", "frequency-counting"],
+    "prerequisites": ["hash-map", "counting"],
+    "common_wrong_turns": ["Sorting all values instead of their frequency groups", "Returning more than k values when a bucket contains a tie", "Assuming input values must be nonnegative for a frequency map"],
+    "source_fidelity_notes": ["Examples were omitted; arbitrary answer order, uniqueness guarantee, k range, numeric bounds, input size, and stricter-than-O(n-log-n) requirement were retained."]
+  }
+}

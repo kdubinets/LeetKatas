@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-386",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "386",
+    "title": "Lexicographical Numbers",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/lexicographical-numbers/",
+    "local_path": "problems/medium/386.md",
+    "content_sha256": "87efd36606f74753c26cfef6af184736166535f631609a8dd864dd5b1005d580"
+  },
+  "teaching": {
+    "hint": "If a number begins a family of longer decimal strings, what follows it in lexical order?",
+    "solution_outline": {
+      "decisive_insight": "Decimal strings form an implicit prefix tree; lexicographic order is its preorder, so only a cursor to the next valid node is needed.",
+      "approach": "Start at `1`. After emitting a value, descend to its first child if in range; otherwise advance to a sibling, climbing past completed digit suffixes until a valid sibling exists.",
+      "state_and_invariant": "The cursor is always the next unreported value in preorder of the prefix tree restricted to `[1,n]`.",
+      "correctness": "Preorder visits each valid decimal string exactly once in lexicographic order. Descent chooses its first child; when that is unavailable, the climb finds the nearest ancestor with a remaining sibling.",
+      "complexity": "`O(n)` time amortized because each digit climb undoes an earlier descent, and `O(1)` auxiliary space.",
+      "pitfall": "A cursor ending in `9` or equal to `n` may need several ancestor climbs before incrementing."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "implicit-trie",
+      "preorder-successor"
+    ],
+    "prerequisites": [
+      "lexicographic-order",
+      "amortized-analysis"
+    ],
+    "common_wrong_turns": [
+      "Sorting all numbers as strings",
+      "Using recursion despite the constant-space requirement",
+      "Incrementing past a completed subtree"
+    ],
+    "source_fidelity_notes": [
+      "Kept a small output-order example to define lexical numeric order; retained both mandatory complexity bounds."
+    ]
+  }
+}

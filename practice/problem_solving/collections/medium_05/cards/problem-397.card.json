@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-397",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "397",
+    "title": "Integer Replacement",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/integer-replacement/",
+    "local_path": "problems/medium/397.md",
+    "content_sha256": "abe6784d4bb3c13646d6eb43e0e86b505948a5db25a7c725807d8bb727c32b08"
+  },
+  "teaching": {
+    "hint": "For an odd value, how do the two choices affect the following divisions by two?",
+    "solution_outline": {
+      "decisive_insight": "At odd values, the direction that creates more trailing binary zeros usually permits more immediate halvings; 3 is a small exception.",
+      "approach": "Repeatedly halve even values. For odd values, decrement 3 and values ending in binary `01`; increment other odd values ending in `11`. Count all operations until 1.",
+      "state_and_invariant": "The current value is the result of the counted operations; each odd choice moves to an even neighbor whose low-bit structure determines the next forced halving chain.",
+      "correctness": "Let F(x) be the optimal remaining steps. Even x forces F(2m)=1+F(m); for odd x>1, F(2m+1)=2+min(F(m),F(m+1)). Starting from F(1)=0 and F(2)=1, substituting these recurrences for adjacent even/odd pairs proves by induction that |F(m+1)-F(m)|≤1. For x=4k+1, the decremented even neighbor costs 2+F(k), while the incremented neighbor costs 3+min(F(k),F(k+1)), so decrement is no worse. For x=4k+3 with k≥1, the incremented neighbor costs 2+F(k+1), while the decremented neighbor costs 3+min(F(k),F(k+1)), so increment is no worse. At x=3, decrement is strictly better. Repeating these optimal choices reaches 1.",
+      "complexity": "`O(log n)` operations and `O(1)` auxiliary space; use a numeric range that can represent `n+1` at the maximum input.",
+      "pitfall": "Incrementing `2^31−1` in a signed 32-bit value overflows."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "integer-reduction",
+      "trailing-bit-greedy"
+    ],
+    "prerequisites": [
+      "binary-representation",
+      "greedy-choice"
+    ],
+    "common_wrong_turns": [
+      "Always decrement odd values",
+      "Forget the special case n=3"
+    ],
+    "source_fidelity_notes": [
+      "The upper bound and possible intermediate increment beyond it are explicit."
+    ]
+  }
+}

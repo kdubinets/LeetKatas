@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3573",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3573",
+    "title": "Best Time to Buy and Sell Stock V",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-v/",
+    "local_path": "problems/medium/3573.md",
+    "content_sha256": "7620ea9ccc14bd6debc727adbed661e6a8753131f3d303d328890297e1988c32"
+  },
+  "teaching": {
+    "hint": "Which information about an unfinished transaction changes the effect of the next price?",
+    "solution_outline": {
+      "decisive_insight": "Flat, long, and short positions have different price exposure. Completed transaction count and position type summarize all relevant past decisions.",
+      "approach": "Scan days with arrays for each completed count and the three position types. From yesterday states, wait, open long or short from flat, or close a position into flat with count increased. Initially only flat with zero completed is reachable. Return the maximum final flat value over counts through k.",
+      "state_and_invariant": "After a day, each state stores the largest cash attainable with that exact completed count and open-position type; open positions carry their opening cash effect but are not final profits.",
+      "correctness": "Every legal schedule performs at most one action per day and follows precisely these position transitions. Reading previous-day states forces closing after opening and prevents a same-day close/reopen. Conversely every DP transition path describes a legal schedule. For a fixed state, greater cash dominates under every continuation, so retaining its maximum loses no optimum. Only flat final states contain completed transactions.",
+      "complexity": "O(nk) time and O(k) auxiliary space; profit totals require 64-bit arithmetic.",
+      "pitfall": "Updating states in place can allow closing and reopening on the same day in violation of the contract."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "state-machine-dp",
+      "stock-trading",
+      "bounded-transactions"
+    ],
+    "prerequisites": [
+      "state-sufficiency"
+    ],
+    "common_wrong_turns": [
+      "Updating states in place can allow closing and reopening on the same day in violation of the contract."
+    ],
+    "source_fidelity_notes": [
+      "Retained both normal and short transactions, strictly later close, no shared close/open day, at-most count, and completed final positions."
+    ]
+  }
+}

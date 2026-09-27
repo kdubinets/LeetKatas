@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-979",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "979",
+    "title": "Distribute Coins in Binary Tree",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/distribute-coins-in-binary-tree/",
+    "local_path": "problems/medium/979.md",
+    "content_sha256": "7ff99ef65cd44f719965dedd3b41bf9e80ea25973ec8751547b63ef8170b2266"
+  },
+  "teaching": {
+    "hint": "How much net coin flow is forced across the edge above any subtree?",
+    "solution_outline": {
+      "decisive_insight": "A subtree must export or import exactly its coin count minus its node count across its only connection to the rest of the tree.",
+      "approach": "Process children before parents. Return each subtree’s excess coins and add the absolute excess of each child to the total number of edge moves.",
+      "state_and_invariant": "The returned excess is coins minus nodes in that subtree; accumulated cost is the forced flow across all processed child edges.",
+      "correctness": "Each child edge is a unique cut, so its absolute excess is a lower bound on moves across it. Routing exactly that net flow across every edge achieves the target, so summing the bounds is exact.",
+      "complexity": "`O(n)` time and `O(h)` recursion space for tree height `h`.",
+      "pitfall": "A subtree can have zero net excess while still requiring internal moves, so do not sum only the root excess."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree-flow",
+      "cut-conservation"
+    ],
+    "prerequisites": [
+      "postorder-traversal",
+      "subtree-balance"
+    ],
+    "common_wrong_turns": [
+      "Simulate individual coin moves",
+      "Ignore internal costs when subtree net balance is zero"
+    ],
+    "source_fidelity_notes": [
+      "The global coin total and bidirectional edge transfers are retained."
+    ]
+  }
+}

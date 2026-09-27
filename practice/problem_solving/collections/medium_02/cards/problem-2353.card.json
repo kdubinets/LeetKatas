@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2353",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2353",
+    "title": "Design a Food Rating System",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/design-a-food-rating-system/",
+    "local_path": "problems/medium/2353.md",
+    "content_sha256": "b28d64592ba3ce59fc0a745ca423dd2fa36e6809332b5e5b845dbcbf6930d8ae"
+  },
+  "teaching": {
+    "hint": "What information lets an update find one food directly, while a query sees its cuisine's items in the required rating and name order?",
+    "solution_outline": {
+      "decisive_insight": "An update identifies a food by name, but a query ranks a whole cuisine by two keys. Direct identity maps and a separately ordered collection per cuisine serve those different access patterns.",
+      "approach": "Map each food to its fixed cuisine and current rating. For each cuisine, maintain an ordered set of its foods keyed by descending rating and then ascending name. On a rating change, remove the old key, update the rating, and insert the new key. A query reads the first key for that cuisine.",
+      "state_and_invariant": "Each cuisine's ordered set contains exactly one entry for every food of that cuisine, and each entry reflects the food's current rating. The identity maps agree with those entries.",
+      "correctness": "Initialization inserts every food once. A change removes precisely the obsolete entry and inserts precisely the new one, preserving the invariant. The set's first entry has maximum rating and, among ties, minimum lexicographic name, so every query returns the required food.",
+      "complexity": "O(n log n) initialization, O(log n) per rating change, O(1) expected per query after cuisine lookup, and O(n) auxiliary space.",
+      "pitfall": "Adding the new rating without removing the old ranking entry can leave a stale item at the top of a cuisine."
+    },
+    "accepted_alternatives": ["A heap per cuisine with lazy deletion of stale rating entries also supports the queries, with amortized cleanup and potentially more stored entries between cleanups."],
+    "tags": ["data-structure-design", "ordered-set", "grouped-ranking"],
+    "prerequisites": ["hash-map", "ordered-set"],
+    "common_wrong_turns": ["Scan all foods on every highest-rated query", "Ignore the lexicographic tie rule", "Leave old rating entries active after an update"],
+    "source_fidelity_notes": ["The long operation transcript was omitted; construction fields, method effects, tie rule, distinct foods, valid-query guarantees, and size/rating bounds were retained."]
+  }
+}

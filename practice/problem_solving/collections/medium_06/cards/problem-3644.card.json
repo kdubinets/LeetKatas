@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3644",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3644",
+    "title": "Maximum K to Sort a Permutation",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-k-to-sort-a-permutation/",
+    "local_path": "problems/medium/3644.md",
+    "content_sha256": "d989dbbe057fcb9d0e1fd1ce5a323d36b354cd1631e84bf85b9bf29acb0eaac5"
+  },
+  "teaching": {
+    "hint": "What restriction does every value that must move impose on the bits of `k`?",
+    "solution_outline": {
+      "decisive_insight": "Every misplaced value must participate in a swap, so `k` is bounded by their bitwise AND; that bound is attainable using its own value as a universal swap partner.",
+      "approach": "AND together the values not at their final indices. For the resulting `K`, the permutation contains value `K`, which can swap with each misplaced value because `K & x = K`.",
+      "state_and_invariant": "`K` is a submask of every misplaced value; star swaps through the element `K` connect all values that must be permuted.",
+      "correctness": "Any feasible `k` is a submask of every value that moves, hence no greater than `K`. Star swaps through `K` generate every permutation of the relevant values, including one restoring sorted order, so `K` is feasible.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space.",
+      "pitfall": "Including already-correct values in the AND can lower the answer even though they need not move."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bitwise-bound",
+      "swap-connectivity"
+    ],
+    "prerequisites": [
+      "permutation",
+      "and-mask"
+    ],
+    "common_wrong_turns": [
+      "ANDing all values including fixed points",
+      "Assuming the pivot cannot move temporarily"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained permutation guarantee, value-based swap condition, and the sorted-array special result."
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+# Maximum Square Area by Removing Fences From a Field
+
+A rectangular field spans coordinates `(1,1)` to `(m,n)`. Removable horizontal fences cross the field at the coordinates in `hFences`; removable vertical fences cross it at the coordinates in `vFences`. The four border fences at horizontal coordinates `1,m` and vertical coordinates `1,n` cannot be removed. You may remove any subset of the interior fences. Return the greatest area of a square field bounded by remaining horizontal and vertical fences, or `-1` if none can be formed. Reduce a possible area modulo `10^9+7` only for the returned value. Coordinates in each list are unique. `3 ≤ m,n ≤ 10^9`; each interior-fence list has between 1 and 600 entries, strictly inside its borders.

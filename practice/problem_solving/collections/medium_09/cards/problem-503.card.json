@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-503",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "503",
+    "title": "Next Greater Element II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/next-greater-element-ii/",
+    "local_path": "problems/medium/503.md",
+    "content_sha256": "c4e057be0ff95488cc1ea95e518e7fa8bd69ba8880aea4e47ae0666b310dc991"
+  },
+  "teaching": {
+    "hint": "Which unresolved elements can the current value answer, and how could they be kept so none is overlooked?",
+    "solution_outline": {
+      "decisive_insight": "Unresolved requests can be kept in nonincreasing value order; a strictly greater arrival resolves a suffix of them. A second virtual lap supplies wrapped successors.",
+      "approach": "Scan two virtual copies of the array. Keep pending original indices in a stack; at each value resolve and remove every smaller pending top, assigning the current value. Push indices only during the first lap. Leave unresolved answers at the prescribed sentinel.",
+      "state_and_invariant": "Pending indices increase from bottom to top and their values are nonincreasing. No pending request has encountered a strictly greater value after its own position; resolved requests have their first such value.",
+      "correctness": "An arriving value larger than a lower stack entry is also larger than every entry above it, so top removal exposes every request it can answer. A pending index has not previously encountered a greater successor, making the current arrival its first. All other positions in its circular order occur within two laps. A request still pending after its full successor range has no greater value anywhere and remains unresolved even through any repeated prefix; therefore the final unresolved sentinels are correct.",
+      "complexity": "`O(n)` time and `O(n)` auxiliary space: each original index is pushed once and popped at most once across two laps.",
+      "pitfall": "Equal values must stay pending; using a non-strict greater comparison answers requests incorrectly, especially in an all-equal array."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "monotonic-stack",
+      "circular-scan",
+      "first-greater"
+    ],
+    "prerequisites": [
+      "stack-invariant",
+      "amortized-analysis"
+    ],
+    "common_wrong_turns": [
+      "Equal values must stay pending; using a non-strict greater comparison answers requests incorrectly, especially in an all-equal array."
+    ],
+    "source_fidelity_notes": [
+      "Retained strict first-successor order, wrapping, singleton behavior, negative values, and the specified ambiguous sentinel.",
+      "Used the canonical strict comparator and tie rule with the correct nonincreasing invariant; omitted its false strict-stack and second-lap re-push amortization claims."
+    ]
+  }
+}

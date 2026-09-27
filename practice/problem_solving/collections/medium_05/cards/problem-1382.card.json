@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1382",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1382",
+    "title": "Balance a Binary Search Tree",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/balance-a-binary-search-tree/",
+    "local_path": "problems/medium/1382.md",
+    "content_sha256": "7fee1169b0127bf2ac2d370371f2eee6b95a9343b77c6df2685f043e2be60189"
+  },
+  "teaching": {
+    "hint": "What order of the values must every valid result preserve, and how can each subtree be kept balanced?",
+    "solution_outline": {
+      "decisive_insight": "A BST traversal yields the values in sorted order; choosing a middle value for each recursive subtree gives comparable left and right sizes.",
+      "approach": "Extract all values in sorted order from the input BST, then recursively form a new tree by selecting a middle value of each remaining interval as its root.",
+      "state_and_invariant": "Every recursive interval contains exactly its subtree’s values; left values are smaller than the root, right values larger, and their sizes differ by at most one.",
+      "correctness": "The extraction preserves all input values. Midpoint splits preserve BST order and, inductively, bound child-height difference by one at each node.",
+      "complexity": "`O(n)` time and `O(n)` auxiliary space for the values; extraction may use `O(n)` stack on a skewed input.",
+      "pitfall": "Balancing only the original root does not ensure every descendant subtree is balanced."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "balanced-bst",
+      "tree-reconstruction"
+    ],
+    "prerequisites": [
+      "bst-inorder",
+      "divide-and-conquer"
+    ],
+    "common_wrong_turns": [
+      "Assume the input is already balanced",
+      "Choose a midpoint without first obtaining sorted values"
+    ],
+    "source_fidelity_notes": [
+      "Allows any valid shape and retains the every-node balance definition."
+    ]
+  }
+}

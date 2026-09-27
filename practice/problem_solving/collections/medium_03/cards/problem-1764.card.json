@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1764",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1764",
+    "title": "Form Array by Concatenating Subarrays of Another Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/form-array-by-concatenating-subarrays-of-another-array/",
+    "local_path": "problems/medium/1764.md",
+    "content_sha256": "149e0e485274a78c6ea1cc097ee5b9a991da57f4078213df6682195c3302759d"
+  },
+  "teaching": {
+    "hint": "If one group matches in several positions, which choice leaves the most flexibility for later groups?",
+    "solution_outline": {
+      "decisive_insight": "For any group, its earliest legal occurrence cannot make a later group harder to place than a later occurrence would.",
+      "approach": "Advance through the groups in order, searching from the end of the preceding accepted match. Choose the first full match and continue after it; fail if none exists.",
+      "state_and_invariant": "The cursor is the first unused position. After each group, it is no farther right than the cursor of any complete valid placement for the same prefix of groups.",
+      "correctness": "By induction, a valid placement of the next group at a later position implies the earliest match exists at or before it. Advancing past the chosen match preserves disjointness and ordering. Failure therefore rules out every placement.",
+      "complexity": "O(mL + S) time and O(1) auxiliary space, where m is the length of nums, L the longest group, and S the total group length; bounds are at most about one million comparisons.",
+      "pitfall": "Allowing a later match to overlap the end of an earlier group violates the disjointness rule."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "greedy",
+      "ordered-pattern-placement"
+    ],
+    "prerequisites": [
+      "contiguous-subarray",
+      "exchange-argument"
+    ],
+    "common_wrong_turns": [
+      "Choose a later occurrence without considering its effect on remaining space",
+      "Resume the next search inside a prior match"
+    ],
+    "source_fidelity_notes": [
+      "Removed verbose marked-up examples; retained ordered, disjoint matches and small comparison bounds."
+    ]
+  }
+}

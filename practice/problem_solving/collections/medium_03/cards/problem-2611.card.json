@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2611",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2611",
+    "title": "Mice and Cheese",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/mice-and-cheese/",
+    "local_path": "problems/medium/2611.md",
+    "content_sha256": "8caea33a719eb588e42d6acfb10e03e59b445f2e294618bd0daf3ab0f51b6de6"
+  },
+  "teaching": {
+    "hint": "What changes in the total when one particular cheese switches recipients?",
+    "solution_outline": {
+      "decisive_insight": "Assigning everything to one mouse provides a fixed baseline; choosing mouse one changes each item’s contribution independently by its reward difference.",
+      "approach": "Sum mouse two’s rewards, compute each item’s mouse-one-minus-mouse-two gain, and add the k largest gains.",
+      "state_and_invariant": "The baseline is fixed. Each selected index contributes one independent gain, and exactly k indices are selected.",
+      "correctness": "If a selected gain is smaller than an unselected gain, swapping them preserves the quota and cannot lower the total. Repeating yields the k largest gains.",
+      "complexity": "O(n log n) time and O(n) auxiliary space with sorting; partial selection can improve expected time to O(n).",
+      "pitfall": "Skipping negative gains violates the exact-k requirement."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "baseline-plus-deltas",
+      "top-k-greedy"
+    ],
+    "prerequisites": [
+      "sorting",
+      "exchange-argument"
+    ],
+    "common_wrong_turns": [
+      "Choose by reward1 alone",
+      "Take only positive gains when k requires more"
+    ],
+    "source_fidelity_notes": [
+      "Retained exact quota including k=0 and k=n; removed answer-specific examples."
+    ]
+  }
+}

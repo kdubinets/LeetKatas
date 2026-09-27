@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2419",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2419",
+    "title": "Longest Subarray With Maximum Bitwise AND",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/longest-subarray-with-maximum-bitwise-and/",
+    "local_path": "problems/medium/2419.md",
+    "content_sha256": "7745236ab900264cba92f9246ee6fe1d3798c6eb621974a3467d76c7efb8958a"
+  },
+  "teaching": {
+    "hint": "Can adding another positive number to a bitwise AND ever raise the result above a single array element?",
+    "solution_outline": {
+      "decisive_insight": "The AND of a subarray cannot exceed any of its elements. Its maximum over all nonempty subarrays is therefore the array's largest element, achieved by a singleton; a longer subarray preserves that value only if every element equals it.",
+      "approach": "Find the maximum array value, then scan for the longest contiguous run equal to that value.",
+      "state_and_invariant": "The current run length is the number of consecutive maximum-valued elements ending at the current position, and the best length is the greatest such run encountered.",
+      "correctness": "Any subarray AND is at most each included value and thus at most the global maximum; a singleton at that maximum attains it. If a subarray also attains it, each constituent must be at least the global maximum and therefore equal to it. Conversely, a run of equal maximum values has that same AND, so its longest run length is exactly the answer.",
+      "complexity": "O(n) time and O(1) auxiliary space for n positive integers.",
+      "pitfall": "Counting all occurrences of the maximum ignores the requirement that the qualifying subarray be contiguous."
+    },
+    "accepted_alternatives": [],
+    "tags": ["bitwise-and", "contiguous-run", "monotone-aggregate"],
+    "prerequisites": ["bitwise-and", "array-maximum"],
+    "common_wrong_turns": ["Combine disjoint occurrences of the maximum", "Search every subarray for its AND", "Assume a longer subarray can have AND above its elements"],
+    "source_fidelity_notes": ["The source example was kept in compact form; nonempty contiguity, two-stage maximum-and-longest objective, positivity, and bounds were retained."]
+  }
+}

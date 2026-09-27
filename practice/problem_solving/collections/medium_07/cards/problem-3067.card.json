@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3067",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3067",
+    "title": "Count Pairs of Connectable Servers in a Weighted Tree Network",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-pairs-of-connectable-servers-in-a-weighted-tree-network/",
+    "local_path": "problems/medium/3067.md",
+    "content_sha256": "431938fc86af283d950cff2e8a9cc57386eb9392050753a39f4111fb495b19fc"
+  },
+  "teaching": {
+    "hint": "In a tree, what can you infer when two paths leaving a server begin with the same edge?",
+    "solution_outline": {
+      "decisive_insight": "Two paths from a center are edge-disjoint exactly when their endpoints lie in different incident branches.",
+      "approach": "For each center, traverse each neighboring branch and count endpoints at divisible total distance. Combine each branch count with the sum of earlier branch counts, adding their product.",
+      "state_and_invariant": "The running sum contains exactly qualifying endpoints in already processed branches; a new product counts pairs with one endpoint there and one in the new branch.",
+      "correctness": "Tree paths are unique. Endpoints in one branch share its first edge, while different branches have disjoint paths. Traversal counts exactly the divisible-distance endpoints of each branch. Every qualifying unordered pair belongs to two distinct branches and is counted precisely when the later branch is processed.",
+      "complexity": "O(n^2) time since each center visits all other nodes once; O(n) auxiliary space.",
+      "pitfall": "Taking all pairs among qualifying endpoints also counts forbidden same-branch pairs."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "tree",
+      "pair-counting",
+      "divisibility"
+    ],
+    "prerequisites": [
+      "tree-path-uniqueness"
+    ],
+    "common_wrong_turns": [
+      "Taking all pairs among qualifying endpoints also counts forbidden same-branch pairs."
+    ],
+    "source_fidelity_notes": [
+      "Made path length weighted and unordered-pair semantics explicit; retained exclusion of the center and edge-disjointness."
+    ]
+  }
+}

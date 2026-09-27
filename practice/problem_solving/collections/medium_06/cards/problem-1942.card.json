@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-1942",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1942",
+    "title": "The Number of the Smallest Unoccupied Chair",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/the-number-of-the-smallest-unoccupied-chair/",
+    "local_path": "problems/medium/1942.md",
+    "content_sha256": "7f4db11191e4e492d1ce53924a935ec03474d310c5a0fe6a2a903cc79a6e484a"
+  },
+  "teaching": {
+    "hint": "What two kinds of events must be settled before an arriving friend chooses a chair?",
+    "solution_outline": {
+      "decisive_insight": "Chair assignment depends on reclaiming all due departures and then selecting the smallest free identifier.",
+      "approach": "Sort friends by arrival. Before each arrival, release every occupied chair whose leaving time is no later than that arrival. Take the smallest released chair if one exists, otherwise use the next never-used number.",
+      "state_and_invariant": "A departure-time priority queue contains exactly occupied chairs, and a free-chair priority queue contains all released chairs; never-used numbers begin at the next new identifier.",
+      "correctness": "Draining due departures makes the free set accurate at each arrival, including simultaneous leave and arrive. Selecting its minimum or the next new number implements the rule, so the target’s recorded chair is correct.",
+      "complexity": "`O(n log n)` time and `O(n)` auxiliary space.",
+      "pitfall": "Processing the arrival before departures at the same timestamp can assign a chair number that is too large."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "event-sweep",
+      "resource-allocation",
+      "priority-queues"
+    ],
+    "prerequisites": [
+      "sorting",
+      "time-ordering"
+    ],
+    "common_wrong_turns": [
+      "Treating chair numbers as arrival order",
+      "Releasing only one due departure",
+      "Processing a same-time arrival before departures"
+    ],
+    "source_fidelity_notes": [
+      "Removed examples; retained distinct arrivals, same-time chair reuse, and unbounded chair numbering."
+    ]
+  }
+}

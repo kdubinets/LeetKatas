@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-820",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "820",
+    "title": "Short Encoding of Words",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/short-encoding-of-words/",
+    "local_path": "problems/medium/820.md",
+    "content_sha256": "cf5ea45b44e832a9eaf5d7ffd0776fe03ceb960f85210457cbb79f3f7945ef6f"
+  },
+  "teaching": {
+    "hint": "When can two different words finish at the same delimiter?",
+    "solution_outline": {
+      "decisive_insight": "Two words sharing a delimiter must be in a suffix-containment relation; only distinct words that are not proper suffixes of another need their own block.",
+      "approach": "Begin with the set of distinct words. Remove every proper suffix of each input word from the set, then sum length plus one delimiter for each survivor.",
+      "state_and_invariant": "Survivors are exactly the distinct input words not contained as proper suffixes of any other input word.",
+      "correctness": "Every removed word is a suffix of a longer word; following that relation terminates at a survivor, so concatenated survivor blocks encode all inputs. Two distinct survivors cannot end at one delimiter, because one would then be a suffix of the other. Each needs at least its own length plus delimiter, giving a lower bound attained by those blocks.",
+      "complexity": "Expected O(nL²) time for constructing and hashing suffixes, and O(nL) auxiliary space, where L<=7.",
+      "pitfall": "Prefix or interior-substring sharing does not work: reading continues to the next delimiter."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "suffix-containment",
+      "set-reduction",
+      "encoding"
+    ],
+    "prerequisites": [
+      "string-relations",
+      "hash-set",
+      "lower-bound"
+    ],
+    "common_wrong_turns": [
+      "Prefix or interior-substring sharing does not work: reading continues to the next delimiter."
+    ],
+    "source_fidelity_notes": [
+      "Explicitly allowed shared indices and duplicate inputs; preserved next-delimiter reading and length-only output."
+    ]
+  }
+}

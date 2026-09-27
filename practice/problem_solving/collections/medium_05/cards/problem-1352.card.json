@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1352",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1352",
+    "title": "Product of the Last K Numbers",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/product-of-the-last-k-numbers/",
+    "local_path": "problems/medium/1352.md",
+    "content_sha256": "95dada4816a08c062f6abc285a752c3bf880469051726f3cdfec913eeb806282"
+  },
+  "teaching": {
+    "hint": "What information about the most recent zero determines whether a suffix product can use division?",
+    "solution_outline": {
+      "decisive_insight": "Product division works only inside a zero-free suffix; any query reaching across the latest zero must return zero.",
+      "approach": "Keep cumulative products since the latest zero, starting with multiplicative identity 1. Reset that sequence on zero. For a query within the current suffix, divide the final cumulative product by the one before the requested suffix.",
+      "state_and_invariant": "The stored sequence gives exact products of prefixes since the latest zero; its length records how many values followed that zero.",
+      "correctness": "If `k` exceeds that length, the requested suffix contains zero. Otherwise the ratio of two nonzero prefix products cancels exactly the earlier factors.",
+      "complexity": "`O(1)` amortized time per add and `O(1)` per query; `O(m)` space for the current zero-free suffix of length `m`.",
+      "pitfall": "Keeping a cumulative product across zero makes division undefined and destroys later nonzero queries."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "stream-product",
+      "zero-boundary"
+    ],
+    "prerequisites": [
+      "prefix-products",
+      "online-queries"
+    ],
+    "common_wrong_turns": [
+      "Divide by a prefix product that may be zero",
+      "Scan the last k entries for every query"
+    ],
+    "source_fidelity_notes": [
+      "The varying `k`, zero value, valid query length, and constant-time follow-up are retained."
+    ]
+  }
+}

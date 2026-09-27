@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-865",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "865",
+    "title": "Smallest Subtree with all the Deepest Nodes",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/smallest-subtree-with-all-the-deepest-nodes/",
+    "local_path": "problems/medium/865.md",
+    "content_sha256": "05491b4779fc2a604fe9bd0af9399c57107a98c759fe21a5af7e233b10a52e48"
+  },
+  "teaching": {
+    "hint": "What information could each child return so its parent knows whether the deepest nodes are all on one side or on both?",
+    "solution_outline": {
+      "decisive_insight": "The answer is the lowest common ancestor of all deepest nodes. A subtree can summarize both its maximum depth and the smallest subtree enclosing all nodes at that depth.",
+      "approach": "Use postorder traversal. Each subtree returns its height and its answer node. At a parent, propagate the answer from the deeper child; if the child heights tie, the parent itself is the smallest node containing deepest nodes on both sides.",
+      "state_and_invariant": "For every completed subtree, the returned height is its greatest root-to-descendant depth, and the returned node is the smallest subtree containing all nodes at that local greatest depth.",
+      "correctness": "If one child is deeper, all deepest descendants lie there, so its answer remains the parent's answer. If heights tie, both children contain deepest descendants and only the parent or an ancestor encloses both; the parent is smallest. Induction through postorder yields the answer for the entire tree.",
+      "complexity": "O(n) time and O(h) traversal stack space for n nodes and tree height h, at most n in a skewed tree.",
+      "pitfall": "Choosing one child on a depth tie misses deepest nodes in the other child and returns a subtree that is too small."
+    },
+    "accepted_alternatives": ["Find the global maximum depth, then identify the lowest common ancestor of the deepest nodes in a second traversal; this remains O(n) time with additional bookkeeping."],
+    "tags": ["tree-dynamic-programming", "lowest-common-ancestor", "postorder"],
+    "prerequisites": ["binary-tree", "postorder-traversal"],
+    "common_wrong_turns": ["Return the first deepest leaf found", "Ignore the equal-depth case", "Return a copied node instead of one from the input tree"],
+    "source_fidelity_notes": ["The image-dependent example was replaced by explicit deepest-node and singleton rules; subtree definition, original-node output, uniqueness, and bounds were retained."]
+  }
+}

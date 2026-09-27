@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-835",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "835",
+    "title": "Image Overlap",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/image-overlap/",
+    "local_path": "problems/medium/835.md",
+    "content_sha256": "2ec17f54895ebccae9d6e0ccc13465ffce97c4db344a4b93377203fda3c79fa3"
+  },
+  "teaching": {
+    "hint": "What single piece of information describes a slide that aligns two chosen one-cells?",
+    "solution_outline": {
+      "decisive_insight": "Every pair of one-cells determines exactly one translation vector; the number of pairs with a vector equals its overlap.",
+      "approach": "Collect one-cell coordinates in both images. Count the coordinate differences for all cross-image pairs and return the largest count, or zero if no pair exists.",
+      "state_and_invariant": "For each translation vector, its tally is exactly the number of inspected one-cell pairs aligned by that translation.",
+      "correctness": "Fix a translation. Every overlapping one-cell has a unique source coordinate and destination coordinate, giving one pair with that difference. Conversely, each such pair lies within both original images and produces one overlap after the translation. This bijection makes the tally exact; maximizing tallies therefore gives the best translation.",
+      "complexity": "`O(n^2 + a*b)` time, where a and b count one-cells; worst case `O(n^4)`. Coordinate lists and bounded offset tallies use `O(n^2)` auxiliary space.",
+      "pitfall": "Off-grid cells disappear, so cyclic shifts are invalid; a single shared offset must apply to all one-cells."
+    },
+    "tags": [
+      "geometry",
+      "translation-voting",
+      "sparse-grid"
+    ],
+    "prerequisites": [
+      "coordinates",
+      "frequency-counting"
+    ],
+    "source_fidelity_notes": [
+      "Replaced image-dependent illustrations with explicit signed translation, erasure, and no-wrap rules plus a corner-alignment example."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "Off-grid cells disappear, so cyclic shifts are invalid; a single shared offset must apply to all one-cells."
+    ]
+  }
+}

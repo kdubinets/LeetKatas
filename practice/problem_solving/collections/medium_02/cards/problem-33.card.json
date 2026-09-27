@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-33",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "33",
+    "title": "Search in Rotated Sorted Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/search-in-rotated-sorted-array/",
+    "local_path": "problems/medium/33.md",
+    "content_sha256": "bf60a955cbbcf43f43f490f393a9ec88fe44b8347d727b19fa8eb51e34476faf"
+  },
+  "teaching": {
+    "hint": "At a midpoint, is either half of the current search range guaranteed to remain ordered?",
+    "solution_outline": {
+      "decisive_insight": "With distinct values, at least one half of any remaining interval is normally sorted, even if the other crosses the rotation point.",
+      "approach": "Use binary search. Compare the midpoint with the left endpoint to identify a sorted half, then test whether the target lies inside that half's value interval. Keep that half if it does; otherwise discard it. Return on a midpoint match.",
+      "state_and_invariant": "Whenever the target exists, it remains within the current interval. Each iteration identifies a sorted half using distinctness and discards only a half whose value range cannot contain the target.",
+      "correctness": "The midpoint either matches or splits the interval into one fully sorted side and one potentially rotated side. Bounds on the sorted side decide exactly whether it can contain the target, so the correct side is retained. The interval shrinks every time, proving logarithmic termination; an empty interval means the target is absent.",
+      "complexity": "O(log n) time and O(1) auxiliary space for n distinct elements.",
+      "pitfall": "Using a sorted-half test that assumes distinctness on an input with duplicates would be invalid; here distinctness is guaranteed."
+    },
+    "accepted_alternatives": ["Find the rotation pivot with binary search, then binary-search the appropriate sorted segment; this also uses O(log n) time and O(1) space."],
+    "tags": ["binary-search", "rotated-array", "search-invariant"],
+    "prerequisites": ["binary-search", "sorted-interval"],
+    "common_wrong_turns": ["Discard the rotated half without checking whether it contains the target", "Apply ordinary binary search directly to the whole rotated array", "Lose the midpoint or an endpoint through inconsistent inclusive comparisons"],
+    "source_fidelity_notes": ["The source's example was condensed to one rotation and target; distinctness, possible no rotation, output convention, bounds, and required logarithmic time were retained."]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-1353",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1353",
+    "title": "Maximum Number of Events That Can Be Attended",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-number-of-events-that-can-be-attended/",
+    "local_path": "problems/medium/1353.md",
+    "content_sha256": "093ece9cd74a77a3ebc169838735cdbcba1497195273e0701291759db2c9b473"
+  },
+  "teaching": {
+    "hint": "When several events are available today, which one loses its chance to be attended first?",
+    "solution_outline": {
+      "decisive_insight": "Choosing the currently available event with the earliest ending day preserves maximum flexibility for later days.",
+      "approach": "Process days in order, adding newly opened events and discarding expired ones. Attend the available event with the earliest deadline; skip stretches with no open event.",
+      "state_and_invariant": "The available set contains exactly the unopened-by-choice events whose start has passed and end has not passed; the selected count is feasible.",
+      "correctness": "An exchange moves an earliest-deadline event into today's slot without reducing an optimal schedule: a later-deadline event can use any later slot occupied by the former. Repeating aligns an optimum with each choice.",
+      "complexity": "O(m log m) time and O(m) auxiliary space for m events; each event enters and leaves the ordered candidate set once.",
+      "pitfall": "Attending an event that ends later can make an earlier-deadline event expire."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "interval-scheduling",
+      "deadline-greedy"
+    ],
+    "prerequisites": [
+      "priority-queue",
+      "exchange-argument"
+    ],
+    "common_wrong_turns": [
+      "Sort only by start day and take the first available event",
+      "Keep expired events eligible"
+    ],
+    "source_fidelity_notes": [
+      "The diagram and long schedule transcript were removed; inclusive attendance days and one-event-per-day semantics remain."
+    ]
+  }
+}

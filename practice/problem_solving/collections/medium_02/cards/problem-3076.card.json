@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3076",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3076",
+    "title": "Shortest Uncommon Substring in an Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/shortest-uncommon-substring-in-an-array/",
+    "local_path": "problems/medium/3076.md",
+    "content_sha256": "98d8d690f29ceb0cbe60dc1a203d55161ac4c956d8cd8620ca2f3be1702317d7"
+  },
+  "teaching": {
+    "hint": "Should a substring occurring several times inside one input string count as appearing in several strings?",
+    "solution_outline": {
+      "decisive_insight": "Uncommon means present in exactly one array entry, not occurring exactly once. At length at most 20, all substrings can be enumerated and counted by distinct source string.",
+      "approach": "For each input string, enumerate its substrings into a local set, then increment a global per-substring count once for that string. For each input, inspect candidate substrings by increasing length and choose the smallest lexical candidate whose global count is one.",
+      "state_and_invariant": "The global count for a substring equals the number of distinct array entries containing it. A candidate from entry i is uncommon exactly when that count is one.",
+      "correctness": "Local deduplication makes every containing entry contribute once. Therefore the global count characterizes absence from all other entries, including duplicate input strings. Examining lengths in ascending order guarantees minimum length, and comparing every candidate at that length guarantees the lexical tie rule.",
+      "complexity": "O(n L^3) expected time and O(n L^3) stored characters for n strings of maximum length L at most 20, counting substring construction and hashing.",
+      "pitfall": "Counting occurrences instead of distinct containing strings can reject a substring that repeats within one entry but appears nowhere else."
+    },
+    "accepted_alternatives": [],
+    "tags": ["substring-enumeration", "frequency-counting", "lexicographic-order"],
+    "prerequisites": ["contiguous-substring", "set-deduplication"],
+    "common_wrong_turns": ["Treat repeated occurrences in one entry as common", "Apply lexicographic order before shortest length", "Stop at the first qualifying substring of one length"],
+    "source_fidelity_notes": ["Examples were omitted; other-entry exclusion, shortest-first then lexical tie rule, empty result, duplicate-entry behavior, and bounds were retained."]
+  }
+}

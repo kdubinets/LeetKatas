@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2929",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2929",
+    "title": "Distribute Candies Among Children II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/distribute-candies-among-children-ii/",
+    "local_path": "problems/medium/2929.md",
+    "content_sha256": "da5da44ba6ac90e833f5daa6a61eaafd2932083115678c1fe4e407ac9b5d689b"
+  },
+  "teaching": {
+    "hint": "How can unrestricted allocations be counted, then corrected for children who exceed the cap?",
+    "solution_outline": {
+      "decisive_insight": "Unrestricted three-part nonnegative compositions have a closed count; upper-bound violations are counted by shifting `limit+1` candies from each violating child.",
+      "approach": "Count all unrestricted triples, subtract the three single-child violation counts, add the three pairwise intersections, and subtract the triple intersection. Treat a negative remaining total as zero ways.",
+      "state_and_invariant": "Each allocation with exactly `r` violating children receives total coefficient `Σ(-1)^j C(r,j)`, which is one if `r=0` and zero otherwise.",
+      "correctness": "Shifting mandatory excess creates a bijection from each chosen violation intersection to unrestricted triples of a smaller total. Inclusion-exclusion therefore counts exactly valid allocations.",
+      "complexity": "`O(1)` arithmetic time and space with 64-bit counts.",
+      "pitfall": "Counting unrestricted distributions without correcting overlaps between violating children overcounts invalid triples."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "bounded-compositions",
+      "inclusion-exclusion"
+    ],
+    "prerequisites": [
+      "stars-and-bars",
+      "counting"
+    ],
+    "common_wrong_turns": [
+      "Enumerate all triples",
+      "Subtract single-child violations without restoring intersections"
+    ],
+    "source_fidelity_notes": [
+      "Clarifies children are distinct and zero allocations are allowed, as shown by source examples."
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3627",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3627",
+    "title": "Maximum Median Sum of Subsequences of Size 3",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-median-sum-of-subsequences-of-size-3/",
+    "local_path": "problems/medium/3627.md",
+    "content_sha256": "40a489432fcd1f6f92f762d3be82d4b427fa7bc371cb3f6c37668ede5570583c"
+  },
+  "teaching": {
+    "hint": "What other values must accompany each of the largest medians you hope to obtain?",
+    "solution_outline": {
+      "decisive_insight": "The jth largest median needs 2j distinct input elements at least as large; its value is therefore at most the 2jth largest input.",
+      "approach": "Sort the values. Reserve the bottom third as group minima; pair the remaining values from largest downward, using the smaller of each pair as a median. Sum those medians.",
+      "state_and_invariant": "Each chosen median has its own larger partner and one unused bottom-third minimum; every group consumes three distinct elements.",
+      "correctness": "For any grouping, the top j medians and their group maxima occupy 2j distinct values, proving the jth median cannot exceed the 2jth largest input. The proposed groups use those exact even-ranked descending values as medians, with minima no larger than them. They attain every bound simultaneously, so their sum is globally maximal.",
+      "complexity": "O(n log n) time and O(log n) auxiliary sorting stack space for an in-place comparison sort.",
+      "pitfall": "Taking the largest n/3 elements as medians ignores the distinct larger partner each median needs."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "greedy",
+      "order-statistics",
+      "attaining-bound"
+    ],
+    "prerequisites": [
+      "sorting",
+      "rank-bound",
+      "counting-resources"
+    ],
+    "common_wrong_turns": [
+      "Taking the largest n/3 elements as medians ignores the distinct larger partner each median needs."
+    ],
+    "source_fidelity_notes": [
+      "Preserved arbitrary element selection, multiplicities, complete removal into triples, and wide total; omitted the grouping examples."
+    ]
+  }
+}

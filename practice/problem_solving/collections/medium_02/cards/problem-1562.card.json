@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-1562",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1562",
+    "title": "Find Latest Group of Size M",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-latest-group-of-size-m/",
+    "local_path": "problems/medium/1562.md",
+    "content_sha256": "2fa6e08472b9b89f6dd1a737fd8a70061ecfb2fd4a59f990f0bbb91e73458e99"
+  },
+  "teaching": {
+    "hint": "When one zero flips, which existing groups can change, and what information at their boundaries would describe them?",
+    "solution_outline": {
+      "decisive_insight": "A newly activated position can only merge the run on its left with the run on its right. Each run's length stored at both ends gives those neighboring sizes immediately.",
+      "approach": "Process activations in step order. Read the lengths of adjacent runs, merge them with the new position, and write the new run length at its two endpoints. If either old run had size m, the previous step is a candidate for the latest answer. Handle m=n by the final step.",
+      "state_and_invariant": "For every current maximal run, its two boundary positions store its full length; zero positions outside runs contribute zero. The recorded answer is the latest step at which a size-m run is known to have existed before being merged away.",
+      "correctness": "Only the two runs adjacent to the new position can disappear, and the boundary lengths identify them exactly. Their merger's endpoints receive its exact combined length, restoring the invariant. Every size-m run with m<n eventually disappears before the all-ones final state, so recording the preceding step of each disappearance finds the latest one. For m=n, the final state itself is the unique qualifying step.",
+      "complexity": "O(n) time and O(n) auxiliary space for n activations, each with constant-time boundary updates.",
+      "pitfall": "Checking only the newly merged run can miss the last step when an existing size-m run disappears because a neighboring bit turns on."
+    },
+    "accepted_alternatives": ["Maintain counts of how many runs have each length, updating counts for the two removed neighbor runs and their merger; this also takes O(n) time and space."],
+    "tags": ["interval-merging", "boundary-length", "online-processing"],
+    "prerequisites": ["contiguous-run", "array-indexing"],
+    "common_wrong_turns": ["Treat any length-m substring inside a longer run as a group", "Forget that the previous step was the final step of a disappearing run", "Assume a qualifying run must survive to the final state"],
+    "source_fidelity_notes": ["Timeline examples were omitted; 1-based activation steps, permutation guarantee, maximal exact-length runs, no-solution result, and bounds were retained."]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2217",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2217",
+    "title": "Find Palindrome With Fixed Length",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-palindrome-with-fixed-length/",
+    "local_path": "problems/medium/2217.md",
+    "content_sha256": "952de6257e9f21fd8c101826f56c62f9fa29bfea3f41a228d2e9816ffc0b1cfc"
+  },
+  "teaching": {
+    "hint": "How many initial digits determine all remaining digits of a fixed-length palindrome?",
+    "solution_outline": {
+      "decisive_insight": "The leading half (including the middle digit for odd lengths) uniquely determines a palindrome and preserves numerical order.",
+      "approach": "Count valid leading halves of the needed digit length. For each query in range, take the corresponding half in increasing numerical order and reflect it, omitting the middle digit from the reflected part when length is odd.",
+      "state_and_invariant": "Each valid half is a nonzero-leading fixed-width number. Mapping halves to full palindromes is one-to-one and order preserving.",
+      "correctness": "Every allowed palindrome has exactly one valid half, and reflecting every valid half yields exactly one allowed palindrome. Since the half occupies the leading digits, the kth half maps to the kth palindrome.",
+      "complexity": "O(Q×L) time and O(L) scratch space per query, plus O(Q) output, where L≤15.",
+      "pitfall": "Mirroring the middle digit twice produces the wrong length for odd-length palindromes."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "rank-to-object",
+      "palindrome-construction"
+    ],
+    "prerequisites": [
+      "decimal-place-value",
+      "ordered-bijection"
+    ],
+    "common_wrong_turns": [
+      "Generate all palindromes for huge query ranks",
+      "Allow leading zero halves",
+      "Duplicate the middle digit for odd length"
+    ],
+    "source_fidelity_notes": [
+      "Kept output -1, 1-indexed rank, length-15 numeric range, and unsorted independent queries."
+    ]
+  }
+}

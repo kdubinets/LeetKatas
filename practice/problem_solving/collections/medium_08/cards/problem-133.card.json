@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-133",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "133",
+    "title": "Clone Graph",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/clone-graph/",
+    "local_path": "problems/medium/133.md",
+    "content_sha256": "d0682b35b9f081e52c049765399dfd68f6c93b244523494e6e4ed725cb48e4a2"
+  },
+  "teaching": {
+    "hint": "If two neighbor paths lead to the same original node, how should their copied references agree?",
+    "solution_outline": {
+      "decisive_insight": "An original-to-copy identity map supplies both cycle detection and exactly one shared clone per original node.",
+      "approach": "Traverse from the supplied node. Create and register a new node before exploring its neighbors. For every original neighbor, create its registered copy if missing, then add that mapped reference to the current copy.",
+      "state_and_invariant": "Every discovered original has exactly one fresh copy. A processed original has its complete adjacency list reproduced using mapped copies.",
+      "correctness": "Registration precedes traversal, so revisiting a node reuses its existing copy and cannot recurse indefinitely or create duplicates. Each original is processed once, and its neighbor entries are recreated with exactly their mapped endpoints. Connected traversal reaches the whole supplied graph, yielding one identity-preserving graph copy with no original references.",
+      "complexity": "O(V+E) time and O(V) auxiliary space, excluding the required O(V+E) copied graph.",
+      "pitfall": "Registering only after exploring neighbors loops on cycles or creates conflicting copies of a shared node."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "graph-copy",
+      "identity-map",
+      "graph-traversal"
+    ],
+    "prerequisites": [
+      "visited-state",
+      "reference-identity"
+    ],
+    "common_wrong_turns": [
+      "Registering only after exploring neighbors loops on cycles or creates conflicting copies of a shared node."
+    ],
+    "source_fidelity_notes": [
+      "Replaced platform adjacency-list boilerplate with explicit fresh-node correspondence; preserved null input, connectedness, and graph simplicity."
+    ]
+  }
+}

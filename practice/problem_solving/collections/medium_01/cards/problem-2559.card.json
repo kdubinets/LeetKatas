@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2559",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2559",
+    "title": "Count Vowel Strings in Ranges",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/count-vowel-strings-in-ranges/",
+    "local_path": "problems/medium/2559.md",
+    "content_sha256": "8a943516ff994e8257918e21e4e2433ec356e1943d031e040ab4dc9fd3221fa3"
+  },
+  "teaching": {
+    "hint": "Can the contribution of each word be decided once, before considering any query?",
+    "solution_outline": {
+      "decisive_insight": "Whether a word qualifies is independent of every query, so a cumulative count can answer static range requests by subtraction.",
+      "approach": "Mark each word as qualifying or not, build counts for prefixes ending just before every index, then answer inclusive [left,right] by subtracting the prefix before left from the prefix through right.",
+      "state_and_invariant": "The prefix count at position i equals the number of qualifying words at indices below i. Each query difference therefore includes exactly its requested indices.",
+      "correctness": "The one-time predicate identifies precisely words with both ends in the vowel set, including a one-letter vowel word. Subtracting the count before left from the count before right+1 cancels all earlier words and leaves every qualifying word in the inclusive interval once.",
+      "complexity": "O(n + q) time and O(n) auxiliary space for n words and q queries; word-end checks take constant time because words are nonempty.",
+      "pitfall": "An inclusive right endpoint requires the count through right, while a left endpoint of zero must work without accessing a negative prefix index."
+    },
+    "accepted_alternatives": ["Store the sorted indices of qualifying words and binary-search both query boundaries; this is correct in O(n + q log n) time."],
+    "tags": ["prefix-sum", "range-query", "string-predicate"],
+    "prerequisites": ["array-indexing", "inclusive-range"],
+    "common_wrong_turns": ["Scan every queried interval separately", "Count words with a vowel at only one end", "Exclude one-letter vowel words"],
+    "source_fidelity_notes": ["Examples were omitted; the vowel set, both-end test, inclusive query bounds, output order, word/query limits, and one-letter behavior were retained."]
+  }
+}

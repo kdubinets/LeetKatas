@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-3468",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3468",
+    "title": "Find the Number of Copy Arrays",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/find-the-number-of-copy-arrays/",
+    "local_path": "problems/medium/3468.md",
+    "content_sha256": "7dba92132bc07ba8ad42200d6661cdd764b8e63909060d8df57a0126d723fcf6"
+  },
+  "teaching": {
+    "hint": "How many independent choices remain once all consecutive differences have been fixed?",
+    "solution_outline": {
+      "decisive_insight": "Equal consecutive differences force copy-original to be one constant shift; every bound restricts that same integer.",
+      "approach": "Translate each index’s value bounds into an interval for the common shift. Intersect all those intervals, then count their inclusive integer points, returning zero for an empty intersection.",
+      "state_and_invariant": "The running lower and upper limits describe exactly the shifts satisfying all processed indices.",
+      "correctness": "Subtracting the difference equations makes copy[i]-original[i] equal to its predecessor, hence constant. Conversely every constant shift preserves all differences. Its per-index bounds are exactly the translated intervals, so the common shifts in their intersection are in bijection with valid arrays.",
+      "complexity": "`O(n)` time and `O(1)` auxiliary space.",
+      "pitfall": "An empty intersection gives zero, not a negative inclusive interval length."
+    },
+    "tags": [
+      "interval-intersection",
+      "affine-invariant",
+      "counting"
+    ],
+    "prerequisites": [
+      "integer-intervals",
+      "telescoping"
+    ],
+    "source_fidelity_notes": [
+      "Retained equality of every adjacent difference, per-index inclusive bounds, and integer-array counting; omitted enumerated examples."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "An empty intersection gives zero, not a negative inclusive interval length."
+    ]
+  }
+}

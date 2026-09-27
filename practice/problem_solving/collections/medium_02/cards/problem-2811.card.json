@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-2811",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2811",
+    "title": "Check if it is Possible to Split Array",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/check-if-it-is-possible-to-split-array/",
+    "local_path": "problems/medium/2811.md",
+    "content_sha256": "4cd7c6e20c3f4b86ee8fd792579e8c80c093b23106a1b3c860bcb3f7e88c0617"
+  },
+  "teaching": {
+    "hint": "In a successful sequence of splits, consider the last length-two piece before it becomes two singletons.",
+    "solution_outline": {
+      "decisive_insight": "For arrays longer than two, complete splitting is possible exactly when some originally adjacent pair sums to at least m.",
+      "approach": "Return true immediately for length one or two. Otherwise scan adjacent pairs and return true if any pair reaches m; return false if none does.",
+      "state_and_invariant": "A qualifying adjacent pair can be kept together while positive-valued elements are peeled from the ends as good singletons; the remaining piece stays good because it contains that pair.",
+      "correctness": "Sufficiency follows by repeatedly peeling outer singletons until only the qualifying pair remains, then splitting it. Necessity follows from any successful split tree: a deepest internal node is an original adjacent pair and, when n>2, was produced as a non-root good piece, so its sum must reach m. Lengths at most two need no qualifying pair because every required result is a singleton.",
+      "complexity": "O(n) time and O(1) auxiliary space for n elements.",
+      "pitfall": "A large total sum does not help if no adjacent pair can serve as the final good length-two piece."
+    },
+    "accepted_alternatives": [],
+    "tags": ["greedy", "structural-proof", "array-partitioning"],
+    "prerequisites": ["contiguous-subarray", "positive-sum-monotonicity"],
+    "common_wrong_turns": ["Require the original array itself to be good", "Search all possible split trees", "Check arbitrary nonadjacent element pairs"],
+    "source_fidelity_notes": ["Long split sequences were omitted; contiguity, both-piece goodness, singleton exception, positive values, and bounds were retained."]
+  }
+}

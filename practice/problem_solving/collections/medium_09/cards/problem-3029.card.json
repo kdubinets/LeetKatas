@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-3029",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3029",
+    "title": "Minimum Time to Revert Word to Initial State I",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-time-to-revert-word-to-initial-state-i/",
+    "local_path": "problems/medium/3029.md",
+    "content_sha256": "9d5ac6cebc2a6f0b0bde48242258b8f85b161a806ac0d4fc65869052c6b03a1c"
+  },
+  "teaching": {
+    "hint": "Which characters after several operations are still forced by the original word?",
+    "solution_outline": {
+      "decisive_insight": "Before all original characters are removed, the remaining original suffix is forced at the front; all later characters can be chosen freely.",
+      "approach": "Test positive times t with t*k below the word length. Restoration is possible exactly when the surviving suffix equals the original prefix of the same length. Return the first passing time; otherwise use ceil(n/k), when no original character remains.",
+      "state_and_invariant": "At time t with t*k<n, the front n-t*k characters are exactly the original suffix starting at t*k. The remaining t*k positions are freely supplied append choices.",
+      "correctness": "The forced suffix must match the desired original prefix, making the test necessary. When it does, append the required remaining suffix in k-character blocks, making restoration achievable. Once all original characters have left, choose all surviving appended characters to form the original. Testing times in order gives the least positive feasible one.",
+      "complexity": "`O(n^2/k)` time for direct comparisons and `O(1)` auxiliary space.",
+      "pitfall": "The operation permits new characters, so treating it as a cyclic rotation imposes a constraint absent from the task."
+    },
+    "tags": [
+      "string-borders",
+      "forced-survivor",
+      "free-completion"
+    ],
+    "prerequisites": [
+      "string-comparison",
+      "prefix-suffix"
+    ],
+    "source_fidelity_notes": [
+      "Retained freely chosen append characters, mandatory two-part operations, positive-time objective, and small limits.",
+      "Omitted the canonical unfinished KMP alternative; used its complete direct suffix/prefix characterization."
+    ],
+    "accepted_alternatives": [],
+    "common_wrong_turns": [
+      "The operation permits new characters, so treating it as a cyclic rotation imposes a constraint absent from the task."
+    ]
+  }
+}

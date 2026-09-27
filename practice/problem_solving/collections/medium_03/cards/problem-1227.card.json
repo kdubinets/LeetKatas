@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-1227",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1227",
+    "title": "Airplane Seat Assignment Probability",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/airplane-seat-assignment-probability/",
+    "local_path": "problems/medium/1227.md",
+    "content_sha256": "87dc34f6843afea9b6e4ca6258e80335a1b24ec289d55350db5dd654a8d1880e"
+  },
+  "teaching": {
+    "hint": "Which two seats make the outcome final as soon as a displaced passenger chooses one?",
+    "solution_outline": {
+      "decisive_insight": "Before either endpoint seat is selected, both passenger 1’s and passenger n’s seats remain equally available to every random chooser.",
+      "approach": "Return 1 when n=1, otherwise one half. Explain the process as repeated random choices until either seat 1 or seat n is selected.",
+      "state_and_invariant": "While unresolved, both decisive seats are in the same set of available seats and have equal selection probability at each random step.",
+      "correctness": "Choosing seat 1 ends displacement without harming passenger n; choosing seat n prevents their success. The two equally likely terminating events partition outcomes, so success probability is one half.",
+      "complexity": "O(1) time and O(1) space.",
+      "pitfall": "Assuming the first passenger must directly choose seat 1 or seat n ignores displaced intermediate passengers."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "probability",
+      "symmetry",
+      "stopping-event"
+    ],
+    "prerequisites": [
+      "conditional-probability",
+      "uniform-choice"
+    ],
+    "common_wrong_turns": [
+      "Return one half for n=1",
+      "Treat an intermediate seat choice as a final failure"
+    ],
+    "source_fidelity_notes": [
+      "Made uniform random choice explicit and retained the one-passenger boundary case."
+    ]
+  }
+}

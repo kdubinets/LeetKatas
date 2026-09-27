@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-3240",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3240",
+    "title": "Minimum Number of Flips to Make Binary Grid Palindromic II",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-number-of-flips-to-make-binary-grid-palindromic-ii/",
+    "local_path": "problems/medium/3240.md",
+    "content_sha256": "6767df0f77ef3a91ae2028e3f541cf2b6caedd68c9a7c49c3ebfd285951dee29"
+  },
+  "teaching": {
+    "hint": "What does requiring both horizontal and vertical symmetry force cells to share?",
+    "solution_outline": {
+      "decisive_insight": "Horizontal and vertical reflections partition cells into constant orbits of size four, two, or one; only the smaller orbits affect the one-count modulo four.",
+      "approach": "Minimize each four-cell orbit independently. For two-cell orbits, count already-11 and split pairs, use split pairs to choose parity freely when possible, otherwise pay to switch one pair. Force an odd-by-odd center to zero.",
+      "state_and_invariant": "Each orbit is made constant. Four-cell orbits contribute 0 modulo four; pair orbits contribute twice the number set to one; a center contributes its own bit.",
+      "correctness": "Local palindrome constraints are exactly equality inside each reflection orbit. A center of one can never satisfy divisibility. Pair parity must be even; split pairs can choose either final value for equal cost, whereas an odd count of 11 pairs with no split pair requires two extra flips. These are the only global interactions.",
+      "complexity": "O(mn) time and O(1) auxiliary space.",
+      "pitfall": "Optimizing every symmetry group independently can leave exactly two ones modulo four."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "grid-symmetry",
+      "modular-parity",
+      "orbit-decomposition"
+    ],
+    "prerequisites": [
+      "palindrome",
+      "modular-arithmetic"
+    ],
+    "common_wrong_turns": [
+      "Check only rows or only columns",
+      "Forget center cell when both dimensions are odd",
+      "Ignore the global divisibility rule"
+    ],
+    "source_fidelity_notes": [
+      "Replaced image-only examples with a text-defined one-column edge case; kept simultaneous row/column symmetry."
+    ]
+  }
+}

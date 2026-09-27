@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2944",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2944",
+    "title": "Minimum Number of Coins for Fruits",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/minimum-number-of-coins-for-fruits/",
+    "local_path": "problems/medium/2944.md",
+    "content_sha256": "7970fb5807a5fbf25a5f3ce37a4b3e1cd9eba614aff9d06a1ec51739608b652d"
+  },
+  "teaching": {
+    "hint": "Can buying a currently free fruit ever make later fruits cheaper to obtain?",
+    "solution_outline": {
+      "decisive_insight": "The identity of the next purchased fruit captures all relevant future coverage; purchases can occur even inside an earlier free window.",
+      "approach": "Define a suffix cost for purchasing fruit i next. After paying at i, the next purchased index can be any later index through the first one outside i’s reward range; take the least such suffix cost.",
+      "state_and_invariant": "The state is the minimum cost from the next purchased fruit onward. Every intervening fruit is covered for free by the most recent purchase.",
+      "correctness": "Any valid purchase schedule has consecutive paid indices separated by no more than the prior reward reach. Conversely every transition within that reach covers the intervening fruits. The recurrence considers exactly all valid schedules.",
+      "complexity": "O(n²) time and O(n) space, suitable for n≤1,000.",
+      "pitfall": "Automatically taking every eligible fruit free can discard a cheap purchase that extends coverage."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "purchase-coverage",
+      "sequence-dp"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "index-translation"
+    ],
+    "common_wrong_turns": [
+      "Never buy a fruit that is currently free",
+      "Misread a one-based fruit j as freeing only j−1 later fruits"
+    ],
+    "source_fidelity_notes": [
+      "Retained ability to buy an eligible-free fruit and a compact example; removed verbose source example 3 with malformed ordinal text."
+    ]
+  }
+}

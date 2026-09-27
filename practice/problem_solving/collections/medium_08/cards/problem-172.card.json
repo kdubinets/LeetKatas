@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-172",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "172",
+    "title": "Factorial Trailing Zeroes",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/factorial-trailing-zeroes/",
+    "local_path": "problems/medium/172.md",
+    "content_sha256": "7baf76a4814db74ad187b1405dae26982b11d90b5677bb8e571a2d0afa2740e0"
+  },
+  "teaching": {
+    "hint": "Which prime factors combine to create a trailing decimal zero, and which one is scarcer?",
+    "solution_outline": {
+      "decisive_insight": "A trailing zero needs one factor two and one factor five; in a factorial, five is the limiting factor and its multiplicities are counted by powers of five.",
+      "approach": "Add floor(n/5), floor(n/25), floor(n/125), and so on until the powers exceed n, without forming the factorial.",
+      "state_and_invariant": "After processing power 5^j, the sum counts the first j layers of each integer’s factor-five multiplicity.",
+      "correctness": "Each integer containing exactly e factors of five appears in precisely the first e divisibility layers. Summing those layers counts every factor five once. For each power, multiples of the corresponding power of two are at least as numerous, so factors two cannot be limiting. Pairing every five with a two gives exactly the returned zero count.",
+      "complexity": "O(log n) time and O(1) auxiliary space.",
+      "pitfall": "Multiples of 25 and higher powers contribute additional fives; counting only multiples of five undercounts."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prime-valuation",
+      "factorial",
+      "counting-layers"
+    ],
+    "prerequisites": [
+      "prime-factors",
+      "divisibility"
+    ],
+    "common_wrong_turns": [
+      "Multiples of 25 and higher powers contribute additional fives; counting only multiples of five undercounts."
+    ],
+    "source_fidelity_notes": [
+      "Retained n=0 and the explicit logarithmic follow-up; defined 0! without introducing a solution hint."
+    ]
+  }
+}

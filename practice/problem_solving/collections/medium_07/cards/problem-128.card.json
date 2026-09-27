@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-128",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "128",
+    "title": "Longest Consecutive Sequence",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/longest-consecutive-sequence/",
+    "local_path": "problems/medium/128.md",
+    "content_sha256": "0e75ad296ad4dad31911fafe31f29a37f6800266a3552553df451384cb1e96a5"
+  },
+  "teaching": {
+    "hint": "How can you recognize the one place from which a full consecutive sequence should be counted?",
+    "solution_outline": {
+      "decisive_insight": "Every maximal value run has exactly one member whose predecessor is absent. Expanding only from these canonical starts avoids repeated scans.",
+      "approach": "Put distinct values in a hash set. For each member without a predecessor, probe successive values to measure its whole run and update the maximum. Iterate distinct members rather than repeated input copies.",
+      "state_and_invariant": "Each expanded run begins at its unique smallest member, and every distinct value belongs to exactly one such run.",
+      "correctness": "The predecessor absence characterizes maximal run starts. Expansion visits every member until the first missing successor and therefore measures that run exactly. Each run is visited once, and taking their maximum returns the longest. Hashing removes duplicates without changing the set of attainable consecutive values.",
+      "complexity": "O(n) expected time and O(n) space: each distinct member contributes to one forward scan, using expected constant-time hash operations.",
+      "pitfall": "Starting a forward scan from every member, or from repeated copies of a run head, can make the work quadratic."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "hashing",
+      "amortized-analysis",
+      "canonical-start"
+    ],
+    "prerequisites": [
+      "hash-membership"
+    ],
+    "common_wrong_turns": [
+      "Starting a forward scan from every member, or from repeated copies of a run head, can make the work quadratic."
+    ],
+    "source_fidelity_notes": [
+      "Clarified value sequence versus contiguous input range, duplicate handling, empty input, and explicit linear-time requirement."
+    ]
+  }
+}

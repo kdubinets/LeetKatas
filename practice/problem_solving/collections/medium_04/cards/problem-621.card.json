@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-621",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "621",
+    "title": "Task Scheduler",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/task-scheduler/",
+    "local_path": "problems/medium/621.md",
+    "content_sha256": "9e02117483f52e3feab2481ed6cb5ae195327c4597f3fa83a97bac9dc040e670"
+  },
+  "teaching": {
+    "hint": "Which task frequencies can force idle gaps even when other tasks are freely reordered?",
+    "solution_outline": {
+      "decisive_insight": "The highest frequency dictates the number of cooldown-sized frames; ties occupy distinct positions in the final frame.",
+      "approach": "Count tasks per label. Let f be the maximum frequency and t the number of labels with that frequency. Compare the task count with the frame bound `(f-1)(n+1)+t` and take the larger.",
+      "state_and_invariant": "The frame bound accounts for f repetitions of every most frequent label while reserving at least n intervening slots between equal labels.",
+      "correctness": "The task count N and frame expression (f-1)(n+1)+t are lower bounds. Arrange the f highest-frequency occurrences in f layers separated by n slots, placing tied labels alongside them. Other labels fill the slots without violating their own spacing. When they outnumber vacant slots, the layers expand so all N tasks run without idle; otherwise the frame expression is attained.",
+      "complexity": "O(N) time and O(1) auxiliary space because the alphabet has 26 labels.",
+      "pitfall": "Using only one most frequent label in the final frame undercounts when several labels tie at frequency f."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "cooldown-scheduling",
+      "frequency-bound"
+    ],
+    "prerequisites": [
+      "counting",
+      "lower-bound-construction"
+    ],
+    "common_wrong_turns": [
+      "Always insert n idle slots between same-label tasks",
+      "Ignore ties for maximum frequency"
+    ],
+    "source_fidelity_notes": [
+      "The intervening-interval meaning, optional idle, reorder permission, and n=0 boundary are explicit."
+    ]
+  }
+}

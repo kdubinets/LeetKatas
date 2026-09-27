@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "problem-2787",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2787",
+    "title": "Ways to Express an Integer as Sum of Powers",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/ways-to-express-an-integer-as-sum-of-powers/",
+    "local_path": "problems/medium/2787.md",
+    "content_sha256": "8a6bdc6da55b3b042a8def88ee01ada0fb322ebca12ce2ce0d2029a812193162"
+  },
+  "teaching": {
+    "hint": "For each possible base, how should the count change without using that base more than once?",
+    "solution_outline": {
+      "decisive_insight": "Only powers no larger than n matter, and counting subsets of these powers gives the desired set count.",
+      "approach": "Generate eligible powers. Keep the number of ways to achieve each sum, and incorporate each power once by updating sums from high to low.",
+      "state_and_invariant": "After a power is processed, each count equals the number of subsets of powers seen so far with that sum; downward updates read only pre-current-power counts.",
+      "correctness": "Every valid set either excludes or includes the new base, producing the two terms of the update. The descending order counts each base at most once and does not distinguish set order.",
+      "complexity": "O(n floor(n^(1/x))) time and O(n) auxiliary space, with modular additions.",
+      "pitfall": "Updating sums upward would allow one base to be reused repeatedly."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "counting-knapsack",
+      "distinct-powers"
+    ],
+    "prerequisites": [
+      "dynamic-programming",
+      "subset-sum"
+    ],
+    "common_wrong_turns": [
+      "Count permutations separately",
+      "Allow repeated bases by updating sums upward"
+    ],
+    "source_fidelity_notes": [
+      "The set semantics, distinctness, positivity, and modulus are explicit."
+    ]
+  }
+}

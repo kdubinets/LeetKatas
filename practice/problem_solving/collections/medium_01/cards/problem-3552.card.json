@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "problem-3552",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3552",
+    "title": "Grid Teleportation Traversal",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/grid-teleportation-traversal/",
+    "local_path": "problems/medium/3552.md",
+    "content_sha256": "2894e09d7adf11d4e4803023a656a31e9d0c4222e67e9d8e74bd30f0b010bad2"
+  },
+  "teaching": {
+    "hint": "What does reaching one portal tell you about the cost of reaching the other portals with its letter?",
+    "solution_outline": {
+      "decisive_insight": "Walking costs one and teleporting costs zero. A first minimum-distance arrival at a letter can make every portal of that letter available at the same distance; no later use can improve them.",
+      "approach": "Group cells by letter and explore cells in nondecreasing move count, placing free teleports ahead of walking moves. Expand a letter's group only on its first settled encounter.",
+      "state_and_invariant": "Store the best distance to each cell and which letters have been expanded. The next settled cell has minimum remaining distance; after a letter is expanded, every cell bearing it has been offered the smallest possible distance through that letter.",
+      "correctness": "The distance order settles every cell at its minimum cost because each transition costs zero or one. Expanding the entire letter group at its first settled cell cannot lose a shorter route: any later arrival at that letter is no cheaper, and the first portal could already reach every destination in the group. Thus a minimum route satisfying the one-use rule is represented, including teleporting from the start.",
+      "complexity": "O(mn) time and O(mn) space: each grid cell and walking edge is considered a constant number of times, and each letter group is expanded once.",
+      "pitfall": "Ordinary FIFO exploration with a distance fixed on first discovery can commit to a walking route before a free teleport offers a shorter one."
+    },
+    "accepted_alternatives": ["Dijkstra's algorithm over zero-cost portal edges and unit-cost walking edges is correct but adds a logarithmic factor."],
+    "tags": ["shortest-path", "zero-one-bfs", "grid-graph"],
+    "prerequisites": ["graph-traversal", "shortest-path-distance"],
+    "common_wrong_turns": ["Track all used-letter subsets as path state", "Scan all portals of a letter on every visit", "Ignore a portal at the starting cell"],
+    "source_fidelity_notes": ["The image-only example was omitted; the start-cell teleport rule was stated explicitly. Orthogonal movement, per-journey letter use, obstacles, dimensions, and unreachable result were retained."]
+  }
+}

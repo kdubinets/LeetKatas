@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "problem-3148",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "3148",
+    "title": "Maximum Difference Score in a Grid",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-difference-score-in-a-grid/",
+    "local_path": "problems/medium/3148.md",
+    "content_sha256": "634c3f350093ce496f9ce1fb8c9621bc7ec8a8115bb30d4ad8fc9066376fc925"
+  },
+  "teaching": {
+    "hint": "What happens to the intermediate cell values when several move scores are added?",
+    "solution_outline": {
+      "decisive_insight": "Path differences cancel to endpoint minus start. Reachable starts form the endpoint prefix rectangle, excluding the endpoint itself.",
+      "approach": "Sweep endpoints in row order. Maintain prefix rectangle minima; the minimum from the rectangle above or left is the best legal predecessor. Update the score before incorporating the current cell into the prefix minimum.",
+      "state_and_invariant": "Before incorporating a cell, the above and left minima jointly cover exactly all coordinate-wise earlier cells distinct from it.",
+      "correctness": "Every nonempty monotone route has total equal to its last value minus its first. Conversely each distinct coordinate-wise predecessor reaches the endpoint by downward and rightward moves. For a fixed endpoint, selecting the smallest such start maximizes its score; all endpoints are inspected, so the maximum is global.",
+      "complexity": "O(mn) time and O(n) space with a rolling row of prefix minima.",
+      "pitfall": "Including the current cell as its own start admits an illegal zero-move score and loses negative optima."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prefix-extremum",
+      "telescoping",
+      "matrix"
+    ],
+    "prerequisites": [
+      "prefix-aggregation"
+    ],
+    "common_wrong_turns": [
+      "Including the current cell as its own start admits an illegal zero-move score and loses negative optima."
+    ],
+    "source_fidelity_notes": [
+      "Restated down/right moves using same-row or same-column coordinates; retained arbitrary endpoints, nonadjacent jumps, and at least one move. Omitted the incorrect sentinel-overflow claim."
+    ]
+  }
+}

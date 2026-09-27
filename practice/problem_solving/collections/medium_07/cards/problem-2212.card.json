@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "problem-2212",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2212",
+    "title": "Maximum Points in an Archery Competition",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/maximum-points-in-an-archery-competition/",
+    "local_path": "problems/medium/2212.md",
+    "content_sha256": "46407f49f3d6f27a4becce17ddb4f3b4062dab9a1733adf28203beeaf243df97"
+  },
+  "teaching": {
+    "hint": "How many arrows are useful in a section once you have decided whether to win it?",
+    "solution_outline": {
+      "decisive_insight": "A won section needs only Alice count plus one, while any additional arrows give no extra score; the decision is a small subset of wins.",
+      "approach": "Enumerate section subsets, sum their minimum winning costs and point values, and retain a highest-value subset whose cost fits. Assign its minimum arrows and place all leftover arrows in section zero.",
+      "state_and_invariant": "Each inspected subset has its exact minimal resource cost and attainable points; the current best has maximum value among feasible subsets inspected so far.",
+      "correctness": "Every allocation has a set of won positive sections and spends at least their minimum costs. Exhaustive subsets therefore bound its score. Conversely a feasible subset can be realized by minimum winning allocations and leftover arrows in section zero, which cannot change point value. The best feasible subset attains the upper bound.",
+      "complexity": "O(12 * 2^12) time and O(12) space, independent of arrow magnitude.",
+      "pitfall": "Using only the minimum winning allocation without placing leftover arrows violates the exact output budget."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "subset-enumeration",
+      "resource-allocation"
+    ],
+    "prerequisites": [
+      "subset-enumeration"
+    ],
+    "common_wrong_turns": [
+      "Using only the minimum winning allocation without placing leftover arrows violates the exact output budget."
+    ],
+    "source_fidelity_notes": [
+      "Removed scoring diagrams and Alice reward details irrelevant to Bob objective; retained strict win threshold, exact budget, and any optimal allocation."
+    ]
+  }
+}

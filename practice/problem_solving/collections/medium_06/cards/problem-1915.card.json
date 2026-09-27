@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "problem-1915",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "1915",
+    "title": "Number of Wonderful Substrings",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/number-of-wonderful-substrings/",
+    "local_path": "problems/medium/1915.md",
+    "content_sha256": "9567cd0acb1d22a6f46230509cdf85ea3109f5e12cfbb6e6237540a9a979616d"
+  },
+  "teaching": {
+    "hint": "For a substring, which information about each letter matters: its full count or only part of that count?",
+    "solution_outline": {
+      "decisive_insight": "Substring parity is the XOR difference of two prefix-parity masks; wonderful substrings correspond to equal masks or masks differing in one bit.",
+      "approach": "Scan the word, toggling one of ten parity bits. Before recording the current prefix, add frequencies of earlier prefixes with the same mask or each one-bit neighbor, then increment its frequency.",
+      "state_and_invariant": "The frequency table contains exactly earlier prefix masks. Their XOR with the current mask describes each substring ending now.",
+      "correctness": "A mask difference of zero has all even counts; one set bit has exactly one odd-count letter. Every earlier prefix makes one unique substring ending at the current position, and every wonderful one appears in one queried category.",
+      "complexity": "`O(10n)` time and `O(2^10)` auxiliary space.",
+      "pitfall": "The empty prefix must be counted before scanning so substrings starting at the first character are included."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "prefix-parity",
+      "substring-counting",
+      "bitmask"
+    ],
+    "prerequisites": [
+      "prefix-state",
+      "frequency-table"
+    ],
+    "common_wrong_turns": [
+      "Counting distinct substring texts instead of occurrences",
+      "Omitting the empty prefix",
+      "Using 32-bit result storage"
+    ],
+    "source_fidelity_notes": [
+      "Removed verbose examples; retained nonempty occurrence counting, ten-letter alphabet, and wide result."
+    ]
+  }
+}

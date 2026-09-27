@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "problem-2222",
+  "source": {
+    "provider": "leetcode",
+    "problem_id": "2222",
+    "title": "Number of Ways to Select Buildings",
+    "difficulty": "medium",
+    "url": "https://leetcode.com/problems/number-of-ways-to-select-buildings/",
+    "local_path": "problems/medium/2222.md",
+    "content_sha256": "44f66d741fb75720066da42994761316535910032ddf9d01fdbbc6e40b5bca46"
+  },
+  "teaching": {
+    "hint": "For a fixed middle building, how many eligible choices can lie before and after it?",
+    "solution_outline": {
+      "decisive_insight": "Every valid triple has a unique middle index, and its two outer types are the opposite of that middle type; left and right choices are independent.",
+      "approach": "Count zeros and ones overall and while scanning. At each middle index, multiply the number of opposite-type positions before it by those after it, then sum.",
+      "state_and_invariant": "The running prefix counts describe positions strictly before the current index; total counts minus the prefix and current position give the suffix counts.",
+      "correctness": "Each valid triple contributes to exactly its own middle index and one independent left/right choice. The product counts every such choice once, so the sum is exact.",
+      "complexity": "O(n) time and O(1) space; use wide arithmetic for up to roughly n³ triples.",
+      "pitfall": "Reading “consecutive” as adjacent street positions excludes valid skipped-index choices."
+    },
+    "accepted_alternatives": [],
+    "tags": [
+      "ordered-triple-counting",
+      "pivot-counting"
+    ],
+    "prerequisites": [
+      "prefix-count",
+      "combinatorial-product"
+    ],
+    "common_wrong_turns": [
+      "Require selected indices to be adjacent",
+      "Count only one of 010 and 101",
+      "Use 32-bit multiplication"
+    ],
+    "source_fidelity_notes": [
+      "Clarified selected-index consecutiveness and nonadjacent street positions without relying on boldface source markup."
+    ]
+  }
+}
