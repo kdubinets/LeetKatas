@@ -1,3 +1,4 @@
+# Level B C++ interview-implementation idiom practice.
 [practice]
 # database_path = "~/.local/share/leetkatas/practice.sqlite3"
 # log_path = "~/.local/state/nvim/leetkatas/practice.log"
@@ -5,12 +6,6 @@
 review_archive_ttl_days = 30
 # Due reviews are never limited. Each group has its own daily new-card limit;
 # collections not listed in a group are unlimited. Groups must not overlap.
-[[practice.new_problem_limits]]
-per_day = 5
-collections = [
-  "~/work/LeetKatas/practice/cpp/collections/core",
-]
-
 [[practice.new_problem_limits]]
 per_day = 2
 collections = [

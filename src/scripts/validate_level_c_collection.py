@@ -103,15 +103,25 @@ def read_json(path: Path, context: str) -> dict[str, Any]:
     return require_object(value, context)
 
 
-def validate_collection_metadata(collection: Path) -> str:
+def validate_collection_metadata(collection: Path) -> tuple[str, str | None, int | None]:
     document = read_json(collection / "collection.json", "collection metadata")
-    require_exact_keys(document, {"schema_version", "id"}, "collection metadata")
+    required = {"schema_version", "id"}
+    if "difficulty" in document or "max_cards" in document:
+        required.update({"difficulty", "max_cards"})
+    require_exact_keys(document, required, "collection metadata")
     if type(document["schema_version"]) is not int or document["schema_version"] != 1:
         raise CollectionValidationError("unsupported collection schema_version")
     identity = require_nonempty_string(document["id"], "collection id")
     if not COLLECTION_ID_PATTERN.fullmatch(identity):
         raise CollectionValidationError("collection id is not a stable global identifier")
-    return identity
+    difficulty = document.get("difficulty")
+    max_cards = document.get("max_cards")
+    if difficulty is not None:
+        if difficulty not in {"medium", "hard"}:
+            raise CollectionValidationError("collection difficulty must be medium or hard")
+        if type(max_cards) is not int or max_cards != 25:
+            raise CollectionValidationError("collection max_cards must be 25")
+    return identity, difficulty, max_cards
 
 
 def validate_order(collection: Path) -> list[str]:
@@ -205,7 +215,7 @@ def resolve_source(source_root: Path, local_path: str) -> Path:
     return resolved
 
 
-def validate_card(path: Path, expected_id: str, source_root: Path) -> str:
+def validate_card(path: Path, expected_id: str, source_root: Path) -> tuple[str, str]:
     document = read_json(path, "card record")
     require_exact_keys(document, CARD_KEYS, f"card {expected_id}")
     if type(document["schema_version"]) is not int or document["schema_version"] != 1:
@@ -263,7 +273,7 @@ def validate_card(path: Path, expected_id: str, source_root: Path) -> str:
             raise CollectionValidationError(
                 f"card {expected_id} teaching.{name} must be an array of nonempty strings"
             )
-    return source["title"]
+    return source["title"], source["difficulty"]
 
 
 def validate_collection(
@@ -278,14 +288,20 @@ def validate_collection(
         raise CollectionValidationError(
             f"missing collection specification: {collection / 'collection_spec.md'}"
         )
-    collection_id = validate_collection_metadata(collection)
+    collection_id, difficulty, max_cards = validate_collection_metadata(collection)
     problem_ids = validate_order(collection)
+    if max_cards is not None and len(problem_ids) > max_cards:
+        raise CollectionValidationError("collection exceeds max_cards")
     cards = validate_card_files(collection, problem_ids)
     root = Path(source_root).expanduser()
     if not root.is_dir():
         raise CollectionValidationError(f"source_root does not exist: {root}")
     for problem_id in problem_ids:
-        title = validate_card(cards / f"{problem_id}.card.json", problem_id, root)
+        title, card_difficulty = validate_card(cards / f"{problem_id}.card.json", problem_id, root)
+        if difficulty is not None and card_difficulty != difficulty:
+            raise CollectionValidationError(
+                f"card {problem_id} difficulty does not match collection difficulty"
+            )
         validate_brief(cards / f"{problem_id}.brief.md", title)
     return {
         "status": "ok",

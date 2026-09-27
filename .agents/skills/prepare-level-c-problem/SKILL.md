@@ -49,6 +49,7 @@ Read these files completely:
 LevelCProblemSolvingFluency.md
 LevelCPromptDesign.md
 src/scripts/prompts/level_c_problem_conversion.txt
+src/scripts/prompts/level_c_candidate_fit.txt
 <collection>/collection.json
 <collection>/collection_spec.md
 <collection>/problem_order.md
@@ -61,15 +62,36 @@ prerequisite, fidelity-note, and ordering conventions. Read only enough existing
 cards to establish those conventions; do not copy their problem-specific
 content.
 
+## Candidate fit gate
+
+Before converting a new source problem, apply
+`src/scripts/prompts/level_c_candidate_fit.txt` to the complete statement,
+canonical explanation, and a compact account of the target collection's
+existing cards and remaining capacity. Keep source readiness separate from
+educational fit. Record the evidence and decision in the preparation report,
+outside the published card schema.
+
+Stop conversion when the source is blocked or the fit decision is `reject`.
+An `introductory` decision requires a specific foundation or contrast role and
+intentional placement in the collection. Do not infer fit from LeetCode
+difficulty, require multiple algorithms, or invent a stronger insight to make
+a weak candidate appear suitable. Human review approves publication.
+
+In review/audit mode, apply the same gate to existing cards and report a weak
+fit separately from defects in their current text. Do not remove or rewrite a
+published card solely because the new rubric would classify it differently.
+
 ## Workflow
 
 1. Confirm the source statement and canonical text solution exist. Read both in
    full and independently check that the canonical approach satisfies the
-   statement, constraints, edge cases, and required complexity. Stop and report
-   a source-material issue when an accurate card cannot be grounded safely.
+   statement, constraints, edge cases, and required complexity. Apply the
+   candidate fit gate before drafting. Stop and report a source-material issue
+   or rejected fit when an accurate, worthwhile card cannot be grounded safely.
 2. Extract a private fidelity checklist before drafting: input/output semantics,
    distinctness and ordering rules, mutation or reuse rules, numeric bounds,
-   approach-defining constraints, viable complexities, and material edge cases.
+   approach-defining constraints, viable complexities, material edge cases, and
+   any meaning conveyed only by source diagrams or examples.
 3. Apply `src/scripts/prompts/level_c_problem_conversion.txt`. Keep the brief
    language-neutral and learner-visible; keep the hint, outline, provenance,
    and teaching metadata private.
@@ -85,16 +107,28 @@ content.
    Prefer the collection's established metadata vocabulary; use specific new
    terms when the problem genuinely adds a new family or prerequisite.
 7. Review the public/private boundary and compare the draft against the fidelity
-   checklist. Confirm that the brief is independently solvable, the hint is
-   non-spoiling, the correctness argument supports the full contract, and the
-   outline teaches reasoning without becoming an implementation walkthrough.
+   checklist. Read the brief alone, paraphrase its observable task as a
+   new learner, and compare that paraphrase with the source. Derive the
+   expected output for one small case and one material edge case without using
+   the source images or hidden teaching fields. If a visual term or output
+   convention remains ambiguous, clarify the observable rule or retain one
+   compact example, either restated from the source or derived from verified
+   source rules. For difficult visual or semantic cases, use a reviewer who
+   has not seen the solution when the author's knowledge makes this check
+   unreliable. Confirm that the clarification does not disclose the solving
+   method, the hint is non-spoiling, the correctness argument supports the full
+   contract, and the outline teaches reasoning without becoming an
+   implementation walkthrough.
 8. Add the ID exactly once to `problem_order.md`. Follow the ordering policy in
    the collection specification. If none is stated, preserve every existing
    entry, append the new ID, and disclose that assumption; never reorder the
-   collection silently.
+   collection silently. For a difficulty-specific cohort, confirm the source
+   difficulty matches `collection.json` and the addition leaves no more than
+   25 cards. If full, select the next cohort with a new stable collection ID.
 9. Run the Level C collection validator and `git diff --check`. Report the draft
-   files, validation results, source or canonical-material concerns, fidelity
-   judgments, and the requirement for human publication review.
+   files, candidate fit decision and evidence, validation results, source or
+   canonical-material concerns, fidelity and brief-clarity judgments, and the
+   requirement for human publication review.
 
 ## Existing cards and conflicts
 

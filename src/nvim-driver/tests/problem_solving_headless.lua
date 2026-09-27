@@ -75,7 +75,8 @@ assert(vim.wait(10000, function()
   return line:find("Today ", 1, true) and line:find("New solved ", 1, true)
     and line:find("New left ", 1, true) and line:find("Reviewed ", 1, true)
     and line:find("Due now ", 1, true) and line:find("Due later ", 1, true)
-end, 10), "problem-solving status line did not show scheduling counters")
+end, 10), "problem-solving status line did not show scheduling counters: "
+  .. _G.ProblemSolvingStatusline())
 local brief = find_buffer("problem_solving_brief")
 assert(brief and vim.bo[brief].readonly and not vim.bo[brief].modifiable,
   "problem brief is not read-only")
@@ -102,7 +103,7 @@ end, 10), "optional hint was not rendered")
 
 problem_solving.bookmark("Think about carry propagation")
 wait_for("solving")
-assert(problem_solving.get_state().problem.id == "problem-4",
+assert(problem_solving.get_state().problem.id == "problem-15",
   "bookmarked problem was not excluded from selection")
 
 problem_solving.bookmarks()
@@ -179,7 +180,7 @@ assert(vim.wait(10000, function() return not problem_solving.get_state().bookmar
   "bookmark was not removed")
 problem_solving.rate("good")
 wait_for("solving")
-assert(problem_solving.get_state().problem.id == "problem-4",
+assert(problem_solving.get_state().problem.id == "problem-15",
   "rating did not advance to the canonical next problem")
 
 problem_solving.stats()
@@ -208,7 +209,7 @@ assert(stats and vim.fn.maparg("q", "n", false, true).buffer == 1,
 
 problem_solving.next()
 wait_for("solving")
-assert(problem_solving.get_state().problem.id == "problem-8", "next did not advance selection")
+assert(problem_solving.get_state().problem.id == "problem-47", "next did not advance selection")
 problem_solving.quit()
 assert(problem_solving.get_state().status == "idle", "quit did not reset the session")
 

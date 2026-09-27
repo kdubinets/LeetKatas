@@ -39,6 +39,34 @@ Pass a different collection directory as the single optional argument:
 src/nvim-driver/practice path/to/exercises
 ```
 
+Use `-c` or `--config` to load a separate practice configuration. The option
+overrides `PRACTICE_CONFIG`; without either, the standard
+`${XDG_CONFIG_HOME:-~/.config}/leetkatas/practice.toml` remains the default.
+Level-specific starter configurations are available as
+`practice-level-a.example.toml` and `practice-level-b.example.toml`; copy them
+to your config directory and adjust the collection paths if needed. These are
+standalone files and do not inherit values from `practice.toml`; if you have
+customized shared settings, carry them into both files.
+
+```bash
+src/nvim-driver/practice --config ~/.config/leetkatas/practice-level-a.toml
+src/nvim-driver/practice -c ~/.config/leetkatas/practice-level-b.toml
+```
+
+After copying those files, use the Level A and Level B shortcut launchers:
+
+```bash
+src/nvim-driver/apractice
+src/nvim-driver/bpractice
+```
+
+They read the matching config from `${XDG_CONFIG_HOME:-~/.config}/leetkatas/`
+and forward other launcher options, such as `-s`.
+
+Both examples use the same default database as the combined session, so
+scheduling history carries across sessions. Keep the same `database_path` in
+both files if you set a custom database location.
+
 Use `-s` (or `--sync-first`) when switching machines to finish Supabase
 synchronization before the first exercise is selected:
 
@@ -72,6 +100,10 @@ Level C reasoning practice has a separate launcher and workspace:
 ```bash
 src/nvim-driver/problem-solving
 ```
+
+The default collection is the first medium cohort. To practice hard problems,
+pass `practice/problem_solving/collections/hard_01` as the launcher argument.
+Each cohort uses its own fresh statistics and holds at most 25 problems.
 
 It presents a read-only problem brief, an optional hint, and a solution outline
 that must be revealed before rating. Use `-s` to synchronize before initial
@@ -153,7 +185,9 @@ Personal practice defaults live in
 to load another file. The file is optional; an explicit collection argument or
 environment variable takes precedence over it, and built-in defaults apply when
 a setting is absent. `src/nvim-driver/practice.example.toml` is a copyable
-starting point.
+starting point. The launcher also accepts `-c` or `--config FILE`; this command
+line option takes precedence over `PRACTICE_CONFIG` and reports an error if the
+specified file does not exist.
 
 ```toml
 [practice]

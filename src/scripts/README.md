@@ -168,14 +168,16 @@ optional source root used to resolve each card's provenance path:
 
 ```json
 {
-  "collection_directory": "practice/problem_solving/collections/algorithmic_problem_solving",
+  "collection_directory": "practice/problem_solving/collections/medium_01",
   "source_root": "optional-repository-root"
 }
 ```
 
 It checks the versioned collection and card schemas, exact brief/card/order
 coverage, source hashes, nonempty outline fields, string-array metadata, and
-the boundary between learner-visible briefs and private teaching records. A
+the boundary between learner-visible briefs and private teaching records. For
+difficulty-specific cohorts, it also checks the card difficulty and 25-card
+limit. A
 successful response includes the stable collection ID, card count, and ordered
 problem IDs.
 

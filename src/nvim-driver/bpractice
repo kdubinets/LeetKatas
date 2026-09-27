@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+driver_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+
+exec "$driver_dir/practice" \
+    --config "$config_home/leetkatas/practice-level-b.toml" \
+    "$@"
