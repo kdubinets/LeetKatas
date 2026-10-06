@@ -4,25 +4,33 @@ Detect a Directed Cycle with Three Colors
 
 # Description
 
-The helper returns whether traversal from a vertex reaches a directed cycle, using zero for unvisited, one for active, and two for complete. Endpoints are valid and the graph is preserved. The wrapper checks all components.
+Return whether the directed adjacency list contains a cycle anywhere, including a self-loop or a cycle unreachable from vertex zero. Vertices are indexed from zero through graph.size()-1; graph[v] lists the outgoing neighbors of vertex v, and all indices are valid. Preserve the graph. An empty graph returns false.
 
-The supplied recursive traversal marks active before descending, detects an edge to active state, skips complete neighbors, and marks complete after all outgoing edges.
+Use recursive traversal with three states: unvisited, active on the current recursion stack, and complete. An edge to an active vertex detects a cycle; an edge to a complete vertex does not. Start traversal at each still-unvisited vertex. The learner implements the complete entry function, including state initialization and any recursive helper.
 
 This exercise covers three-state distinction between unvisited, active, and completed vertices.
 
 # Solution
 
 ```cpp
-state[vertex] = 1;
-for (std::size_t neighbor : graph[vertex]) {
-    if (state[neighbor] == 1) {
-        return true;
+std::vector<int> state(graph.size(), 0);
+auto search = [&](auto&& self, std::size_t vertex) -> bool {
+    state[vertex] = 1;
+    for (std::size_t neighbor : graph[vertex]) {
+        if (state[neighbor] == 1) {
+            return true;
+        }
+        if (state[neighbor] == 0 && self(self, neighbor)) {
+            return true;
+        }
     }
-    if (state[neighbor] == 0 &&
-        reaches_active_directed_cycle(neighbor, graph, state)) {
+    state[vertex] = 2;
+    return false;
+};
+for (std::size_t vertex = 0; vertex < graph.size(); ++vertex) {
+    if (state[vertex] == 0 && search(search, vertex)) {
         return true;
     }
 }
-state[vertex] = 2;
 return false;
 ```

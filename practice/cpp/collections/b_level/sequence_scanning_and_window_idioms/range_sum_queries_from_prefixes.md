@@ -4,7 +4,7 @@ Answer Inclusive Range Sums
 
 # Description
 
-Return one sum per query, in query order. Each pair `{first, last}` requests the sum of elements in `values` from index `first` through `last`, including both endpoints. Every range satisfies `first <= last < values.size()`. An empty query list produces an empty result.
+Return one sum per query, in query order. Each pair `{first, last}` requests the sum of elements in `values` from index `first` through `last`, including both endpoints. Every range satisfies `first <= last < values.size()`. An empty query list produces an empty result. Preserve both inputs, and assume all prefix and range sums fit in long long.
 
 The supplied pattern is one-past prefix sums: each prefix position represents the total before that position, and an inclusive range sum is the difference between its two boundary prefixes.
 

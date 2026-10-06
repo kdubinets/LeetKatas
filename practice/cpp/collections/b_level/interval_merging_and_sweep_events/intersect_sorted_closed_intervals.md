@@ -4,9 +4,9 @@ Intersect Two Sorted Closed-Interval Lists
 
 # Description
 
-Return all nonempty intersections between two sorted pairwise nonoverlapping lists of closed intervals. Shared endpoints form one-point intersections. Inputs have valid endpoints and are preserved.
+Return all nonempty pairwise intersections between the two closed-interval lists, sorted by start. Each input is sorted by start and pairwise nonoverlapping, and every interval has start <= end. Shared endpoints form one-point intersections. Either empty input returns empty. Preserve both inputs.
 
-The supplied paired frontiers emit the overlap, then discard whichever interval cannot overlap any later counterpart because it ends first.
+Use paired interval frontiers: emit an overlap, then advance the interval that ends first because it cannot overlap a later counterpart; advance both when their ends are equal.
 
 This exercise covers paired-frontier advancement after closed-interval intersection.
 

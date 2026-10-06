@@ -4,9 +4,9 @@ Unweighted Shortest Distances
 
 # Description
 
-Return the fewest directed edges from source to every vertex, or an empty optional if unreachable. All identifiers are valid and the graph is unchanged.
+Return a vector with one optional distance per vertex, indexed by vertex identifier. Distances count the fewest directed edges from source; source has distance zero and unreachable vertices have empty optionals. Vertices are indexed from zero through graph.size()-1; graph[v] lists the outgoing neighbors of vertex v, and source and every neighbor are valid indices. Preserve the graph.
 
-The supplied breadth-first invariant assigns distance at enqueue time, ensuring the first discovery is shortest and each vertex is queued once.
+Use breadth-first discovery: assign a vertex's distance and mark it discovered when adding it to pending work, so its first discovery gives its shortest distance and it is queued at most once. The learner implements the complete entry function, including distance and frontier initialization.
 
 This exercise covers enqueue-time discovery and distance assignment in unweighted BFS.
 

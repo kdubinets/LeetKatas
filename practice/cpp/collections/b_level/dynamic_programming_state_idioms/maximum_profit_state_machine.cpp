@@ -4,7 +4,7 @@
 using namespace std;
 
 long long maximum_trading_profit(const std::vector<int>& prices, int transaction_fee) {
-    // Pattern: two-state dynamic program. After each price, cash is the best profit while holding nothing and holding is the best profit while holding one item; compute both from the same prior pair, charging the nonnegative fee on a sale.
+    // Pattern: two-state dynamic program: cash is the best profit while holding nothing and holding is the best profit while holding one item. Initially cash is zero and holding is minus the first price; for each later price, next cash is the greater of prior cash and prior holding plus price minus fee, and next holding is the greater of prior holding and prior cash minus price. Derive both from the same prior snapshot.
 
-    // Finish: return the greatest profit from any number of chronological buy-then-sell transactions while holding at most one item and paying transaction_fee on each sale; prices and fee are nonnegative; return 0 for empty input, do not modify prices, and assume all arithmetic fits in long long
+    // Finish: return the greatest realized profit from any number of chronological buy-then-sell transactions, holding at most one item and paying transaction_fee on every sale; prices and fee are nonnegative, doing nothing is allowed, and finish holding nothing; return zero for empty input, preserve prices, and all arithmetic fits in long long
 }

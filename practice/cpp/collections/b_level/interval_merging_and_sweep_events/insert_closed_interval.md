@@ -4,9 +4,9 @@ Insert and Merge One Closed Interval
 
 # Description
 
-Insert added and return the union as sorted pairwise nonoverlapping closed intervals. Input is already sorted and pairwise nonoverlapping; all endpoints are valid and shared endpoints overlap. Preserve input.
+Return the union of the input intervals and added as maximal nonoverlapping closed intervals sorted by start. The input is sorted by start and pairwise nonoverlapping. Every interval, including added, has start <= end, and shared endpoints count as overlap. Empty input returns a single interval equal to added. Preserve the input.
 
-The supplied three-phase scan emits intervals before added, absorbs overlapping intervals into it, emits it once, and copies the remainder.
+Use three scan phases: emit intervals before added, absorb overlapping intervals while expanding its endpoints, emit the merged interval once, then copy the remainder.
 
 This exercise covers phase transitions around insertion into sorted disjoint intervals.
 

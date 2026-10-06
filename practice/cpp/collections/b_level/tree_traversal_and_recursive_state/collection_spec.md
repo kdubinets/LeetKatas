@@ -10,6 +10,8 @@ Four initial exercises cover postorder failure state, returned-state plus aggreg
 
 All exercises use caller-owned, finite, acyclic binary trees. They do not allocate, delete, or mutate nodes. The traversal order, state meaning, base case, and propagation rule are supplied in Pattern. Learners implement one invariant in 3–8 minutes. Finish independently specifies observable behavior and constraints.
 
+Each learner source supplies the node model and public entry function. Helpers, accumulators, bounds, and initialization belong to the learner implementation. Finish defines the complete observable task independently of the hint, including tree validity and mutation constraints.
+
 ## Included State Shapes
 
 - Optional postorder height carrying either success or failure.

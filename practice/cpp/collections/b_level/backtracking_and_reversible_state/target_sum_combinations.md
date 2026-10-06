@@ -4,26 +4,31 @@ Reusable Target-Sum Combinations
 
 # Description
 
-Append every nondecreasing combination summing to the positive initial target. Candidates are strictly increasing and positive, may be reused, and are preserved. Initial state is empty at index zero.
+Return every distinct nondecreasing combination whose values sum to the positive target. Candidates are strictly increasing and positive, may be reused any number of times, and are preserved. Return an empty result when no combination exists; result order is unspecified.
 
-The supplied sorted search reuses the selected index in recursion and stops a loop once a candidate exceeds the remainder.
+Use sorted reusable-choice backtracking, restoring the path after each branch and stopping candidate exploration on overshoot. The learner implements the complete function and its recursive state.
 
 This exercise covers reusable-choice recursion with sorted overshoot pruning.
 
 # Solution
 
 ```cpp
-if (remaining == 0) {
-    result.push_back(path);
-    return;
-}
-for (std::size_t index = start; index < candidates.size(); ++index) {
-    if (candidates[index] > remaining) {
-        break;
+std::vector<std::vector<int>> result;
+std::vector<int> path;
+auto search = [&](auto&& self, std::size_t start, int remaining) -> void {
+    if (remaining == 0) {
+        result.push_back(path);
+        return;
     }
-    path.push_back(candidates[index]);
-    collect_target_sum_combinations(
-        candidates, index, remaining - candidates[index], path, result);
-    path.pop_back();
-}
+    for (std::size_t index = start; index < candidates.size(); ++index) {
+        if (candidates[index] > remaining) {
+            break;
+        }
+        path.push_back(candidates[index]);
+        self(self, index, remaining - candidates[index]);
+        path.pop_back();
+    }
+};
+search(search, 0, target);
+return result;
 ```

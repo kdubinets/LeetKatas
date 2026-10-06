@@ -4,9 +4,9 @@ Weighted Shortest Distances with Stale Entries
 
 # Description
 
-Return minimum nonnegative-weight path distances from source, or empty optionals for unreachable vertices. Identifiers are valid, sums fit in long long, and input is preserved.
+Return one optional distance per vertex, indexed by zero-based vertex identifier. Each distance is the minimum total directed-edge weight from source; source has distance zero and unreachable vertices have empty optionals. Graph[v] lists outgoing edges, source and all endpoints are valid, and weights are nonnegative. Preserve graph. All evaluated distance-plus-weight sums fit in long long.
 
-The supplied tentative-distance heap permits duplicate entries. A popped entry is expanded only if it still equals the recorded best; strict relaxations update and push.
+Use a minimum heap of tentative distance/vertex entries. Multiple entries for one vertex are allowed; expand an entry only if its distance still equals the recorded best, and record and enqueue each strict improvement. The learner implements the complete entry function and frontier initialization.
 
 This exercise covers stale-entry filtering in a weighted shortest-path heap frontier.
 

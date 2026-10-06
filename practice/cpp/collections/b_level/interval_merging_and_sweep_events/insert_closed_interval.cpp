@@ -12,5 +12,5 @@ struct Interval {
 std::vector<Interval> insert_closed_interval(const std::vector<Interval>& intervals, Interval added) {
     // Pattern: three scan phases. Emit intervals strictly before added, absorb every interval overlapping added while expanding its endpoints, emit the merged interval once, then copy the remainder.
 
-    // Finish: insert added and return the union as sorted pairwise nonoverlapping closed intervals; input is sorted and pairwise nonoverlapping, all intervals have start <= end, intervals sharing an endpoint overlap, and input is not modified
+    // Finish: return the union of the input intervals and added as maximal nonoverlapping closed intervals sorted by start; input is sorted by start and pairwise nonoverlapping, every interval including added has start <= end, shared endpoints count as overlap, empty input returns {added}, and preserve input
 }

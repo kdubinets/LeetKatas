@@ -4,9 +4,9 @@ Check Bipartite Coloring
 
 # Description
 
-Return whether the undirected graph admits two colors with different colors on every edge. Endpoints are valid and connections reciprocal. Empty and disconnected graphs are allowed; preserve the graph.
+Return whether the undirected adjacency list admits two colors with different colors at the endpoints of every edge, across all components. Vertices are indexed from zero through graph.size()-1; graph[v] lists the neighbors of vertex v, all indices are valid, and connections are reciprocal. Preserve the graph. An empty graph returns true.
 
-The supplied traversal starts from every uncolored component, assigns opposite colors on discovery, and rejects a same-color edge.
+Use breadth-first two-coloring: start from every still-uncolored component, assign opposite colors on discovery, and reject a same-color edge. The learner implements the complete entry function, including traversal state.
 
 This exercise covers two-color discovery state and conflict detection across components.
 

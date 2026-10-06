@@ -8,7 +8,7 @@ long long maximum_capacity_value(
     const std::vector<std::size_t>& weights,
     const std::vector<int>& values,
     std::size_t capacity) {
-    // Pattern: one capacity row for zero-one choices. For each item, visit capacities from high to low so every transition reads state from before that item; best[c] = max(best[c], best[c - weight] + value).
+    // Pattern: one capacity row for zero-one choices, initially all zero. For each item visit capacities from high to low; the new best at a capacity is the greater of its prior value and the prior best at capacity minus weight plus this item's value.
 
-    // Finish: return the greatest total value of a subset whose total weight is at most capacity; weights and values have equal length, every weight is positive, every value is nonnegative, and each item may be selected at most once; do not modify either input, and assume all total values fit in long long
+    // Finish: return the greatest total value of a subset whose total weight is at most capacity, selecting each item at most once; weights and values have equal length, weights are positive, and values are nonnegative; empty input or zero capacity returns zero; preserve both inputs, capacity plus one fits in size_t, and all total values fit in long long
 }

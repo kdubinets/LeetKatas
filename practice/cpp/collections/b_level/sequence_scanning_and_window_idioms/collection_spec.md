@@ -25,6 +25,8 @@ The `Finish` comment specifies the required result or final mutated state, input
 
 Leave a blank line after `Pattern` as a fold spacer. The practice driver hides the pattern hint by default, separately from imports, while keeping `Finish` visible. Learners can reveal or hide the hint with `<Space>h` or `:PracticeHint`.
 
+Learners implement the complete entry function, including invalid-width and empty-pattern checks. Boundary behavior belongs in Finish rather than supplied executable guards. Arithmetic assumptions must be visible in each exercise that relies on them.
+
 ## Included Topics
 
 - Fixed-size rolling windows over sums and frequency state.

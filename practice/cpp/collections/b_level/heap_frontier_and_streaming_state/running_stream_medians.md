@@ -4,9 +4,9 @@ Running Medians from Two Balanced Heaps
 
 # Description
 
-Return the median of every nonempty prefix. Odd prefixes use the middle value and even prefixes use the mean of both middle values. Empty input returns empty; preserve values and widen even-prefix addition.
+Return one median per input element in prefix order. The median is the middle value of a sorted odd-length prefix, or the arithmetic mean of the two middle values of a sorted even-length prefix. Empty input returns empty. Preserve values and avoid integer overflow when averaging.
 
-The supplied two heaps partition the lower and upper halves and maintain equal sizes or one extra value in the lower half.
+Use two initially empty heaps for lower and upper halves. Every lower-half value is at most every upper-half value, and the lower half has the same size or one extra value. Maintain both invariants after every insertion; the heap boundaries determine the median.
 
 This exercise covers ordering and size balancing between two streaming heaps.
 

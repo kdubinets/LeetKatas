@@ -4,7 +4,7 @@ Maximum Two-Endpoint Container Area
 
 # Description
 
-Return the maximum area among pairs of indices `i < j` in nonnegative `heights`. The area is `(j - i)` times the smaller of `heights[i]` and `heights[j]`. Return zero when fewer than two elements exist.
+Return the maximum area among pairs of indices `i < j` in nonnegative `heights`. The area is `(j - i)` times the smaller of `heights[i]` and `heights[j]`. Return zero when fewer than two elements exist. Preserve heights, and assume every area fits in long long.
 
 The supplied pattern is converging two pointers: after a pair is measured, its smaller-height endpoint is dominated; either endpoint may be discarded when heights are equal.
 

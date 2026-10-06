@@ -4,9 +4,9 @@ Maximum Trading Profit with Coupled States
 
 # Description
 
-Return the greatest profit from chronological buy-then-sell transactions while holding at most one item and paying the nonnegative fee on each sale. Prices are nonnegative. Empty input returns zero; do not modify prices. Arithmetic fits in long long.
+Return the greatest realized profit from any number of chronological buy-then-sell transactions, holding at most one item and paying transaction_fee on every sale. Prices and the fee are nonnegative. Doing nothing is allowed; finish holding nothing. Empty input returns zero. Preserve prices, and assume all arithmetic fits in long long.
 
-The supplied two-state recurrence derives both cash and holding states from the same prior snapshot.
+Cash is the best profit while holding nothing; holding is the best profit while holding one item. Initialize them to zero and minus the first price. For each later price, next cash is the greater of prior cash and prior holding plus price minus fee; next holding is the greater of prior holding and prior cash minus price. Derive both from the same prior snapshot.
 
 This exercise covers snapshot-based updates of coupled dynamic-programming states.
 

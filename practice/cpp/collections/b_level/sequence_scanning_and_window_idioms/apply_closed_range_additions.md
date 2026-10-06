@@ -4,7 +4,7 @@ Apply Closed Range Additions
 
 # Description
 
-Return a `std::vector<long long>` of length `size`. At each index, its value is the sum of `delta` from every update covering that index, or zero if no update covers it. Ranges include both endpoints, so overlapping additions accumulate. Indices are zero-based and every update satisfies `first <= last < size`.
+Return a `std::vector<long long>` of length `size`. At each index, its value is the sum of `delta` from every update covering that index, or zero if no update covers it. Ranges include both endpoints, so overlapping additions accumulate. Indices are zero-based and every update satisfies `first <= last < size`. Size zero with no updates returns an empty vector. Preserve updates. Size plus one fits in size_t, and all intermediate arithmetic fits in long long.
 
 The supplied pattern is a difference array: its boundary changes represent the updates, and its running total represents the accumulated value at each position.
 

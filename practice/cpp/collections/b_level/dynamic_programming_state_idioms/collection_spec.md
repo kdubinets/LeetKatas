@@ -20,6 +20,8 @@ One `// Pattern:` comment supplies the dynamic-programming model and invariant w
 
 Metadata has only Name, Description, and Solution. Description records the supplied recurrence and implementation skill, but introduces no behavioral requirement absent from the source.
 
+Learners implement the complete public entry function, including boundary checks, state storage, cache initialization, and any recursive helper. State meaning and recurrence belong in Pattern; caller-provided implementation caches and partial helper tasks are excluded.
+
 ## Included State Shapes
 
 - Two scalar states for a supplied one-dimensional recurrence.

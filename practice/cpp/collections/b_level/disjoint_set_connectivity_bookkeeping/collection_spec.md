@@ -10,6 +10,8 @@ The initial set contains three exercises. Reassessment found no fourth objective
 
 The parent-forest representation and root/size preconditions are supplied. Exercises isolate path shortening, weighted root attachment, and successful-union counting. They do not ask learners to invent or implement a complete data structure.
 
+Each Finish specifies the complete public operation, parent/size preconditions, allowed mutations, and result. The component-count exercise intentionally supplies find and union primitives to isolate successful-union bookkeeping; learners initialize its state and implement the entire counting function.
+
 ## Included State Shapes
 
 - Follow parent links while shortening the queried path.

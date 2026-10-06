@@ -4,9 +4,9 @@ Component Counts after Connections
 
 # Description
 
-Return the connected-component count after every connection, starting with isolated vertices. Endpoints are valid; repeated and self connections are allowed; preserve input.
+Return one connected-component count per connection in input order, starting with vertex_count isolated vertices indexed from zero through vertex_count-1. Connections are undirected, all endpoints are valid, and repeated or self connections are allowed. No connections returns an empty result. Preserve connections.
 
-The supplied union helper reports whether connectivity actually changed. The running count decrements only on successful unions.
+The supplied union operation returns true exactly when it merges two previously separate components. Initialize the parent forest and component sizes, then decrement the running count only after a successful union. Supporting find and union implementations are supplied to isolate component-count bookkeeping.
 
 This exercise covers component-count maintenance conditioned on successful unions.
 

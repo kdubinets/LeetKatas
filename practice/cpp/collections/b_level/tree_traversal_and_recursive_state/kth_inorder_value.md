@@ -4,9 +4,9 @@ Kth Value in Inorder Traversal
 
 # Description
 
-Return the value at the valid positive one-based rank in inorder traversal. The tree is nonempty and large enough; nodes are caller-owned and unchanged.
+Return the value at a valid positive one-based rank in inorder traversal: visit the left subtree, the node, then the right subtree. The tree is nonempty and has at least rank nodes; its values need not be sorted or distinct. The input is a caller-owned finite acyclic binary tree. Do not allocate, delete, or modify nodes.
 
-The supplied explicit stack suspends ancestors during left descent, then resumes each visit before entering its right subtree.
+Use iterative inorder traversal with an explicit stack to suspend ancestors during left descent and resume each visit before entering its right subtree. The learner implements the complete entry function.
 
 This exercise covers explicit suspension and resumption of iterative inorder traversal.
 

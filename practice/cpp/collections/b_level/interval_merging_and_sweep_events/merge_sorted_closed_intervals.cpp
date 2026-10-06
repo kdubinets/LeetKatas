@@ -12,5 +12,5 @@ struct Interval {
 std::vector<Interval> merge_sorted_closed_intervals(const std::vector<Interval>& intervals) {
     // Pattern: one active interval. Sorted starts guarantee that an interval whose start is beyond the active end closes the active interval; otherwise extend its end when needed.
 
-    // Finish: return the union as sorted pairwise nonoverlapping closed intervals; input is sorted by nondecreasing start, every start <= end, intervals sharing an endpoint overlap, empty input returns empty, and input is not modified
+    // Finish: merge all overlapping intervals and return their union as maximal nonoverlapping closed intervals sorted by start; input starts are nondecreasing, every start <= end, shared endpoints count as overlap, empty input returns empty, and preserve input
 }

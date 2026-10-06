@@ -4,7 +4,7 @@ Longest Balanced Binary Subarray
 
 # Description
 
-Return the length of the longest nonempty contiguous range in `values` containing equally many zeroes and ones, or zero if no such range exists. Every input value is zero or one; empty input produces zero.
+Return the length of the longest nonempty contiguous range in `values` containing equally many zeroes and ones, or zero if no such range exists. Every input value is zero or one; empty input produces zero. Preserve values, and assume every prefix balance fits in long long.
 
 The supplied pattern is first-occurrence prefix state: zero and one contribute opposite balance changes, and the earliest position for each balance remains available to maximize the matching span.
 
@@ -13,8 +13,8 @@ This exercise covers retaining earliest prefix-balance positions to maximize an 
 # Solution
 
 ```cpp
-std::unordered_map<int, std::size_t> first_position{{0, 0}};
-int balance = 0;
+std::unordered_map<long long, std::size_t> first_position{{0, 0}};
+long long balance = 0;
 std::size_t best = 0;
 for (std::size_t index = 0; index < values.size(); ++index) {
     balance += values[index] == 0 ? -1 : 1;

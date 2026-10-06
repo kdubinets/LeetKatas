@@ -12,6 +12,7 @@ It does not ask the learner to discover an algorithm, combine several independen
 - One primary state-management or invariant-maintenance objective.
 - Normally 3–8 minutes of learner-written code.
 - Exactly one `// Finish:` section and the normal paired `.cpp` / `.md` format.
+- Put Finish in the public entry function and leave its state storage, initialization, boundary checks, and recursive structure to the learner. Supporting types remain supplied. Supply an implemented helper only when it performs a separate prerequisite idiom needed to isolate the exercise's primary objective; document its contract and the reason for supplying it.
 - The learner source explicitly names the pattern and its invariant, without revealing exact APIs or code.
 - Metadata keeps `# Name`, `# Description`, and `# Solution`; its description names the pattern, invariant, inputs, constraints, and implementation skill.
 - One canonical exercise per idiom by default. Add a variation only when it changes the state shape, invariant, or primary implementation decision.
@@ -22,6 +23,8 @@ Example source guidance:
 // Pattern: sliding window. Keep the current window valid by shrinking its left edge.
 // Finish: return the greatest valid window length
 ```
+
+The [2026-10-06 exercise-quality review](LevelBExerciseQualityReview.md) records the application of this contract to the remaining nine collections after the backtracking and graph reviews.
 
 ## Development route
 

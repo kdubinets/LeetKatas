@@ -4,9 +4,9 @@ Merge Sorted Sequences From the End
 
 # Description
 
-After the function returns, `left` must contain all original values from its first `left_count` elements and from `right`, in nondecreasing order, including duplicates. Both input sequences are sorted. The remaining original elements of `left` are output placeholders. Initially, `left.size()` equals `left_count + right.size()`, and its size must stay unchanged.
+Fill left with all original values from its first left_count elements and from right in nondecreasing order, including duplicates. The first left_count elements of left and all of right are sorted; remaining left elements are placeholders with arbitrary values. The vectors are distinct. Leave right unchanged and preserve left.size(), initially left_count + right.size().
 
-The supplied pattern is a backwards two-pointer merge whose completed output suffix does not overwrite unread values in the left input prefix.
+Use a backwards two-pointer merge so the completed output suffix never overwrites unread values in the left input prefix. The learner implements the complete entry function.
 
 This exercise covers merging sorted sequences backwards into reserved output space without overwriting unread input values.
 

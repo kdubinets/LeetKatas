@@ -256,8 +256,7 @@ int main() {
                   values),
               lis_oracle(values), "longest increasing subsequence");
         for (std::size_t start = 0; start <= size + 2; ++start) {
-            std::vector<std::optional<long long>> memo(size);
-            assert_equal(minimum_step_cost_memoized::minimum_step_cost_from(start, costs, memo),
+            assert_equal(minimum_step_cost_memoized::minimum_step_cost_from(start, costs),
                   cost_oracle(start, costs), "memoized cost");
         }
         std::string left(random() % 9, 'a'), right(random() % 9, 'a');
@@ -266,6 +265,8 @@ int main() {
         assert_equal(longest_common_subsequence_rolling::longest_common_subsequence_length(left, right),
               lcs_oracle(left, right), "longest common subsequence");
     }
+    assert_equal(minimum_step_cost_memoized::minimum_step_cost_from(0, std::vector<int>(100, 0)),
+          0LL, "memoized zero-cost chain");
     for (int trial = 0; trial < 2000; ++trial) {
         std::vector<int> prices(random() % 10);
         for (int& price : prices) price = static_cast<int>(random() % 21);

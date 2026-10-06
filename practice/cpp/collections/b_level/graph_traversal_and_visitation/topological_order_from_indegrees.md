@@ -4,9 +4,9 @@ Topological Order from Indegree Transitions
 
 # Description
 
-Return a complete topological ordering, or an empty optional if the directed graph has no such ordering. Every endpoint is valid and the graph is preserved. Any valid ordering is accepted.
+Return an optional containing any ordering of all vertices exactly once such that each directed edge's source precedes its destination. Return an empty optional if the graph contains a cycle. Vertices are indexed from zero through graph.size()-1; graph[v] lists the outgoing neighbors of vertex v, and all indices are valid. Preserve the graph. An empty graph returns an optional containing an empty vector.
 
-The supplied indegree frontier enqueues initial zero-indegree vertices and later enqueues a neighbor exactly when decrementing it to zero.
+Use an indegree frontier: initialize each vertex's indegree from the adjacency lists, start with every zero-indegree vertex, and add a neighbor exactly when its decremented indegree reaches zero. Failure to process all vertices means no ordering exists. The learner implements the complete entry function, including indegree and frontier initialization.
 
 This exercise covers zero-transition maintenance of an indegree frontier.
 

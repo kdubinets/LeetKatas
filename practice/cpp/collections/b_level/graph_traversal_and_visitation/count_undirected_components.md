@@ -4,9 +4,9 @@ Count Undirected Connected Components
 
 # Description
 
-Return the number of connected components, including isolated vertices, in the supplied undirected adjacency list. Endpoints are valid and connections are reciprocal. Preserve the graph.
+Return the number of connected components in the undirected adjacency list, counting isolated vertices as individual components. Vertices are indexed from zero through graph.size()-1; graph[v] lists the neighbors of vertex v, all indices are valid, and connections are reciprocal. Preserve the graph. An empty graph returns zero.
 
-The supplied outer scan starts one iterative traversal per unvisited root; vertices are marked when pushed to avoid duplicate pending work.
+Use an outer component scan and iterative depth-first traversal: start a component only at an unvisited vertex and mark each neighbor when adding it to pending work. The learner implements the complete entry function, including traversal state.
 
 This exercise covers component-root selection around an iterative visited traversal.
 

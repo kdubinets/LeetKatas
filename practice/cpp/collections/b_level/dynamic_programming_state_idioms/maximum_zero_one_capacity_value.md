@@ -4,9 +4,9 @@ Maximum Zero-One Capacity Value
 
 # Description
 
-Return the greatest total value of a subset whose total weight is at most capacity. The weight and value vectors have equal length, every weight is positive, every value is nonnegative, and each item may be selected at most once. Empty input and zero capacity produce zero. Do not modify either input. All values and sums fit in long long.
+Return the greatest total value of a subset whose total weight is at most capacity. The weight and value vectors have equal length, every weight is positive, every value is nonnegative, and each item may be selected at most once. Empty input and zero capacity produce zero. Do not modify either input. Capacity plus one fits in size_t, and all values and sums fit in long long.
 
-The supplied zero-one dynamic-programming transition uses one capacity row. Capacities are visited from high to low for each item so a transition reads the state that existed before processing that item.
+The supplied zero-one dynamic-programming transition uses one capacity row initialized to zero. Capacities are visited from high to low for each item so a transition reads the state that existed before processing that item.
 
 This exercise covers descending in-place capacity updates for zero-one choices.
 

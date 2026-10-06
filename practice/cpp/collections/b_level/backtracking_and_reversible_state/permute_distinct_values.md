@@ -4,27 +4,34 @@ Permute Distinct Values with Used Markers
 
 # Description
 
-Append every permutation of distinct input values in input-index choice order. Initial used markers are false and path/result empty. Preserve values; empty input produces one empty permutation.
+Return every permutation of the distinct input values, preserving the input. Order results by the sequences of original input indices chosen, in lexicographic order; the values themselves need not be sorted. Empty input returns one empty permutation.
 
-The supplied search marks one unused position, appends its value, recurses, then restores both path and marker.
+Use position-choice backtracking and restore both the current path and the selected-position marker after every branch. The learner implements the complete function and its recursive state.
 
 This exercise covers coordinated restoration of a path and selected-position marker.
 
 # Solution
 
 ```cpp
-if (path.size() == values.size()) {
-    result.push_back(path);
-    return;
-}
-for (std::size_t index = 0; index < values.size(); ++index) {
-    if (used[index]) {
-        continue;
+std::vector<std::vector<int>> result;
+std::vector<int> path;
+std::vector<bool> used(values.size(), false);
+auto search = [&](auto&& self) -> void {
+    if (path.size() == values.size()) {
+        result.push_back(path);
+        return;
     }
-    used[index] = true;
-    path.push_back(values[index]);
-    collect_distinct_permutations(values, used, path, result);
-    path.pop_back();
-    used[index] = false;
-}
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (used[index]) {
+            continue;
+        }
+        used[index] = true;
+        path.push_back(values[index]);
+        self(self);
+        path.pop_back();
+        used[index] = false;
+    }
+};
+search(search);
+return result;
 ```

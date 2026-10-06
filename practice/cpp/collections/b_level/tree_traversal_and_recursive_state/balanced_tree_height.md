@@ -4,9 +4,9 @@ Balanced Tree Height or Failure
 
 # Description
 
-Return the height in nodes if every node's child-subtree heights differ by at most one, or an empty optional otherwise. Empty tree height is zero. Nodes are caller-owned and unchanged.
+Return the height in nodes when every node's left and right subtree heights differ by at most one, or an empty optional otherwise. An empty tree has height zero. The input is a caller-owned finite acyclic binary tree. Do not allocate, delete, or modify nodes.
 
-The supplied postorder summary carries either a subtree height or failure, allowing failure to propagate without a separate traversal.
+Use a postorder optional summary to propagate either a subtree height or failure in one traversal. The learner implements the complete entry function.
 
 This exercise covers postorder propagation of either a height or a failure state.
 

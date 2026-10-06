@@ -4,9 +4,9 @@ Three-Way Partition around a Pivot
 
 # Description
 
-Rearrange values into below-pivot, equal-pivot, and above-pivot regions, preserving multiplicity and size but not internal order. Return the half-open equal-region boundaries; when no value equals pivot, that region is empty.
+Rearrange values into below-pivot, equal-pivot, and above-pivot regions, preserving multiplicity and size while allowing arbitrary internal order. Return zero-based half-open equal-region boundaries. If no value equals pivot, the boundaries are equal at the position after all smaller values; empty input returns {0, 0}. The pivot need not occur in the input.
 
-The supplied four-region invariant classifies one unknown value at a time while maintaining less, equal, unknown, and greater regions.
+Use the supplied four-region invariant to classify one unknown value at a time while maintaining less, equal, unknown, and greater regions.
 
 This exercise covers four-region transitions in a Dutch-national-flag partition.
 

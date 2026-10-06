@@ -4,25 +4,26 @@ Minimum Step Cost with Memoization
 
 # Description
 
-Return the minimum total cost incurred from index until moving beyond the end. Pay the cost at every visited in-range index, including the starting index, and advance one or two positions per move. An index at or beyond the end costs zero. The memo vector has costs.size() initially disengaged optional entries; the input costs are read-only. Costs may be negative, and all totals fit in long long.
+Return the minimum total cost from index until reaching or passing costs.size(). Pay the cost at every visited in-range position, including the starting position, and advance one or two positions per move. An index already at or beyond the end costs zero. Costs may be negative, must be preserved, and all totals fit in long long.
 
-The supplied top-down recurrence adds the current cost to the smaller result obtained after advancing one or two positions. An engaged optional marks a computed state, including a legitimate zero result.
+Use top-down memoization of the supplied recurrence: the current cost plus the smaller of the next two states. Distinguish uncomputed cache entries from computed results, including zero. The learner implements the complete entry function, cache initialization, and any recursive helper.
 
 This exercise covers top-down memoization with an explicit uncomputed cache state.
 
 # Solution
 
 ```cpp
-if (index >= costs.size()) {
-    return 0;
-}
-if (memo[index].has_value()) {
-    return *memo[index];
-}
-memo[index] =
-    static_cast<long long>(costs[index]) +
-    std::min(
-        minimum_step_cost_from(index + 1, costs, memo),
-        minimum_step_cost_from(index + 2, costs, memo));
-return *memo[index];
+std::vector<std::optional<long long>> memo(costs.size());
+auto solve = [&](auto&& self, std::size_t position) -> long long {
+    if (position >= costs.size()) {
+        return 0;
+    }
+    if (memo[position].has_value()) {
+        return *memo[position];
+    }
+    memo[position] = static_cast<long long>(costs[position]) +
+        std::min(self(self, position + 1), self(self, position + 2));
+    return *memo[position];
+};
+return solve(solve, index);
 ```

@@ -14,5 +14,5 @@ std::vector<long long> apply_closed_range_additions(
     const std::vector<RangeAddition>& updates) {
     // Pattern: difference array. Record each closed update at its start and immediately after its end, then materialize one running total.
 
-    // Finish: return a vector of length size; each element equals the sum of delta from every update covering its index, or zero if none cover it; each range includes both first and last; indices are zero-based and every range satisfies first <= last < size
+    // Finish: return a vector of length size whose entries sum delta from all updates covering that index, or zero if none cover it; ranges include both zero-based endpoints and satisfy first <= last < size; size zero with no updates returns empty; preserve updates, size plus one fits in size_t, and all intermediate arithmetic fits in long long
 }

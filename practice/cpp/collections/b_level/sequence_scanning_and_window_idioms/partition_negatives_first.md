@@ -4,7 +4,7 @@ Partition Negative Values First
 
 # Description
 
-Rearrange `values` in place so all negative values precede all values greater than or equal to zero. Return the first nonnegative index, or `values.size()` if no such element exists. Either group's order may change. Empty input returns zero.
+Rearrange `values` in place so all negative values precede all values greater than or equal to zero. Return the first nonnegative index, or `values.size()` if no such element exists. Either group's order may change. Empty input returns zero. Preserve vector size and every value's multiplicity.
 
 The supplied pattern is opposing partition pointers whose completed left region is negative and completed right region is nonnegative.
 

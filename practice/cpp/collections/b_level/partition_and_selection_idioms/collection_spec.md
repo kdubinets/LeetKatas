@@ -10,6 +10,8 @@ The initial set contains the two distinct objectives supported by the roadmap. R
 
 The pivot, region invariant, equality rule, and partition helper are supplied. Learners implement either region transitions or selection-range transitions, not both in one exercise.
 
+Learners implement the complete public entry function and initialize its state. Quickselect intentionally supplies the partition primitive with an explicit contract so the learner can focus on selection-range maintenance; this helper implements a separate prerequisite idiom.
+
 ## Included State Shapes
 
 - Maintain less-than, equal, unknown, and greater-than regions around a supplied pivot value.

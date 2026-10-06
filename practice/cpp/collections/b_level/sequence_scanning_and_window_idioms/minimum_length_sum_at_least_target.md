@@ -4,7 +4,7 @@ Minimum Sufficient Sum Window
 
 # Description
 
-Return the length of the shortest nonempty contiguous range in `positive_values` whose elements sum to at least `target`, or zero if no such range exists. Every input value and the target are strictly positive. Empty input produces zero.
+Return the length of the shortest nonempty contiguous range in `positive_values` whose elements sum to at least `target`, or zero if no such range exists. Every input value and the target are strictly positive. Empty input produces zero. Preserve positive_values, and assume all intermediate sums fit in long long.
 
 The supplied pattern is a shrinking positive-sum sliding window: advancing its left boundary decreases the sum, allowing sufficient windows to be shortened.
 

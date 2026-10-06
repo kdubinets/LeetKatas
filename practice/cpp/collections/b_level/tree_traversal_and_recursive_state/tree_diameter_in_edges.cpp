@@ -9,14 +9,8 @@ struct TreeNode {
     TreeNode* right = nullptr;
 };
 
-std::size_t measure_height_for_diameter(const TreeNode* root, std::size_t& greatest_path) {
-    // Pattern: postorder returned height plus shared aggregate. Empty height is zero; combine child heights as a path through the node before returning one plus their maximum.
-
-    // Finish: return root's subtree height in nodes and update greatest_path to the greatest number of edges on any path found in that subtree; root may be null, greatest_path contains the best value found outside this subtree, and nodes are not modified
-}
-
 std::size_t tree_diameter_in_edges(const TreeNode* root) {
-    std::size_t greatest_path = 0;
-    measure_height_for_diameter(root, greatest_path);
-    return greatest_path;
+    // Pattern: postorder returned height plus shared aggregate. An empty subtree has height zero; combine child heights as the edge count of a path through the node, update the greatest path, and return one plus the greater child height.
+
+    // Finish: return the greatest number of edges on any simple path between two nodes in the tree; the path need not pass through root; return zero for an empty or single-node tree; the tree is finite and acyclic; do not allocate, delete, or modify nodes
 }

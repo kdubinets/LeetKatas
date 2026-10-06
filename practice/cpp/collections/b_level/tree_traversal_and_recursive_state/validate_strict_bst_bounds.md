@@ -4,22 +4,26 @@ Validate Strict BST Ancestor Bounds
 
 # Description
 
-Return whether the subtree obeys the supplied optional strict bounds recursively. Null is valid. The wrapper therefore validates a strict binary-search tree; duplicate values are invalid. Optional bounds safely represent trees containing extreme int values. Nodes are unchanged.
+Return whether every node has only strictly smaller values throughout its left subtree and strictly larger values throughout its right subtree. Duplicate values are invalid, and values may include the full int range. An empty tree is valid. The input is a caller-owned finite acyclic binary tree. Do not allocate, delete, or modify nodes.
 
-The supplied preorder context narrows the upper bound for a left child and the lower bound for a right child.
+Use preorder propagation of optional ancestor bounds, initially absent. Each left child inherits a tighter upper bound and each right child a tighter lower bound. The learner implements the complete entry function and any recursive helper.
 
 This exercise covers downward propagation of strict optional ancestor bounds.
 
 # Solution
 
 ```cpp
-if (root == nullptr) {
-    return true;
-}
-if ((lower && root->value <= *lower) ||
-    (upper && root->value >= *upper)) {
-    return false;
-}
-return subtree_respects_strict_bounds(root->left, lower, root->value) &&
-       subtree_respects_strict_bounds(root->right, root->value, upper);
+auto valid = [&](auto&& self, const TreeNode* node,
+                 std::optional<int> lower, std::optional<int> upper) -> bool {
+    if (node == nullptr) {
+        return true;
+    }
+    if ((lower && node->value <= *lower) ||
+        (upper && node->value >= *upper)) {
+        return false;
+    }
+    return self(self, node->left, lower, node->value) &&
+           self(self, node->right, node->value, upper);
+};
+return valid(valid, root, std::nullopt, std::nullopt);
 ```

@@ -4,7 +4,7 @@ Manual Exact Binary Search
 
 # Description
 
-Return any zero-based index where `values` equals `target`, or an empty optional if no such index exists. The input is sorted in nondecreasing order, so duplicates are permitted. Empty input has no matching index.
+Return any zero-based index where `values` equals `target`, or an empty optional if no such index exists. The input is sorted in nondecreasing order, so duplicates are permitted. Empty input has no matching index. Preserve values.
 
 The supplied pattern is manual binary search with a half-open candidate interval `[low, high)` containing every still-possible matching index.
 

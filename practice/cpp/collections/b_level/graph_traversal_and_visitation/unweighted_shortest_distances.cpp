@@ -10,5 +10,5 @@ std::vector<std::optional<std::size_t>> unweighted_shortest_distances(
     std::size_t source) {
     // Pattern: breadth-first discovery. Assign a vertex's distance and mark it discovered when enqueueing it, so every vertex enters the queue at most once.
 
-    // Finish: return one entry per vertex containing the fewest directed edges from source, or an empty optional when unreachable; source and every listed endpoint are valid vertex indices and graph is not modified
+    // Finish: return one entry per vertex containing the fewest directed edges from source, with distance zero for source and an empty optional for unreachable vertices; graph[v] lists the outgoing neighbors of vertex v, source and every neighbor are valid vertex indices, and preserve graph
 }

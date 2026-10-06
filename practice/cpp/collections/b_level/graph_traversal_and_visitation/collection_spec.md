@@ -10,6 +10,8 @@ Five initial exercises cover enqueue-time discovery, component starts, two-color
 
 Adjacency lists use zero-based vertex identifiers and valid endpoints. The representation, traversal, marking time, state meaning, and neighbor rules are supplied. Learners implement one visitation invariant in 3–8 minutes rather than select an algorithm.
 
+Each learner source supplies only the public entry function, a pattern hint, and one Finish comment describing the complete task, including relevant edge cases. State storage, initialization, traversal, and any recursive helper belong to the learner's implementation. Metadata restates the source contract and records a solution for the complete entry function.
+
 ## Included State Shapes
 
 - Optional unweighted distances assigned at enqueue time.

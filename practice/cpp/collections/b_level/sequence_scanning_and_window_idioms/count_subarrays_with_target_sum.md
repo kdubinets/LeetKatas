@@ -4,9 +4,9 @@ Count Target-Sum Subarrays
 
 # Description
 
-Return the number of nonempty contiguous ranges in `values` whose elements sum to `target`. Overlapping ranges count separately, negative values are allowed, and empty input produces zero.
+Return the number of nonempty contiguous ranges in `values` whose elements sum to `target`. Overlapping ranges count separately, negative values are allowed, and empty input produces zero. Preserve values. All prefix sums and their differences from target fit in long long; the result fits in size_t.
 
-The supplied pattern is a prefix-frequency scan: prior prefix counts describe positions strictly before the current prefix, so a matching earlier prefix identifies a nonempty target-sum range.
+The supplied pattern is a prefix-frequency scan initialized with one empty prefix of sum zero: prior prefix counts describe positions strictly before the current prefix, so a matching earlier prefix identifies a nonempty target-sum range.
 
 This exercise covers counting target-sum subarrays by querying prior prefix frequencies before recording the current prefix.
 

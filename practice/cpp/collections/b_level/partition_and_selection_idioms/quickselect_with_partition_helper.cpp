@@ -4,6 +4,12 @@
 
 using namespace std;
 
+/*
+Supporting partition primitive: low <= high < values.size().
+Only [low, high] is rearranged, preserving its values and placing the original
+last-element pivot at the returned index, with smaller values before it and
+values greater than or equal to it after it.
+*/
 std::size_t partition_around_last(
     std::vector<int>& values,
     std::size_t low,

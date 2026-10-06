@@ -4,9 +4,9 @@ Nearest Source Distances from Multiple Sources
 
 # Description
 
-Return each cell's fewest four-direction moves to any cell containing one. If there is no source, every result is empty. The grid is nonempty, rectangular, and preserved.
+Return a grid of optional distances with the same dimensions as the input. Each distance is the fewest horizontal or vertical moves to any cell whose value is 1; source cells have distance zero. All cells are traversable regardless of value. If no cell contains 1, every distance is an empty optional. The input is nonempty and rectangular with at least one column, and must be preserved.
 
-The supplied multi-source traversal enqueues all distance-zero sources before expansion and marks neighbors at enqueue time.
+Use multi-source breadth-first discovery: initialize all sources at distance zero before expanding any of them, and assign an undiscovered neighbor's distance when adding it to pending work. The learner implements the complete entry function, including frontier initialization and traversal state.
 
 This exercise covers simultaneous initialization and expansion of a multi-source BFS frontier.
 

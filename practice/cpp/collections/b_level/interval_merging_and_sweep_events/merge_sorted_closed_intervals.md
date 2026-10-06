@@ -4,9 +4,9 @@ Merge Sorted Closed Intervals
 
 # Description
 
-Return the union as sorted pairwise nonoverlapping closed intervals. Input starts are nondecreasing, endpoints are valid, and sharing an endpoint counts as overlap. Empty input remains empty and input is preserved.
+Merge all overlapping intervals and return their union as maximal nonoverlapping closed intervals sorted by start. Input starts are nondecreasing, every start <= end, and shared endpoints count as overlap. Empty input returns empty. Preserve the input.
 
-The supplied scan maintains one active interval, extending it on overlap and emitting it only after a later start lies beyond its end.
+Maintain one active interval: extend it on overlap, emit it when the next start lies beyond its end, and emit the final active interval after the scan.
 
 This exercise covers extension and finalization of one active sorted interval.
 

@@ -3,22 +3,8 @@
 
 using namespace std;
 
-bool reaches_active_directed_cycle(
-    std::size_t vertex,
-    const std::vector<std::vector<std::size_t>>& graph,
-    std::vector<int>& state) {
-    // Pattern: recursive three-color traversal. Mark vertex active before descending; an edge to active state finds a cycle, complete neighbors need no work, and a fully explored vertex becomes complete.
-
-    // Finish: return whether traversal from vertex reaches a directed cycle, using state 0 for unvisited, 1 for active on the current recursion stack, and 2 for complete; every endpoint is valid and graph is not modified
-}
-
 bool has_directed_cycle(const std::vector<std::vector<std::size_t>>& graph) {
-    std::vector<int> state(graph.size(), 0);
-    for (std::size_t vertex = 0; vertex < graph.size(); ++vertex) {
-        if (state[vertex] == 0 &&
-            reaches_active_directed_cycle(vertex, graph, state)) {
-            return true;
-        }
-    }
-    return false;
+    // Pattern: recursive three-state traversal across every component. Mark a vertex active before descending and complete after all outgoing edges; an edge to an active vertex finds a cycle, while complete neighbors need no work.
+
+    // Finish: return whether the directed graph contains a cycle anywhere, including a self-loop; graph[v] lists the outgoing neighbors of vertex v with valid indices, preserve graph, and an empty graph returns false
 }

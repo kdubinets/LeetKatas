@@ -7,6 +7,7 @@ HARNESS=r"""
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <random>
 #include <vector>
@@ -28,7 +29,9 @@ void test(const Shape&s){
  if(!s.value.empty()){std::vector<int>order;inorder(s,0,order);Tree<kth_inorder_value::TreeNode>t(s);for(std::size_t k=1;k<=order.size();++k)same(kth_inorder_value::kth_inorder_value(t.root(),k),order[k-1],"inorder");}
  if(s.value.size()>1){Tree<lowest_common_ancestor::TreeNode>t(s);for(std::size_t a=0;a<s.value.size();++a)for(std::size_t b=a+1;b<s.value.size();++b){auto*actual=lowest_common_ancestor::lowest_common_ancestor(t.root(),&t.nodes[a],&t.nodes[b]);same(actual,&t.nodes[lca(s,a,b)],"lca");}}
 }
-int main(){std::mt19937 r(20260919);for(int n=0;n<=20;++n)for(int trial=0;trial<150;++trial)test(make_shape(r,n));std::cout<<"Tree runtime checks passed: "<<checks<<'\n';}
+int main(){std::mt19937 r(20260919);for(int n=0;n<=20;++n)for(int trial=0;trial<150;++trial)test(make_shape(r,n));{Shape s{{0,std::numeric_limits<int>::min(),std::numeric_limits<int>::max()},{1,-1,-1},{2,-1,-1},{-1,0,0}};Tree<validate_strict_bst_bounds::TreeNode>t(s);same(validate_strict_bst_bounds::is_strict_binary_search_tree(t.root()),true,"bst extreme values");t.nodes[1].value=0;same(validate_strict_bst_bounds::is_strict_binary_search_tree(t.root()),false,"bst duplicate rejection");}
+{Shape s{{10,5,12},{1,-1,-1},{-1,2,-1},{-1,0,1}};Tree<validate_strict_bst_bounds::TreeNode>t(s);same(validate_strict_bst_bounds::is_strict_binary_search_tree(t.root()),false,"bst ancestor bound violation");}
+std::cout<<"Tree runtime checks passed: "<<checks<<'\n';}
 """
 def completed(n):
  s=(COLLECTION/f"{n}.cpp").read_text();m=(COLLECTION/f"{n}.md").read_text();x=re.findall(r"^```cpp\n(.*?)^```$",m,re.M|re.S);d,c=re.subn(r"^([ \t]*)// Finish: .*?$",lambda q:"\n".join(q[1]+z for z in x[0].rstrip().splitlines()),s,flags=re.M);assert len(x)==1 and c==1;i=re.findall(r"^#include .*?$",d,re.M);d=re.sub(r"^#include .*?\n","",d,flags=re.M);return"\n".join(i)+f"\nnamespace {n}{{\n"+d+"}\n"

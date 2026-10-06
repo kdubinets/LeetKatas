@@ -4,20 +4,25 @@ Tree Diameter through Returned Heights
 
 # Description
 
-The helper returns a subtree height in nodes and updates the referenced aggregate with the greatest edge count on any path in that subtree. Null height is zero; the incoming aggregate may already contain a larger outside result. The wrapper returns the whole-tree diameter. Nodes are unchanged.
+Return the greatest number of edges on a simple path between two nodes anywhere in the tree; the path need not pass through the root. Empty and single-node trees have diameter zero. The input is a caller-owned finite acyclic binary tree. Do not allocate, delete, or modify nodes.
 
-The supplied postorder pattern separates the summary returned to a parent from the cross-child result accumulated globally.
+Use postorder traversal with returned subtree heights and a separate greatest-path aggregate. An empty subtree has height zero; the sum of child heights measures the path through their parent. The learner implements the complete entry function, its recursive helper, and aggregate initialization.
 
 This exercise covers returning one subtree summary while updating a separate aggregate.
 
 # Solution
 
 ```cpp
-if (root == nullptr) {
-    return 0;
-}
-const std::size_t left = measure_height_for_diameter(root->left, greatest_path);
-const std::size_t right = measure_height_for_diameter(root->right, greatest_path);
-greatest_path = std::max(greatest_path, left + right);
-return std::max(left, right) + 1;
+std::size_t greatest_path = 0;
+auto height = [&](auto&& self, const TreeNode* node) -> std::size_t {
+    if (node == nullptr) {
+        return 0;
+    }
+    const std::size_t left = self(self, node->left);
+    const std::size_t right = self(self, node->right);
+    greatest_path = std::max(greatest_path, left + right);
+    return std::max(left, right) + 1;
+};
+height(height, root);
+return greatest_path;
 ```

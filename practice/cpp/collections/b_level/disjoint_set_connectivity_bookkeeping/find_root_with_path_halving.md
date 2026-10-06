@@ -4,9 +4,9 @@ Find a Root with Path Halving
 
 # Description
 
-Return the root reached from the valid node in a valid parent forest and shorten links along the queried path. Each root is its own parent.
+Return the root reached from node in a valid rooted parent forest, where each root points to itself and node is a valid index. Redirect each visited nonroot to its current grandparent and continue from that shortened position. Preserve vector size and every unvisited entry. A root query returns that root without changing the forest.
 
-The supplied iterative path-halving invariant redirects a visited nonroot to its grandparent before continuing.
+Use iterative path halving while walking to the root; the changed links preserve the original component membership.
 
 This exercise covers iterative root finding with path-halving compression.
 
